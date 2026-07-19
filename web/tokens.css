@@ -1,0 +1,46 @@
+:root {
+  --color-paper: oklch(96% 0.018 86);
+  --color-paper-2: oklch(92% 0.020 86);
+  --color-paper-3: oklch(88% 0.022 86);
+  --color-ink: oklch(20% 0.022 245);
+  --color-ink-2: oklch(34% 0.022 245);
+  --color-muted: oklch(52% 0.018 245);
+  --color-rule: oklch(78% 0.018 86);
+  --color-rule-2: oklch(84% 0.014 86);
+  --color-accent: oklch(56% 0.15 32);
+  --color-accent-2: oklch(50% 0.12 176);
+  --color-accent-soft: oklch(91% 0.050 32);
+  --color-danger: oklch(49% 0.18 28);
+  --color-focus: oklch(58% 0.20 32);
+  --color-accent-ink: oklch(97% 0.014 86);
+
+  --font-display: Georgia, 'Times New Roman', serif;
+  --font-body: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'SFMono-Regular', 'JetBrains Mono', ui-monospace, monospace;
+
+  --space-2xs: 0.25rem;
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --space-3xl: 4rem;
+
+  --text-sm: 0.875rem;
+  --text-md: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 2rem;
+  --text-display-s: clamp(2.6rem, 7vw, 5.2rem);
+  --text-display: clamp(3rem, 9vw, 7.6rem);
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --rule-hairline: 1px solid var(--color-rule);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 140ms;
+  --dur-med: 240ms;
+}

@@ -1,0 +1,6 @@
+{
+  "private": true,
+  "scripts": {
+    "ui:add": "pnpm --dir web dlx shadcn@latest add"
+  }
+}

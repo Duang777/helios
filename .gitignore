@@ -1,0 +1,14 @@
+.DS_Store
+.hallmark/
+.env
+.env.*
+!.env.example
+node_modules/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+.references/
+tmp/
+*.log
+backend/helios

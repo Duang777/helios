@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+  <title id="title">Helios evidence ledger visual</title>
+  <desc id="desc">A proposal desk with cards, DAG nodes, terminal snippets and audit stamps.</desc>
+  <defs>
+    <linearGradient id="paper" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#f6efd9"/>
+      <stop offset="1" stop-color="#e7ddc2"/>
+    </linearGradient>
+    <linearGradient id="ink" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#24323a"/>
+      <stop offset="1" stop-color="#12191d"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#1c1710" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="760" fill="#d7cab0"/>
+  <path d="M0 610h1200v150H0z" fill="#cbbd9f" opacity=".45"/>
+  <g opacity=".24" stroke="#5c5548" stroke-width="1" fill="none">
+    <path d="M72 88h252v104H72zM410 52h398v124H410zM858 118h242v132H858zM88 602h352v92H88zM762 562h310v96H762z"/>
+    <path d="M110 126h178M110 154h126M450 92h288M450 128h220M910 154h136M910 190h162M138 642h246M808 602h204"/>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="300" y="120" width="600" height="300" rx="10" fill="url(#paper)"/>
+    <text x="600" y="222" text-anchor="middle" font-family="Georgia, serif" font-size="54" font-weight="700" fill="#18252b">AI 运行证据链</text>
+    <text x="600" y="268" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" fill="#9c4a2b">从目标到可审计执行</text>
+    <path d="M384 336h432" stroke="#726957" stroke-width="2"/>
+    <g font-family="Arial, sans-serif" font-size="18" fill="#263238" text-anchor="middle">
+      <circle cx="390" cy="336" r="32" fill="#f3ead0" stroke="#263238" stroke-width="2"/>
+      <circle cx="530" cy="336" r="32" fill="#f3ead0" stroke="#263238" stroke-width="2"/>
+      <circle cx="670" cy="336" r="32" fill="#0d7b72"/>
+      <circle cx="810" cy="336" r="32" fill="#f3ead0" stroke="#263238" stroke-width="2"/>
+      <path d="M422 336h76M562 336h76M702 336h76" stroke="#263238" stroke-width="2" fill="none" marker-end="url(#none)"/>
+      <text x="390" y="396">解析</text><text x="530" y="396">计划</text><text x="670" y="396">验证</text><text x="810" y="396">归档</text>
+      <path d="M656 334l10 10 20-24" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="84" y="218" width="210" height="160" rx="10" fill="#f8f1dc"/>
+    <text x="116" y="262" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#1f2b31">命题输入</text>
+    <g font-family="Arial, sans-serif" font-size="18" fill="#48545a">
+      <text x="116" y="306">行业报告</text><text x="116" y="338">竞品案例</text><text x="116" y="370">用户反馈</text>
+    </g>
+    <rect x="90" y="445" width="250" height="150" rx="10" fill="url(#ink)"/>
+    <g font-family="Menlo, monospace" font-size="17" fill="#a8f0d8">
+      <text x="118" y="492">&gt; load context</text>
+      <text x="118" y="524">&gt; build graph</text>
+      <text x="118" y="556">&gt; verify run</text>
+    </g>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="905" y="160" width="220" height="175" rx="10" fill="#f8f1dc"/>
+    <text x="935" y="206" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#1f2b31">方案输出</text>
+    <g font-family="Arial, sans-serif" font-size="18" fill="#48545a">
+      <text x="935" y="252">完整性</text><text x="935" y="286">创新性</text><text x="935" y="320">可行性</text>
+    </g>
+    <g fill="#0d7b72"><circle cx="1086" cy="246" r="9"/><circle cx="1086" cy="280" r="9"/><circle cx="1086" cy="314" r="9"/></g>
+    <rect x="862" y="444" width="250" height="174" rx="10" fill="#f8f1dc"/>
+    <text x="895" y="490" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#1f2b31">审计记录</text>
+    <g font-family="Menlo, monospace" font-size="16" fill="#48545a">
+      <text x="895" y="532">10:21 plan</text>
+      <text x="895" y="564">10:24 blocked</text>
+      <text x="895" y="596">10:31 archived</text>
+    </g>
+  </g>
+  <g stroke="#9c4a2b" stroke-width="4" fill="none" opacity=".8">
+    <path d="M294 294C340 282 276 164 332 154"/>
+    <path d="M900 246c-54 12-16 118-72 132"/>
+    <path d="M340 520c86-18 92-90 182-108"/>
+    <path d="M862 532c-74-28-72-92-146-112"/>
+  </g>
+  <g font-family="Arial, sans-serif" font-size="30" font-weight="700" text-anchor="middle">
+    <circle cx="226" cy="618" r="58" fill="none" stroke="#0d7b72" stroke-width="5"/>
+    <text x="226" y="628" fill="#0d7b72">已验证</text>
+    <circle cx="1018" cy="362" r="58" fill="none" stroke="#9c4a2b" stroke-width="5"/>
+    <text x="1018" y="372" fill="#9c4a2b">归档</text>
+  </g>
+</svg>
