@@ -5,7 +5,7 @@
 <h1 align="center">Helios</h1>
 
 <p align="center">
-  <strong>一句话，把经营碎片编译成可运行的 AI 工作流。</strong>
+  <strong>一句话，把企业数据编译成可追溯的 AI 工作流。</strong>
 </p>
 
 <p align="center">
@@ -33,12 +33,14 @@
   ·
   <code>Evidence Ledger</code>
   ·
-  <code>Small Business Ops</code>
+  <code>Enterprise Data Governance</code>
 </p>
 
 Helios is a Go-native AI Workflow Compiler for business operations. It turns a natural-language business goal into an executable workflow, scoped agent roles, runtime adapter contracts, generated app surfaces, evidence records, and an auditable run history.
 
 Live demo: `https://duang777.github.io/helios/`
+
+Challenge direction: 四维图新企业级智能数据 Agent，让一线员工 3 秒获得准确答案，让管理决策有据可依。
 
 The project is a general-purpose workflow kernel first. `SKUFlow` is the included industry scenario shell that applies the kernel to MINISO-style high-volume new product development.
 

@@ -21,7 +21,7 @@ import { RunPanel } from './components/RunPanel';
 import { WorkflowCanvas } from './components/WorkflowCanvas';
 import { Badge, Button, DataTable, Panel, Textarea } from './components/ui/primitives';
 
-const defaultGoal = '整理 AI Agent 学习资料包：从浏览器自动化和 AI Agent 相关链接中提取要点，生成资料索引、行动项、对比表、Markdown 清洗结果和复盘文档。';
+const defaultGoal = '为四维图新构建企业数据治理 Agent：员工用自然语言查询客户、项目、合同、会议纪要和指标口径，系统在 3 秒内返回带来源、版本、可信度和下一步建议的可审计答案。';
 
 export function App() {
   const [goal, setGoal] = useState(defaultGoal);
