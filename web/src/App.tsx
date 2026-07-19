@@ -21,7 +21,7 @@ import { RunPanel } from './components/RunPanel';
 import { WorkflowCanvas } from './components/WorkflowCanvas';
 import { Badge, Button, DataTable, Panel, Textarea } from './components/ui/primitives';
 
-const defaultGoal = '为四维图新构建企业数据治理 Agent：员工用自然语言查询客户、项目、合同、会议纪要和指标口径，系统在 3 秒内返回带来源、版本、可信度和下一步建议的可审计答案。';
+const defaultGoal = '构建企业数据治理 Agent：员工用自然语言查询客户、项目、合同、会议纪要和指标口径，系统在 3 秒内返回带来源、版本、可信度和下一步建议的可审计答案。';
 
 export function App() {
   const [goal, setGoal] = useState(defaultGoal);

@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" href="assets/helios-logo-square.png" type="image/png" />
-  <meta name="description" content="Helios 面向四维图新企业数据治理命题，打造 3 秒响应、答案可证、经验可传承的企业级智能数据 Agent。" />
-  <title>Helios | 企业数据治理 Agent 参赛方案</title>
+  <meta name="description" content="Helios 打造 3 秒响应、答案可证、经验可传承的企业级智能数据 Agent，把散落数据编译成可信决策。" />
+  <title>Helios | Governed Answer Layer</title>
   <style>
     :root {
       --paper: #f2ecdf;
@@ -132,7 +132,7 @@
     .hero {
       min-height: calc(100vh - 140px);
       display: grid;
-      grid-template-columns: minmax(0, 1.05fr) minmax(340px, 0.72fr);
+      grid-template-columns: minmax(0, 0.95fr) minmax(360px, 0.85fr);
       gap: clamp(28px, 6vw, 84px);
       align-items: center;
       padding: 0 34px 58px;
@@ -212,6 +212,78 @@
       font-family: var(--mono);
       font-size: 0.74rem;
       letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+
+    .answer-lab {
+      display: grid;
+      gap: 14px;
+      padding: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background:
+        linear-gradient(135deg, rgba(185, 213, 220, 0.08), transparent 34%),
+        #15181e;
+      color: #f8f0e5;
+      box-shadow: 14px 14px 0 rgba(43, 109, 98, 0.12);
+    }
+
+    .answer-lab-header,
+    .evidence-grid,
+    .source-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .answer-lab-header {
+      justify-content: space-between;
+      color: #9fd9cb;
+      font-family: var(--mono);
+      font-size: 0.74rem;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .latency {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 0 10px;
+      border: 1px solid rgba(159, 217, 203, 0.48);
+      border-radius: 999px;
+      color: #f8f0e5;
+    }
+
+    .lab-question {
+      color: #f8f0e5;
+      font-family: var(--serif);
+      font-size: clamp(1.25rem, 1.8vw, 1.72rem);
+      line-height: 1.25;
+    }
+
+    .lab-answer {
+      color: #d9d4ca;
+      font-size: 0.95rem;
+    }
+
+    .evidence-grid span {
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.05);
+      color: #f8f0e5;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      padding: 6px 8px;
+    }
+
+    .source-list {
+      padding-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.12);
+      color: #a9a298;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.05em;
       text-transform: uppercase;
     }
 
@@ -616,11 +688,11 @@
     <header class="topline">
       <span class="brand-strip">
         <img src="assets/helios-logo-square.png" alt="" aria-hidden="true" />
-        <span>Helios · 企业数据治理 Agent 参赛方案</span>
+        <span>Helios · Governed Answer Layer</span>
       </span>
       <nav aria-label="页面导航">
-        <a href="#pain">挑战</a>
-        <a href="#modules">链路</a>
+        <a href="#pain">断点</a>
+        <a href="#modules">协议</a>
         <a href="#copy">开题</a>
         <a href="#submit">提交</a>
       </nav>
@@ -636,12 +708,31 @@
       <div class="story">
         <div class="story-card">
           <p>
-            新销售想了解一个客户，打开 CRM、项目库、合同台账、会议纪要和指标看板，半小时过去，只拼出一半画像。
-            新人想复用一次历史项目经验，却不知道那条关键判断藏在哪次评审里。
-            企业不是没有数据，是智慧总在<strong>跨系统的路上失声</strong>。
-            Helios 要做的事，就是把它编织成 3 秒可问、答案可证、经验可传承的业务知识网络。
+            一个客户值不值得推进，答案散在 CRM、合同、项目复盘、会议纪要和指标看板里。
+            员工不是不会问，是每次问完都要自己做取证、对口径、找负责人。
+            企业最贵的不是数据系统，而是<strong>每次决策前重复发生的人工拼图</strong>。
+            Helios 把这件事变成一条受治理的回答链路：先懂业务，再查证据，最后留下可复用的组织经验。
           </p>
         </div>
+        <aside class="answer-lab" aria-label="3 秒答案演示">
+          <div class="answer-lab-header">
+            <strong>Governed answer</strong>
+            <span class="latency">00:03</span>
+          </div>
+          <p class="lab-question">“这个客户本周能不能推进？”</p>
+          <p class="lab-answer">可以推进，但先补齐交付风险确认。机会评分高，历史项目复购意愿强；风险来自最近两次需求变更和未关闭的合同条款。</p>
+          <div class="evidence-grid" aria-label="证据来源">
+            <span>CRM · 高意向</span>
+            <span>合同 · 待确认</span>
+            <span>项目复盘 · 同类成功</span>
+            <span>会议纪要 · 需求变更</span>
+          </div>
+          <div class="source-list">
+            <span>Evidence attached</span>
+            <span>Policy checked</span>
+            <span>Human gate ready</span>
+          </div>
+        </aside>
         <div class="badges">
           <span>3-second governed answer</span>
           <span>evidence-backed decision</span>
@@ -657,12 +748,12 @@
 
     <section class="rule-title" id="pain">
       <div>
-        <p class="kicker">The Siwei Tuxin challenge</p>
-        <h2>数据有了，不等于组织真的会用。AI 来了，反而把这个问题照得更亮。</h2>
+        <p class="kicker">Where enterprise data breaks</p>
+        <h2>真正的痛点不是找不到数据，而是没人敢把散乱数据直接变成决策。</h2>
       </div>
       <p class="intro">
-        四维图新的命题指向一个很真实的企业困境：数据越积越多，系统越来越复杂，但一线员工仍然要跨系统找答案。
-        Helios 不把 AI 做成一个会聊天的入口，而是做成企业知识网络的运行层：能懂业务口径、能拆查询计划、能带证据回答、能把一次有效判断沉淀回组织。
+        企业系统各自正确，业务口径各自沉默。AI 如果只接一个搜索框，只会把不确定性包装成流畅文字。
+        Helios 把提问先变成查询计划和证据协议：该查什么、按什么口径、能不能看、谁来确认、答案如何回流，一次回答就完成一次治理。
       </p>
     </section>
 
@@ -670,7 +761,7 @@
       <article class="belief">
         <small>01</small>
         <h3>系统不是知识。</h3>
-        <p>CRM、项目库、合同、会议纪要各自正确，但员工需要的是一个能被业务理解的客户全貌。</p>
+        <p>CRM、项目库、合同、会议纪要各自正确，但员工需要的是一个能被业务理解的完整画像。</p>
       </article>
       <article class="belief">
         <small>02</small>
@@ -680,7 +771,7 @@
       <article class="belief">
         <small>03</small>
         <h3>答案没有来源，就不是决策。</h3>
-        <p>管理层不需要漂亮段落，需要知道答案来自哪份数据、哪个版本、哪条规则，以及为什么可信。</p>
+        <p>管理层不缺漂亮段落，缺的是答案来自哪份数据、哪个版本、哪条规则，以及为什么可信。</p>
       </article>
       <article class="belief">
         <small>04</small>
@@ -690,7 +781,7 @@
       <article class="belief">
         <small>05</small>
         <h3>智慧要能流动。</h3>
-        <p>一次高质量问答不应停在聊天窗口里，它要回到知识库、指标口径和工作流，成为下一次判断的材料。</p>
+        <p>一次高质量问答不该停在聊天窗口里，它要回到知识库、指标口径和工作流，成为下一次判断的材料。</p>
       </article>
     </section>
 
@@ -709,7 +800,7 @@
 
     <section class="module-wrap" id="modules">
       <p class="kicker">The Helios governance loop</p>
-      <h2>Helios 的核心不是“回答”，而是让回答经过治理、执行和沉淀。</h2>
+      <h2>Helios 的核心不是“回答”，而是把回答变成一条可审计的企业协议。</h2>
       <div class="modules">
         <article class="module">
           <small>Module 01</small>
@@ -750,7 +841,7 @@
           <span>For the form · part 1</span>
           <button type="button" data-copy-target="part1">复制</button>
         </div>
-        <p id="part1">我选择四维图新的企业数据治理命题。这个问题打动我的地方不是“让 AI 更会聊天”，而是让企业多年积累的数据、项目经验和业务规则真正被一线员工用起来。销售要查客户全貌，新人要找历史项目经验，管理层要看决策依据，今天往往都要跨系统、跨文档、跨人脉去拼答案。Helios 想做的是一层企业级智能数据 Agent：把自然语言问题编译成受权限约束的查询工作流，让答案在 3 秒内返回，并带着来源、口径、版本和可信度一起出现。</p>
+        <p id="part1">这个命题真正要解决的不是“让 AI 更会聊天”，而是让企业多年积累的数据、项目经验和业务规则真正被一线员工用起来。销售要查客户全貌，新人要找历史项目经验，管理层要看决策依据，今天往往都要跨系统、跨文档、跨人脉去拼答案。Helios 想做的是一层企业级智能数据 Agent：把自然语言问题编译成受权限约束的查询工作流，让答案在 3 秒内返回，并带着来源、口径、版本和可信度一起出现。</p>
       </article>
 
       <article class="text-card">
@@ -764,7 +855,7 @@
 
     <section class="submission" id="submit">
       <p class="kicker">Ask once. Govern always.</p>
-      <h2>Helios 面向四维图新命题的提交包。</h2>
+      <h2>Helios 的提交包。</h2>
       <div class="submit-grid">
         <article class="submit-card">
           <small>Repository</small>
@@ -779,11 +870,11 @@
         <article class="submit-card">
           <small>Appendix</small>
           <strong>命题方向</strong>
-          <code>四维图新 · 企业级智能数据 Agent</code>
+          <code>企业级智能数据 Agent</code>
         </article>
       </div>
       <div class="footer-note">
-        <span>这页是 Helios 结合四维图新数据治理命题的参赛展示入口。</span>
+        <span>这页是 Helios 企业级智能数据 Agent 的参赛展示入口。</span>
         <span>Push 到 main 后会由 GitHub Pages 自动发布。</span>
       </div>
     </section>
