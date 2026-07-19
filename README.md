@@ -44,9 +44,19 @@ Helios is a Go-native AI Workflow Compiler for business operations. It turns a n
 
 Live demo: `https://duang777.github.io/helios/`
 
-Challenge direction: 企业级智能数据 Agent，让一线员工 3 秒获得准确答案，让管理决策有据可依。
+Challenge direction: 企业级业务能力沉淀 Agent，让业务人员通过自然语言创建、调用和迭代 Agent，把数据、流程、权限和经验沉淀为可复用的组织能力。
 
-The project is a general-purpose workflow kernel first. `SKUFlow` is the included industry scenario shell that applies the kernel to MINISO-style high-volume new product development.
+Supplemental materials for the opening report:
+
+- [补充材料索引](docs/supplemental/README.md)
+- [开题报告补充材料](docs/supplemental/01-opening-report-supplement.md)
+- [相关项目经验](docs/supplemental/02-project-experience.md)
+- [数据分析样本](docs/supplemental/03-data-analysis-sample.md)
+- [研究笔记](docs/supplemental/04-research-notes.md)
+- [参考资料清单](docs/supplemental/05-reference-list.md)
+- [附件打包下载](docs/supplemental/helios-supplemental-materials.zip)
+
+The project is a general-purpose workflow kernel first. The current scenario shell applies the kernel to enterprise data governance: customer insight, project review, contract risk, operating metrics, evidence-led answers, and business-side Agent creation.
 
 ## Positioning
 
@@ -66,7 +76,7 @@ Helios is inspired by the broader category of AI automation platforms, but it is
 - Persist workflow runs in memory for local demo use.
 - Execute deterministic MVP node types: `llm_task`, `form`, `approval`, `human_task`, `report`, and `dashboard`.
 - Show the Helios product loop in Chinese: chat builder, rendered node canvas, generated app preview, scoped agent panel, runtime adapter table, metrics, evidence ledger, and report summary.
-- Ship a SKUFlow sample for new product development decisions.
+- Ship an enterprise data governance sample for customer insight, project review, contract risk, and evidence-led operating decisions.
 
 The MVP runtime is deterministic and does not pretend to call external model providers without configured adapters. The compiled workflow explicitly marks adapter contracts such as `codex_runtime`, `claude`, `local_tools`, `human_gate`, and `audit_store` so real providers can be connected without changing the public API shape.
 
