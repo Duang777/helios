@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="assets/helios-logo-square.png" type="image/png" />
   <title>Helios | 参赛方案</title>
   <style>
     :root {
@@ -109,6 +110,20 @@
       justify-content: flex-end;
       gap: 18px;
       letter-spacing: 0.10em;
+    }
+
+    .brand-strip {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-strip img {
+      width: 36px;
+      height: 36px;
+      border: 1px solid var(--ink);
+      border-radius: 8px;
+      background: var(--paper-2);
     }
 
     .topline a:hover { color: var(--red); }
@@ -598,7 +613,10 @@
 
   <main class="sheet" id="top">
     <header class="topline">
-      <span>Helios · 一张给小生意的工作传单</span>
+      <span class="brand-strip">
+        <img src="assets/helios-logo-square.png" alt="" aria-hidden="true" />
+        <span>Helios · 一张给小生意的工作传单</span>
+      </span>
       <nav aria-label="页面导航">
         <a href="#pain">痛点</a>
         <a href="#modules">模块</a>

@@ -92,7 +92,9 @@ export function App() {
     <main className="console-shell">
       <header className="console-topbar">
         <a className="brand-lockup" href="#workspace" aria-label="Helios console">
-          <span className="brand-mark">H</span>
+          <span className="brand-mark">
+            <img src="./helios-logo-square.png" alt="" aria-hidden="true" />
+          </span>
           <span>
             <strong>Helios</strong>
             <small>AI Workflow Compiler</small>
