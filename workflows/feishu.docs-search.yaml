@@ -1,0 +1,20 @@
+apiVersion: helios/v1
+kind: Workflow
+id: feishu.docs-search
+version: 1
+description: Search Feishu docs / wiki / sheets by keyword (requires login)
+params:
+  query:
+    type: string
+    required: true
+requires:
+  clis:
+    - name: helios-lark
+      version: ">=0.2.0"
+steps:
+  - id: search
+    uses: cli
+    cli: helios-lark
+    sideEffect: read
+    argv: ["docs", "+search", "--query", "${params.query}"]
+    out: results

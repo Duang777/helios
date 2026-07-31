@@ -1,0 +1,32 @@
+apiVersion: helios/v1
+kind: Workflow
+id: feishu.sheets-cells-get
+version: 1
+description: Read Feishu spreadsheet cells (requires login + spreadsheet access)
+params:
+  spreadsheet_token:
+    type: string
+    required: true
+  range:
+    type: string
+    required: true
+  sheet_name:
+    type: string
+    required: false
+requires:
+  clis:
+    - name: helios-lark
+      version: ">=0.2.0"
+steps:
+  - id: cells
+    uses: cli
+    cli: helios-lark
+    sideEffect: read
+    argv:
+      - "sheets"
+      - "+cells-get"
+      - "--spreadsheet-token"
+      - "${params.spreadsheet_token}"
+      - "--range"
+      - "${params.range}"
+    out: cells

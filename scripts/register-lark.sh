@@ -26,7 +26,17 @@ curl -sf -X POST "http://127.0.0.1:${PORT}/api/v1/clis/register" \
 
 echo
 echo "Bootstrapping Feishu workflows..."
-for wf in feishu.doctor.yaml feishu.auth-status.yaml feishu.send-text.yaml; do
+for wf in \
+  feishu.doctor.yaml \
+  feishu.auth-status.yaml \
+  feishu.send-text.yaml \
+  feishu.calendar-agenda.yaml \
+  feishu.chat-list.yaml \
+  feishu.my-tasks.yaml \
+  feishu.docs-search.yaml \
+  feishu.sheets-cells-get.yaml \
+  feishu.calendar-create.yaml
+do
   curl -sf -X PUT "http://127.0.0.1:${PORT}/api/v1/workflows/${wf%.yaml}" \
     -H 'content-type: application/yaml' \
     --data-binary @"$ROOT/workflows/$wf" >/dev/null
@@ -37,5 +47,6 @@ echo
 echo "Next:"
 echo "  1) lark-cli config init --new    # browser authorize app"
 echo "  2) lark-cli auth login --recommend"
-echo "  3) In Helios console, run workflow feishu.doctor or feishu.auth-status"
-echo "  4) For messaging: feishu.send-text with chat_id + text"
+echo "  3) In Helios console, run feishu.doctor / feishu.calendar-agenda / feishu.chat-list"
+echo "  4) Write paths: feishu.send-text or feishu.calendar-create (approval gated)"
+echo "  5) Docs: docs/feishu-cli.md | design: docs/architecture/slice-i-feishu-thicken.md"

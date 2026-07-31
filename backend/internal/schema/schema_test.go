@@ -114,7 +114,17 @@ func TestLoadInventoryWorkflow(t *testing.T) {
 
 func TestLoadFeishuWorkflows(t *testing.T) {
 	root := findRepoRoot(t)
-	for _, name := range []string{"feishu.doctor.yaml", "feishu.auth-status.yaml", "feishu.send-text.yaml"} {
+	for _, name := range []string{
+		"feishu.doctor.yaml",
+		"feishu.auth-status.yaml",
+		"feishu.send-text.yaml",
+		"feishu.calendar-agenda.yaml",
+		"feishu.chat-list.yaml",
+		"feishu.my-tasks.yaml",
+		"feishu.docs-search.yaml",
+		"feishu.sheets-cells-get.yaml",
+		"feishu.calendar-create.yaml",
+	} {
 		wf, err := schema.LoadWorkflowFile(filepath.Join(root, "workflows", name))
 		if err != nil {
 			t.Fatalf("%s load: %v", name, err)

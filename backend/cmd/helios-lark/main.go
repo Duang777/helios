@@ -10,7 +10,7 @@ import (
 	"github.com/Duang777/helios/backend/internal/domain"
 )
 
-const version = "0.1.0"
+const version = "0.2.0"
 
 func main() {
 	if len(os.Args) < 2 {
@@ -39,7 +39,11 @@ func writeIntrospect() {
 				{Name: "--verify", Type: "boolean"},
 			}},
 			{Path: []string{"auth", "login"}, SideEffect: domain.SideEffectWrite},
-			{Path: []string{"im", "+chat-list"}, SideEffect: domain.SideEffectRead},
+			{Path: []string{"im", "+chat-list"}, SideEffect: domain.SideEffectRead, Args: []domain.CLIArgSpec{
+				{Name: "--types", Type: "string"},
+				{Name: "--page-size", Type: "number"},
+				{Name: "--dry-run", Type: "boolean"},
+			}},
 			{Path: []string{"im", "+messages-send"}, SideEffect: domain.SideEffectWrite, DryRun: true, Args: []domain.CLIArgSpec{
 				{Name: "--chat-id", Type: "string"},
 				{Name: "--user-id", Type: "string"},
@@ -47,7 +51,60 @@ func writeIntrospect() {
 				{Name: "--markdown", Type: "string"},
 				{Name: "--dry-run", Type: "boolean"},
 			}},
-			{Path: []string{"calendar", "+agenda"}, SideEffect: domain.SideEffectRead},
+			{Path: []string{"calendar", "+agenda"}, SideEffect: domain.SideEffectRead, Args: []domain.CLIArgSpec{
+				{Name: "--start", Type: "string"},
+				{Name: "--end", Type: "string"},
+				{Name: "--calendar-id", Type: "string"},
+				{Name: "--dry-run", Type: "boolean"},
+			}},
+			{Path: []string{"calendar", "+freebusy"}, SideEffect: domain.SideEffectRead, Args: []domain.CLIArgSpec{
+				{Name: "--start", Type: "string"},
+				{Name: "--end", Type: "string"},
+				{Name: "--user-id", Type: "string"},
+				{Name: "--dry-run", Type: "boolean"},
+			}},
+			{Path: []string{"calendar", "+search-event"}, SideEffect: domain.SideEffectRead},
+			{Path: []string{"calendar", "+create"}, SideEffect: domain.SideEffectWrite, DryRun: true, Args: []domain.CLIArgSpec{
+				{Name: "--summary", Type: "string"},
+				{Name: "--start", Type: "string"},
+				{Name: "--end", Type: "string"},
+				{Name: "--description", Type: "string"},
+				{Name: "--attendee-ids", Type: "string"},
+				{Name: "--calendar-id", Type: "string"},
+				{Name: "--dry-run", Type: "boolean"},
+			}},
+			{Path: []string{"docs", "+search"}, SideEffect: domain.SideEffectRead, Args: []domain.CLIArgSpec{
+				{Name: "--query", Type: "string"},
+				{Name: "--page-size", Type: "string"},
+				{Name: "--dry-run", Type: "boolean"},
+			}},
+			{Path: []string{"docs", "+fetch"}, SideEffect: domain.SideEffectRead, Args: []domain.CLIArgSpec{
+				{Name: "--doc", Type: "string"},
+				{Name: "--doc-format", Type: "string"},
+				{Name: "--detail", Type: "string"},
+				{Name: "--dry-run", Type: "boolean"},
+			}},
+			{Path: []string{"docs", "+create"}, SideEffect: domain.SideEffectWrite, DryRun: true, Args: []domain.CLIArgSpec{
+				{Name: "--title", Type: "string"},
+				{Name: "--content", Type: "string"},
+				{Name: "--doc-format", Type: "string"},
+				{Name: "--dry-run", Type: "boolean"},
+			}},
+			{Path: []string{"task", "+get-my-tasks"}, SideEffect: domain.SideEffectRead, Args: []domain.CLIArgSpec{
+				{Name: "--query", Type: "string"},
+				{Name: "--complete", Type: "boolean"},
+				{Name: "--dry-run", Type: "boolean"},
+			}},
+			{Path: []string{"task", "+search"}, SideEffect: domain.SideEffectRead},
+			{Path: []string{"sheets", "+cells-get"}, SideEffect: domain.SideEffectRead, Args: []domain.CLIArgSpec{
+				{Name: "--spreadsheet-token", Type: "string"},
+				{Name: "--url", Type: "string"},
+				{Name: "--range", Type: "string"},
+				{Name: "--sheet-id", Type: "string"},
+				{Name: "--sheet-name", Type: "string"},
+				{Name: "--dry-run", Type: "boolean"},
+			}},
+			{Path: []string{"sheets", "+csv-get"}, SideEffect: domain.SideEffectRead},
 			{Path: []string{"api"}, SideEffect: domain.SideEffectWrite},
 			{Path: []string{"introspect"}, SideEffect: domain.SideEffectNone},
 		},

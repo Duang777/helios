@@ -1,0 +1,17 @@
+apiVersion: helios/v1
+kind: Workflow
+id: feishu.chat-list
+version: 1
+description: List Feishu chats the current user/bot belongs to (requires login)
+params: {}
+requires:
+  clis:
+    - name: helios-lark
+      version: ">=0.2.0"
+steps:
+  - id: chats
+    uses: cli
+    cli: helios-lark
+    sideEffect: read
+    argv: ["im", "+chat-list", "--page-size", "20"]
+    out: chats

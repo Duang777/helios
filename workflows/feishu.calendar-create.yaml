@@ -1,0 +1,67 @@
+apiVersion: helios/v1
+kind: Workflow
+id: feishu.calendar-create
+version: 1
+description: Create a Feishu calendar event after dry-run + approval (requires login)
+params:
+  summary:
+    type: string
+    required: true
+  start:
+    type: string
+    required: true
+  end:
+    type: string
+    required: true
+  description:
+    type: string
+    required: false
+requires:
+  clis:
+    - name: helios-lark
+      version: ">=0.2.0"
+steps:
+  - id: preview_auth
+    uses: cli
+    cli: helios-lark
+    sideEffect: read
+    argv: ["auth", "status"]
+    out: auth
+
+  - id: dry_run
+    uses: cli
+    needs: [preview_auth]
+    cli: helios-lark
+    sideEffect: read
+    argv:
+      - "calendar"
+      - "+create"
+      - "--summary"
+      - "${params.summary}"
+      - "--start"
+      - "${params.start}"
+      - "--end"
+      - "${params.end}"
+      - "--dry-run"
+    out: dry
+
+  - id: approve_create
+    uses: approval
+    needs: [dry_run]
+    prompt: "Create Feishu calendar event '${params.summary}' (${params.start} → ${params.end})"
+
+  - id: create
+    uses: cli
+    needs: [approve_create]
+    cli: helios-lark
+    sideEffect: write
+    argv:
+      - "calendar"
+      - "+create"
+      - "--summary"
+      - "${params.summary}"
+      - "--start"
+      - "${params.start}"
+      - "--end"
+      - "${params.end}"
+    out: created

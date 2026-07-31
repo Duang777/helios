@@ -24,6 +24,7 @@ Build `Helios`, a business workflow compiler and auditable runtime:
 - **Dev gate (必读):** `docs/architecture/dev-gate.md` — 无 Accepted 切片设计不得实现
 - Slice G (Lathe, Implemented): `docs/architecture/slice-g-lathe-adapter.md`
 - Slice H (human_help handoff, Implemented): `docs/architecture/slice-h-human-help-handoff.md`
+- Slice I (Feishu thicken, Implemented): `docs/architecture/slice-i-feishu-thicken.md` / `docs/feishu-cli.md`
 - Plan/tasks: `tasks/plan.md`, `tasks/todo.md`
 - ADR: `docs/decisions/ADR-001-go-control-plane-pi-sidecar.md`
 - Naming: `docs/naming.md`
@@ -40,6 +41,7 @@ Build `Helios`, a business workflow compiler and auditable runtime:
 8. ~~Add CLI factory (Slice F).~~ Design + impl: `docs/architecture/slice-f-cli-factory.md`
 9. ~~**Slice G Lathe adapter**~~ — Implemented: `docs/architecture/slice-g-lathe-adapter.md` / ADR-002
 10. ~~**Slice H human_help handoff**~~ — Implemented: `docs/architecture/slice-h-human-help-handoff.md`
+11. ~~**Slice I Feishu thicken**~~ — Implemented: `docs/architecture/slice-i-feishu-thicken.md`
 
 ## Development Gate
 
@@ -152,6 +154,17 @@ cd packages/gui-operator && npm test
 ./scripts/smoke-human-help.sh
 # real browser session:
 HELIOS_GUI_MODE=playwright ./scripts/smoke-human-help.sh
+```
+
+## Slice I verification (Feishu thicken)
+
+Design: `docs/architecture/slice-i-feishu-thicken.md`  
+Guide: `docs/feishu-cli.md`
+
+```bash
+cd backend && go test ./internal/schema/ ./internal/registry/
+./scripts/smoke-feishu-lark.sh
+# after login: console run feishu.calendar-agenda / feishu.chat-list
 ```
 
 ## Coding Standards

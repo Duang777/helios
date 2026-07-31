@@ -1,0 +1,23 @@
+apiVersion: helios/v1
+kind: Workflow
+id: feishu.calendar-agenda
+version: 1
+description: Read today's Feishu calendar agenda via lark-cli (requires login)
+params:
+  start:
+    type: string
+    required: false
+  end:
+    type: string
+    required: false
+requires:
+  clis:
+    - name: helios-lark
+      version: ">=0.2.0"
+steps:
+  - id: agenda
+    uses: cli
+    cli: helios-lark
+    sideEffect: read
+    argv: ["calendar", "+agenda"]
+    out: agenda
