@@ -28,6 +28,7 @@ Build `Helios`, a business workflow compiler and auditable runtime:
 - Slice J (Pi live default, Implemented): `docs/architecture/slice-j-pi-live-default.md`
 - Slice K (evidence viewer, Implemented): `docs/architecture/slice-k-evidence-viewer.md`
 - Slice L (GUI ↔ playwright-cli, Implemented): `docs/architecture/slice-l-gui-playwright-cli.md`
+- Slice M (Feishu daily-brief / Q1, Implemented): `docs/architecture/slice-m-feishu-daily-brief.md`
 - Plan/tasks: `tasks/plan.md`, `tasks/todo.md`
 - ADR: `docs/decisions/ADR-001-go-control-plane-pi-sidecar.md`
 - Naming: `docs/naming.md`
@@ -48,6 +49,7 @@ Build `Helios`, a business workflow compiler and auditable runtime:
 12. ~~**Slice J Pi live default**~~ — Implemented: `docs/architecture/slice-j-pi-live-default.md`
 13. ~~**Slice K evidence viewer**~~ — Implemented: `docs/architecture/slice-k-evidence-viewer.md`
 14. ~~**Slice L GUI playwright-cli align**~~ — Implemented: `docs/architecture/slice-l-gui-playwright-cli.md`
+15. ~~**Slice M Feishu daily-brief (Q1)**~~ — Implemented: `docs/architecture/slice-m-feishu-daily-brief.md`
 
 ## Development Gate
 
@@ -201,6 +203,18 @@ Design: `docs/architecture/slice-l-gui-playwright-cli.md`
 cd packages/gui-operator && npm test
 ./scripts/smoke-gui-run.sh
 HELIOS_GUI_MODE=playwright ./scripts/smoke-gui-run.sh
+```
+
+## Slice M verification (Feishu daily-brief / Q1)
+
+Design: `docs/architecture/slice-m-feishu-daily-brief.md`  
+Guide: `docs/feishu-cli.md`
+
+```bash
+cd backend && go test ./internal/schema/
+./scripts/smoke-feishu-daily-brief.sh
+# logged-in:
+HELIOS_FEISHU_CHAT_ID=oc_xxx ./scripts/smoke-feishu-daily-brief.sh
 ```
 
 ## Coding Standards

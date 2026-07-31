@@ -35,7 +35,8 @@ for wf in \
   feishu.my-tasks.yaml \
   feishu.docs-search.yaml \
   feishu.sheets-cells-get.yaml \
-  feishu.calendar-create.yaml
+  feishu.calendar-create.yaml \
+  feishu.daily-brief.yaml
 do
   curl -sf -X PUT "http://127.0.0.1:${PORT}/api/v1/workflows/${wf%.yaml}" \
     -H 'content-type: application/yaml' \
@@ -47,6 +48,6 @@ echo
 echo "Next:"
 echo "  1) lark-cli config init --new    # browser authorize app"
 echo "  2) lark-cli auth login --recommend"
-echo "  3) In Helios console, run feishu.doctor / feishu.calendar-agenda / feishu.chat-list"
-echo "  4) Write paths: feishu.send-text or feishu.calendar-create (approval gated)"
-echo "  5) Docs: docs/feishu-cli.md | design: docs/architecture/slice-i-feishu-thicken.md"
+echo "  3) Pilot playbook: feishu.daily-brief (agenda → approve → send)"
+echo "  4) Or: feishu.doctor / feishu.calendar-agenda / feishu.chat-list"
+echo "  5) Docs: docs/feishu-cli.md | design: docs/architecture/slice-m-feishu-daily-brief.md"

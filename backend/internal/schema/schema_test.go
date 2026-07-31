@@ -138,6 +138,7 @@ func TestLoadFeishuWorkflows(t *testing.T) {
 		"feishu.docs-search.yaml",
 		"feishu.sheets-cells-get.yaml",
 		"feishu.calendar-create.yaml",
+		"feishu.daily-brief.yaml",
 	} {
 		wf, err := schema.LoadWorkflowFile(filepath.Join(root, "workflows", name))
 		if err != nil {

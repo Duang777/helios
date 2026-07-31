@@ -1,0 +1,69 @@
+apiVersion: helios/v1
+kind: Workflow
+id: feishu.daily-brief
+version: 1
+description: >
+  Feishu pilot playbook (PRD Q1): read today's calendar agenda, then after approval
+  send a daily brief text to a chat. Credentials stay in local lark-cli.
+params:
+  chat_id:
+    type: string
+    required: true
+    description: Target Feishu chat/open chat id
+  note:
+    type: string
+    required: true
+    description: Brief note (may be empty string) appended to the message
+requires:
+  clis:
+    - name: helios-lark
+      version: ">=0.2.0"
+steps:
+  - id: auth
+    uses: cli
+    cli: helios-lark
+    sideEffect: read
+    argv: ["auth", "status"]
+    out: auth
+
+  - id: agenda
+    uses: cli
+    needs: [auth]
+    cli: helios-lark
+    sideEffect: read
+    argv: ["calendar", "+agenda"]
+    out: agenda
+
+  - id: dry_run
+    uses: cli
+    needs: [agenda]
+    cli: helios-lark
+    sideEffect: read
+    argv:
+      - "im"
+      - "+messages-send"
+      - "--chat-id"
+      - "${params.chat_id}"
+      - "--text"
+      - "【Helios 每日日程简报】\n${params.note}\n（完整日程见本 Run 的 agenda 证据）"
+      - "--dry-run"
+    out: dry
+
+  - id: approve_send
+    uses: approval
+    needs: [dry_run]
+    prompt: "将今日日程简报发送到会话 ${params.chat_id}？附加说明：${params.note}"
+
+  - id: send
+    uses: cli
+    needs: [approve_send]
+    cli: helios-lark
+    sideEffect: write
+    argv:
+      - "im"
+      - "+messages-send"
+      - "--chat-id"
+      - "${params.chat_id}"
+      - "--text"
+      - "【Helios 每日日程简报】\n${params.note}\n（完整日程见本 Run 的 agenda 证据）"
+    out: sent

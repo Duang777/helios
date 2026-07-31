@@ -2,7 +2,7 @@
 
 使用官方 [`lark-cli`](https://github.com/larksuite/cli)（`@larksuite/cli`），经 Helios 包装命令 `helios-lark` 注册进 Runtime。
 
-设计：`docs/architecture/slice-i-feishu-thicken.md`（Slice I）
+设计：`docs/architecture/slice-i-feishu-thicken.md`（Slice I）· 试点剧本：`docs/architecture/slice-m-feishu-daily-brief.md`（Slice M / PRD Q1）
 
 ## 为什么要包装
 
@@ -12,6 +12,23 @@ Helios 要求 CLI 提供 `introspect`。官方 `lark-cli` 没有该子命令，�
 - 其余参数原样转发给本机 `lark-cli`
 
 当前 wrapper 版本：`0.2.0`。
+
+## 试点剧本（第一条真实平台）
+
+**`feishu.daily-brief`**：读今日日程 → dry-run 发消息 → **审批** → 发送简报到 `chat_id`。
+
+```bash
+# 先查会话 id（控制台跑 feishu.chat-list，或）
+helios-lark im +chat-list
+```
+
+验收：
+
+```bash
+./scripts/smoke-feishu-daily-brief.sh
+# 已登录时：
+HELIOS_FEISHU_CHAT_ID=oc_xxx ./scripts/smoke-feishu-daily-brief.sh   # → WAITING_APPROVAL
+```
 
 ## 一次性准备
 
@@ -36,6 +53,7 @@ lark-cli doctor
 
 | ID | 作用 | 需登录 |
 |---|---|---|
+| **`feishu.daily-brief`** | **试点：日程简报 → 审批 → 发 IM** | 是 |
 | `feishu.doctor` | 只跑 `doctor` | 否（无配置会失败并留 hint） |
 | `feishu.auth-status` | `auth status` + `doctor` | 建议 |
 | `feishu.chat-list` | `im +chat-list` | 是 |
@@ -46,17 +64,16 @@ lark-cli doctor
 | `feishu.send-text` | 审批后发 IM 文本 | 是 |
 | `feishu.calendar-create` | 审批后创建日历事件 | 是 |
 
-写操作（`send-text` / `calendar-create`）一律：dry-run → approval → write。
+写操作一律：dry-run → approval → write。
 
 未完成 `config init` 时，只读工作流会失败，并在证据里留下官方 JSON 错误（含 hint）。这是预期行为。
 
 ## 控制台用法
 
 1. 打开 `web` 控制台  
-2. 左侧加载 `feishu.doctor`  
-3. 运行；若失败，按证据里的 hint 去登录  
-4. 登录成功后再跑 `feishu.auth-status` / `feishu.calendar-agenda` / `feishu.chat-list`  
-5. 发消息用 `feishu.send-text`；建日程用 `feishu.calendar-create`（写操作会卡审批）
+2. 加载 **`feishu.daily-brief`**，填 `chat_id`（可用 `feishu.chat-list` 先查）  
+3. 运行；查看 agenda 证据后批准发送  
+4. 调试用：`feishu.doctor` / `feishu.auth-status`  
 
 ## 注意
 
@@ -69,4 +86,5 @@ lark-cli doctor
 
 ```bash
 ./scripts/smoke-feishu-lark.sh
+./scripts/smoke-feishu-daily-brief.sh
 ```
