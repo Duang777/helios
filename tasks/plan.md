@@ -57,6 +57,12 @@ contracts/schema
 - Pi bash must be restricted in compile/ai sessions.
 - Real platform CLI is still unknown; demo CLIs unblock Slice A.
 
+## Slice O — MVP §15 closeout (done)
+
+- Design: `docs/architecture/slice-o-mvp-acceptance.md`
+- Verify: `./scripts/smoke-mvp-acceptance.sh`
+- Feishu live: `docs/acceptance/2026-08-01-feishu-live.md`
+
 ## Out of Scope for this plan
 
 - Multi-tenant SaaS

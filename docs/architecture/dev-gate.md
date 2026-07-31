@@ -74,5 +74,7 @@ Status 枚举：`Proposed` | `Accepted` | `Implemented` | `Superseded`
 
 | ID | 文档 | 复用 | 状态 |
 |----|------|------|------|
-| G | `docs/architecture/slice-g-lathe-adapter.md` | Lathe | Implemented |
-| H | `docs/architecture/slice-h-human-help-handoff.md` | browser-handoff 协议 | Implemented |
+| G–N | `docs/architecture/slice-*.md` | 见各文档 | Implemented |
+| O | `docs/architecture/slice-o-mvp-acceptance.md` | 既有 smoke | Implemented |
+
+下一决策面：PRD Q2–Q6（非实现排队）。

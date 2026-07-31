@@ -78,9 +78,14 @@
   - Files: `backend/internal/clifactory/`, `backend/cmd/helios-factory/`, `backend/cmd/demo-inventory/`, `examples/cli-factory/`
   - Design: `docs/architecture/slice-f-cli-factory.md`
 
-- [ ] Task: Dev gate — tech design before code (process)
+- [x] Task: Dev gate — tech design before code (process)
   - Acceptance: `docs/architecture/dev-gate.md` + template + Cursor rule; agent/CLAUDE aligned
   - Design: `docs/architecture/dev-gate.md`
+
+- [x] Task: Slice O — MVP §15 acceptance closeout
+  - Design: `docs/architecture/slice-o-mvp-acceptance.md`
+  - Acceptance: `./scripts/smoke-mvp-acceptance.sh`; PRD §15 all checked; feishu live record
+  - Files: `scripts/smoke-mvp-acceptance.sh`, `docs/acceptance/`, `docs/prd/helios-prd-v0.1.md`
 
 - [x] Task: Lathe adapter (Slice G)
   - Design: `docs/architecture/slice-g-lathe-adapter.md` / ADR-002

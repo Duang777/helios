@@ -504,16 +504,19 @@ clis: [demo-crm, demo-erp]
 
 ## 15. 验收检查清单（MVP）
 
-- [ ] Intent → YAML 草稿可生成  
-- [ ] YAML 校验（schema、依赖、参数）通过/失败信息明确  
-- [ ] CLI Registry 可注册并执行 allowlist 命令  
-- [ ] dry-run → approval → write 路径可跑  
-- [ ] Run 证据可查看  
-- [ ] 同制品同参复跑，cli 步骤顺序稳定  
-- [ ] `run_workflow` API 可用  
-- [ ] Pi 能触发一次已发布 workflow  
-- [ ] 文档：CLI 契约、schema、ADR、本 PRD 已对齐  
-- [ ] 明确记录「不做列表」未被偷偷做大
+> 收口：Slice O（`docs/architecture/slice-o-mvp-acceptance.md`）；聚合命令 `./scripts/smoke-mvp-acceptance.sh`。  
+> 真人飞书：`docs/acceptance/2026-08-01-feishu-live.md`。
+
+- [x] Intent → YAML 草稿可生成（`smoke-compile` / Slice C–N）  
+- [x] YAML 校验（schema、依赖、参数）通过/失败信息明确  
+- [x] CLI Registry 可注册并执行 allowlist 命令  
+- [x] dry-run → approval → write 路径可跑（`smoke-lead-sync`；飞书 `feishu.daily-brief`）  
+- [x] Run 证据可查看（fs evidence + Slice K 文件 API）  
+- [x] 同制品同参复跑，cli 步骤顺序稳定（`go test ./internal/runtime`）  
+- [x] `run_workflow` API 可用（`smoke-lead-sync-ai`）  
+- [x] Pi 能触发一次已发布 workflow（同上）  
+- [x] 文档：CLI 契约、schema、ADR、本 PRD 已对齐  
+- [x] 明确记录「不做列表」未被偷偷做大（§2.2 + acceptance 审计）
 
 ---
 
@@ -534,3 +537,4 @@ clis: [demo-crm, demo-erp]
 | 版本 | 日期 | 说明 |
 |---|---|---|
 | 0.1 | 2026-07-31 | 首版：基于产品讨论与外部调研落稿 |
+| 0.1.1 | 2026-08-01 | Q1 关闭（飞书 daily-brief）；§15 MVP 清单全部勾选（Slice O） |

@@ -65,7 +65,39 @@ curl -sf -X POST "http://127.0.0.1:18080/api/v1/runs/$RUN_ID/approval" \
 for i in $(seq 1 100); do
   STATUS=$(curl -sf "http://127.0.0.1:18080/api/v1/runs/$RUN_ID" | python3 -c 'import json,sys; print(json.load(sys.stdin)["run"]["status"])')
   if [[ "$STATUS" == "COMPLETED" ]]; then
-    echo "OK run=$RUN_ID status=$STATUS"
+    EV="$HELIOS_DATA_DIR/runs/$RUN_ID/evidence"
+    [[ -d "$EV" ]] || { echo "missing evidence dir $EV" >&2; exit 1; }
+    ls "$EV" >/dev/null
+    # second run: same CLI step order
+    RUN2=$(curl -sf -X POST "http://127.0.0.1:18080/api/v1/workflows/demo.lead-sync/runs" \
+      -H 'content-type: application/json' \
+      -d '{"params":{"lead_id":"L-123"}}')
+    RID2=$(python3 -c 'import json,sys; print(json.load(sys.stdin)["run"]["id"])' <<<"$RUN2")
+    for j in $(seq 1 100); do
+      ST2=$(curl -sf "http://127.0.0.1:18080/api/v1/runs/$RID2" | python3 -c 'import json,sys; print(json.load(sys.stdin)["run"]["status"])')
+      [[ "$ST2" == "WAITING_APPROVAL" ]] && break
+      [[ "$ST2" == "FAILED" || "$ST2" == "ABORTED" ]] && exit 1
+      sleep 0.1
+    done
+    curl -sf -X POST "http://127.0.0.1:18080/api/v1/runs/$RID2/approval" \
+      -H 'content-type: application/json' \
+      -d '{"stepId":"approve","decision":"approve","actor":"script"}' >/dev/null
+    for j in $(seq 1 100); do
+      ST2=$(curl -sf "http://127.0.0.1:18080/api/v1/runs/$RID2" | python3 -c 'import json,sys; print(json.load(sys.stdin)["run"]["status"])')
+      [[ "$ST2" == "COMPLETED" ]] && break
+      [[ "$ST2" == "FAILED" || "$ST2" == "ABORTED" ]] && exit 1
+      sleep 0.1
+    done
+    python3 - <<PY2
+import json, urllib.request
+def cli_order(rid):
+    with urllib.request.urlopen(f"http://127.0.0.1:18080/api/v1/runs/{rid}") as r:
+        run = json.load(r)["run"]
+    return [s["stepId"] for s in run["stepRuns"] if s.get("status")=="COMPLETED"]
+a, b = cli_order("$RUN_ID"), cli_order("$RID2")
+assert a == b, (a, b)
+print("OK run=%s run2=%s status=COMPLETED evidence=yes order_stable=yes" % ("$RUN_ID", "$RID2"))
+PY2
     exit 0
   fi
   if [[ "$STATUS" == "FAILED" || "$STATUS" == "ABORTED" ]]; then
