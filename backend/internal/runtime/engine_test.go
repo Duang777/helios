@@ -222,6 +222,20 @@ func (f *fakeGUI) ScreenshotAndConfirm(_ context.Context, in guiclient.Screensho
 	}, nil
 }
 
+func (f *fakeGUI) Run(_ context.Context, in guiclient.RunRequest) (guiclient.RunResponse, error) {
+	f.calls++
+	if len(in.Steps) == 0 {
+		return guiclient.RunResponse{}, fmt.Errorf("missing steps")
+	}
+	return guiclient.RunResponse{
+		OK:          true,
+		Screenshot:  []byte{0x89, 0x50, 0x4e, 0x47},
+		ContentType: "image/png",
+		Mode:        "fake",
+		Results:     []map[string]any{{"op": "open"}},
+	}, nil
+}
+
 func (f *fakeGUI) StartHumanHelp(_ context.Context, in guiclient.HumanHelpStartRequest) (guiclient.HumanHelpStartResponse, error) {
 	f.helpCalls++
 	f.lastHelp = in.Reason

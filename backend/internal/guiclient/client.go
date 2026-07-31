@@ -176,3 +176,61 @@ func (c *Client) ResolveHumanHelp(ctx context.Context, in HumanHelpResolveReques
 	}
 	return nil
 }
+
+type RunStep map[string]any
+
+type RunRequest struct {
+	Steps []RunStep `json:"steps"`
+}
+
+type RunResponse struct {
+	OK               bool           `json:"ok"`
+	ScreenshotBase64 string         `json:"screenshotBase64"`
+	ContentType      string         `json:"contentType"`
+	Mode             string         `json:"mode"`
+	Results          []map[string]any `json:"results,omitempty"`
+	Screenshot       []byte         `json:"-"`
+}
+
+func (c *Client) Run(ctx context.Context, in RunRequest) (RunResponse, error) {
+	if len(in.Steps) == 0 {
+		return RunResponse{}, fmt.Errorf("gui run requires steps")
+	}
+	raw, err := json.Marshal(in)
+	if err != nil {
+		return RunResponse{}, err
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.BaseURL+"/v1/actions/run", bytes.NewReader(raw))
+	if err != nil {
+		return RunResponse{}, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return RunResponse{}, fmt.Errorf("gui operator unreachable: %w", err)
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return RunResponse{}, err
+	}
+	if resp.StatusCode >= 300 {
+		return RunResponse{}, fmt.Errorf("gui operator status %d: %s", resp.StatusCode, string(body))
+	}
+	var out RunResponse
+	if err := json.Unmarshal(body, &out); err != nil {
+		return RunResponse{}, fmt.Errorf("invalid gui operator response: %w", err)
+	}
+	if !out.OK {
+		return RunResponse{}, fmt.Errorf("gui operator returned ok=false")
+	}
+	if out.ScreenshotBase64 == "" {
+		return RunResponse{}, fmt.Errorf("gui operator returned empty screenshot")
+	}
+	png, err := base64.StdEncoding.DecodeString(out.ScreenshotBase64)
+	if err != nil {
+		return RunResponse{}, fmt.Errorf("invalid screenshot base64: %w", err)
+	}
+	out.Screenshot = png
+	return out, nil
+}

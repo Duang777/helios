@@ -51,11 +51,77 @@ export function createOperator(mode = 'fake') {
     return { ok: true };
   }
 
-  async function type(sessionId, selector, text) {
+  async function fill(sessionId, selector, text) {
     const s = get(sessionId);
     if (!selector) throw Object.assign(new Error('selector is required'), { status: 400 });
     if (mode === 'playwright' && s.page) {
       await s.page.fill(selector, String(text ?? ''), { timeout: 10000 });
+    }
+    return { ok: true };
+  }
+
+  /** Alias of fill — playwright-cli uses both `type` and `fill`. */
+  async function type(sessionId, selector, text) {
+    return fill(sessionId, selector, text);
+  }
+
+  async function goto(sessionId, url) {
+    const s = get(sessionId);
+    if (!url || typeof url !== 'string') {
+      throw Object.assign(new Error('url is required'), { status: 400 });
+    }
+    if (mode === 'playwright' && s.page) {
+      await s.page.goto(url, { waitUntil: 'domcontentloaded', timeout: 20000 });
+    }
+    s.url = url;
+    return { ok: true };
+  }
+
+  async function press(sessionId, key, selector) {
+    const s = get(sessionId);
+    if (!key) throw Object.assign(new Error('key is required'), { status: 400 });
+    if (mode === 'playwright' && s.page) {
+      if (selector) {
+        await s.page.locator(selector).press(String(key), { timeout: 10000 });
+      } else {
+        await s.page.keyboard.press(String(key));
+      }
+    }
+    return { ok: true };
+  }
+
+  async function hover(sessionId, selector) {
+    const s = get(sessionId);
+    if (!selector) throw Object.assign(new Error('selector is required'), { status: 400 });
+    if (mode === 'playwright' && s.page) {
+      await s.page.hover(selector, { timeout: 10000 });
+    }
+    return { ok: true };
+  }
+
+  async function select(sessionId, selector, value) {
+    const s = get(sessionId);
+    if (!selector) throw Object.assign(new Error('selector is required'), { status: 400 });
+    if (mode === 'playwright' && s.page) {
+      await s.page.selectOption(selector, String(value ?? ''), { timeout: 10000 });
+    }
+    return { ok: true };
+  }
+
+  async function check(sessionId, selector) {
+    const s = get(sessionId);
+    if (!selector) throw Object.assign(new Error('selector is required'), { status: 400 });
+    if (mode === 'playwright' && s.page) {
+      await s.page.check(selector, { timeout: 10000 });
+    }
+    return { ok: true };
+  }
+
+  async function uncheck(sessionId, selector) {
+    const s = get(sessionId);
+    if (!selector) throw Object.assign(new Error('selector is required'), { status: 400 });
+    if (mode === 'playwright' && s.page) {
+      await s.page.uncheck(selector, { timeout: 10000 });
     }
     return { ok: true };
   }
@@ -80,6 +146,132 @@ export function createOperator(mode = 'fake') {
       screenshotBase64: Buffer.from(buf).toString('base64'),
       contentType: 'image/png',
     };
+  }
+
+  /**
+   * Run a playwright-cli-shaped step list. Always closes the session afterwards.
+   * @param {{ steps: Array<Record<string, any>> }} body
+   */
+  async function run({ steps } = {}) {
+    if (!Array.isArray(steps) || steps.length === 0) {
+      throw Object.assign(new Error('steps must be a non-empty array'), { status: 400 });
+    }
+    let sessionId = null;
+    const results = [];
+    let lastShot = null;
+    try {
+      for (let i = 0; i < steps.length; i++) {
+        const step = steps[i] || {};
+        const op = String(step.op || step.action || '').trim();
+        if (!op) {
+          throw Object.assign(new Error(`steps[${i}]: op is required`), { status: 400 });
+        }
+        switch (op) {
+          case 'open': {
+            const opened = await open(step.url);
+            sessionId = opened.sessionId;
+            results.push({ op, sessionId });
+            break;
+          }
+          case 'goto': {
+            if (!sessionId) throw Object.assign(new Error(`steps[${i}]: goto requires an open session`), { status: 400 });
+            await goto(sessionId, step.url);
+            results.push({ op, url: step.url });
+            break;
+          }
+          case 'click': {
+            if (!sessionId) throw Object.assign(new Error(`steps[${i}]: click requires an open session`), { status: 400 });
+            await click(sessionId, step.selector);
+            results.push({ op, selector: step.selector });
+            break;
+          }
+          case 'fill':
+          case 'type': {
+            if (!sessionId) throw Object.assign(new Error(`steps[${i}]: fill requires an open session`), { status: 400 });
+            const text = step.text ?? step.value ?? '';
+            await fill(sessionId, step.selector, text);
+            results.push({ op: 'fill', selector: step.selector });
+            break;
+          }
+          case 'press': {
+            if (!sessionId) throw Object.assign(new Error(`steps[${i}]: press requires an open session`), { status: 400 });
+            await press(sessionId, step.key, step.selector);
+            results.push({ op, key: step.key });
+            break;
+          }
+          case 'hover': {
+            if (!sessionId) throw Object.assign(new Error(`steps[${i}]: hover requires an open session`), { status: 400 });
+            await hover(sessionId, step.selector);
+            results.push({ op, selector: step.selector });
+            break;
+          }
+          case 'select': {
+            if (!sessionId) throw Object.assign(new Error(`steps[${i}]: select requires an open session`), { status: 400 });
+            await select(sessionId, step.selector, step.value ?? step.text);
+            results.push({ op, selector: step.selector });
+            break;
+          }
+          case 'check': {
+            if (!sessionId) throw Object.assign(new Error(`steps[${i}]: check requires an open session`), { status: 400 });
+            await check(sessionId, step.selector);
+            results.push({ op, selector: step.selector });
+            break;
+          }
+          case 'uncheck': {
+            if (!sessionId) throw Object.assign(new Error(`steps[${i}]: uncheck requires an open session`), { status: 400 });
+            await uncheck(sessionId, step.selector);
+            results.push({ op, selector: step.selector });
+            break;
+          }
+          case 'extract': {
+            if (!sessionId) throw Object.assign(new Error(`steps[${i}]: extract requires an open session`), { status: 400 });
+            const out = await extract(sessionId, step.selector);
+            results.push({ op, selector: step.selector, text: out.text });
+            break;
+          }
+          case 'screenshot': {
+            if (!sessionId) throw Object.assign(new Error(`steps[${i}]: screenshot requires an open session`), { status: 400 });
+            lastShot = await screenshot(sessionId);
+            results.push({ op });
+            break;
+          }
+          case 'close': {
+            if (sessionId) {
+              await close(sessionId);
+              sessionId = null;
+            }
+            results.push({ op });
+            break;
+          }
+          default:
+            throw Object.assign(
+              new Error(
+                `steps[${i}]: unsupported op ${JSON.stringify(op)} (open|goto|click|fill|type|press|hover|select|check|uncheck|extract|screenshot|close)`,
+              ),
+              { status: 400 },
+            );
+        }
+      }
+      if (!lastShot && sessionId) {
+        lastShot = await screenshot(sessionId);
+      }
+      if (!lastShot) {
+        lastShot = {
+          screenshotBase64: Buffer.from(FAKE_PNG).toString('base64'),
+          contentType: 'image/png',
+        };
+      }
+      return {
+        ok: true,
+        mode,
+        results,
+        ...lastShot,
+      };
+    } finally {
+      if (sessionId) {
+        await close(sessionId).catch(() => {});
+      }
+    }
   }
 
   async function close(sessionId) {
@@ -324,11 +516,19 @@ export function createOperator(mode = 'fake') {
   return {
     mode,
     open,
+    goto,
     click,
+    fill,
     type,
+    press,
+    hover,
+    select,
+    check,
+    uncheck,
     extract,
     screenshot,
     close,
+    run,
     screenshotAndConfirm,
     humanHelp,
     startHumanHelp,

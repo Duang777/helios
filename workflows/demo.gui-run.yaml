@@ -1,0 +1,32 @@
+apiVersion: helios/v1
+kind: Workflow
+id: demo.gui-run
+version: 1
+description: Multi-step GUI run aligned with playwright-cli verbs (CSS selectors in YAML)
+params:
+  form_url:
+    type: string
+    required: true
+  note:
+    type: string
+    required: true
+steps:
+  - id: fill_form
+    uses: gui
+    action: run
+    sideEffect: write
+    gui:
+      steps:
+        - op: open
+          url: "${params.form_url}"
+        - op: fill
+          selector: "#note"
+          text: "${params.note}"
+        - op: check
+          selector: "#agree"
+        - op: click
+          selector: "button#submit"
+        - op: extract
+          selector: "#status"
+        - op: screenshot
+    out: gui

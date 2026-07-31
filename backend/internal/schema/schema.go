@@ -68,9 +68,21 @@ func StructuralValidate(wf domain.Workflow) error {
 			if step.GUI == nil {
 				return fmt.Errorf("step %s: gui steps require gui object", step.ID)
 			}
-			url, _ := step.GUI["url"].(string)
-			if strings.TrimSpace(url) == "" {
-				return fmt.Errorf("step %s: gui.url is required", step.ID)
+			switch step.Action {
+			case "run":
+				raw, ok := step.GUI["steps"]
+				if !ok {
+					return fmt.Errorf("step %s: gui.steps is required for action run", step.ID)
+				}
+				list, ok := raw.([]any)
+				if !ok || len(list) == 0 {
+					return fmt.Errorf("step %s: gui.steps must be a non-empty list", step.ID)
+				}
+			default:
+				url, _ := step.GUI["url"].(string)
+				if strings.TrimSpace(url) == "" {
+					return fmt.Errorf("step %s: gui.url is required", step.ID)
+				}
 			}
 		case domain.StepUsesCode:
 			// allowed; deeper checks later

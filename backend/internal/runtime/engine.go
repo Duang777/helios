@@ -25,6 +25,7 @@ type AIRunner interface {
 
 type GUIRunner interface {
 	ScreenshotAndConfirm(ctx context.Context, in guiclient.ScreenshotAndConfirmRequest) (guiclient.ScreenshotAndConfirmResponse, error)
+	Run(ctx context.Context, in guiclient.RunRequest) (guiclient.RunResponse, error)
 	StartHumanHelp(ctx context.Context, in guiclient.HumanHelpStartRequest) (guiclient.HumanHelpStartResponse, error)
 	ResolveHumanHelp(ctx context.Context, in guiclient.HumanHelpResolveRequest) error
 }
@@ -434,10 +435,12 @@ func (e *Engine) runGUI(ctx context.Context, run *domain.Run, sr *domain.StepRun
 	switch step.Action {
 	case "screenshot_and_confirm":
 		return e.runGUIScreenshot(ctx, run, sr, step, scope, evStore)
+	case "run":
+		return e.runGUIRun(ctx, run, sr, step, scope, evStore)
 	case "human_help":
 		return e.runGUIHumanHelp(ctx, run, sr, step, scope, evStore)
 	default:
-		err := fmt.Errorf("unsupported gui action %q (supported: screenshot_and_confirm, human_help)", step.Action)
+		err := fmt.Errorf("unsupported gui action %q (supported: screenshot_and_confirm, run, human_help)", step.Action)
 		e.failStep(run, sr, err.Error(), evStore)
 		return err
 	}
@@ -498,6 +501,111 @@ func (e *Engine) runGUIScreenshot(ctx context.Context, run *domain.Run, sr *doma
 	}
 	_ = evStore.WriteStep(*sr)
 	return nil
+}
+
+func (e *Engine) runGUIRun(ctx context.Context, run *domain.Run, sr *domain.StepRun, step domain.Step, scope *expr.Scope, evStore *evidence.Store) error {
+	now := e.now()
+	sr.Status = domain.StepStatusRunning
+	sr.StartedAt = &now
+
+	rawSteps, ok := step.GUI["steps"]
+	if !ok {
+		err := fmt.Errorf("gui.steps is required for action run")
+		e.failStep(run, sr, err.Error(), evStore)
+		return err
+	}
+	steps, err := evalGUISteps(rawSteps, *scope)
+	if err != nil {
+		e.failStep(run, sr, err.Error(), evStore)
+		return err
+	}
+	if len(steps) == 0 {
+		err := fmt.Errorf("gui.steps must not be empty")
+		e.failStep(run, sr, err.Error(), evStore)
+		return err
+	}
+
+	out, err := e.gui.Run(ctx, guiclient.RunRequest{Steps: steps})
+	end := e.now()
+	sr.CompletedAt = &end
+	urlHint := firstGUIStepURL(steps)
+	if err != nil {
+		e.failStep(run, sr, err.Error(), evStore)
+		_, _ = e.writeGUIEvidence(run, step, urlHint, "", nil, "", domain.StepStatusFailed, err.Error(), evStore)
+		return err
+	}
+
+	result := map[string]any{
+		"ok":      true,
+		"mode":    out.Mode,
+		"action":  step.Action,
+		"results": out.Results,
+	}
+	sr.Status = domain.StepStatusCompleted
+	written, werr := e.writeGUIEvidence(run, step, urlHint, "", out.Screenshot, out.Mode, domain.StepStatusCompleted, "", evStore)
+	if werr != nil {
+		e.failStep(run, sr, werr.Error(), evStore)
+		return werr
+	}
+	result["screenshotPath"] = written.ScreenshotRef
+	sr.Output = result
+	if step.Out != "" {
+		scope.Vars[step.Out] = result
+	}
+	_ = evStore.WriteStep(*sr)
+	return nil
+}
+
+func evalGUISteps(raw any, scope expr.Scope) ([]guiclient.RunStep, error) {
+	list, ok := raw.([]any)
+	if !ok {
+		return nil, fmt.Errorf("gui.steps must be a list")
+	}
+	out := make([]guiclient.RunStep, 0, len(list))
+	for i, item := range list {
+		m, ok := item.(map[string]any)
+		if !ok {
+			return nil, fmt.Errorf("gui.steps[%d] must be an object", i)
+		}
+		step := guiclient.RunStep{}
+		for k, v := range m {
+			switch tv := v.(type) {
+			case string:
+				ev, err := expr.EvalString(tv, scope)
+				if err != nil {
+					return nil, fmt.Errorf("gui.steps[%d].%s: %w", i, k, err)
+				}
+				step[k] = ev
+			default:
+				step[k] = v
+			}
+		}
+		if op, _ := step["op"].(string); strings.TrimSpace(op) != "" {
+			out = append(out, step)
+			continue
+		}
+		if act, _ := step["action"].(string); strings.TrimSpace(act) != "" {
+			out = append(out, step)
+			continue
+		}
+		return nil, fmt.Errorf("gui.steps[%d]: op is required", i)
+	}
+	return out, nil
+}
+
+func firstGUIStepURL(steps []guiclient.RunStep) string {
+	for _, s := range steps {
+		op := strings.TrimSpace(fmt.Sprint(s["op"]))
+		if op == "" {
+			op = strings.TrimSpace(fmt.Sprint(s["action"]))
+		}
+		if op == "open" || op == "goto" {
+			if u, ok := s["url"].(string); ok {
+				return u
+			}
+		}
+	}
+	return ""
 }
 
 func (e *Engine) runGUIHumanHelp(ctx context.Context, run *domain.Run, sr *domain.StepRun, step domain.Step, scope *expr.Scope, evStore *evidence.Store) error {

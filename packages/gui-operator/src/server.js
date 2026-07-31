@@ -48,6 +48,9 @@ export function createServer(opts = {}) {
       if (req.method === 'GET' && url.pathname === '/fixture/confirm.html') {
         return send(res, 200, readFileSync(FIXTURE, 'utf8'));
       }
+      if (req.method === 'GET' && url.pathname === '/fixture/form.html') {
+        return send(res, 200, readFileSync(join(__dirname, '..', 'fixture', 'form.html'), 'utf8'));
+      }
 
       const viewerMatch = url.pathname.match(/^\/v1\/human_help\/([^/]+)\/viewer$/);
       if (req.method === 'GET' && viewerMatch) {
@@ -71,14 +74,36 @@ export function createServer(opts = {}) {
         const out = await op.screenshotAndConfirm(body);
         return send(res, 200, out);
       }
+      if (url.pathname === '/v1/actions/run') {
+        const out = await op.run(body);
+        return send(res, 200, out);
+      }
       if (url.pathname === '/v1/open') {
         return send(res, 200, await op.open(body.url));
+      }
+      if (url.pathname === '/v1/goto') {
+        return send(res, 200, await op.goto(body.sessionId, body.url));
       }
       if (url.pathname === '/v1/click') {
         return send(res, 200, await op.click(body.sessionId, body.selector));
       }
-      if (url.pathname === '/v1/type') {
-        return send(res, 200, await op.type(body.sessionId, body.selector, body.text));
+      if (url.pathname === '/v1/type' || url.pathname === '/v1/fill') {
+        return send(res, 200, await op.fill(body.sessionId, body.selector, body.text ?? body.value));
+      }
+      if (url.pathname === '/v1/press') {
+        return send(res, 200, await op.press(body.sessionId, body.key, body.selector));
+      }
+      if (url.pathname === '/v1/hover') {
+        return send(res, 200, await op.hover(body.sessionId, body.selector));
+      }
+      if (url.pathname === '/v1/select') {
+        return send(res, 200, await op.select(body.sessionId, body.selector, body.value ?? body.text));
+      }
+      if (url.pathname === '/v1/check') {
+        return send(res, 200, await op.check(body.sessionId, body.selector));
+      }
+      if (url.pathname === '/v1/uncheck') {
+        return send(res, 200, await op.uncheck(body.sessionId, body.selector));
       }
       if (url.pathname === '/v1/extract') {
         return send(res, 200, await op.extract(body.sessionId, body.selector));

@@ -18,6 +18,7 @@ This repository builds `Helios`, a business workflow compiler and auditable runt
 - Slice I (Feishu): `docs/architecture/slice-i-feishu-thicken.md` / `docs/feishu-cli.md`
 - Slice J (Pi live default): `docs/architecture/slice-j-pi-live-default.md`
 - Slice K (evidence viewer): `docs/architecture/slice-k-evidence-viewer.md`
+- Slice L (GUI ↔ playwright-cli): `docs/architecture/slice-l-gui-playwright-cli.md`
 - Best-fit OSS: `docs/research/2026-08-01-best-fit-oss.md`
 
 ## Collaboration Rules

@@ -27,6 +27,7 @@ Build `Helios`, a business workflow compiler and auditable runtime:
 - Slice I (Feishu thicken, Implemented): `docs/architecture/slice-i-feishu-thicken.md` / `docs/feishu-cli.md`
 - Slice J (Pi live default, Implemented): `docs/architecture/slice-j-pi-live-default.md`
 - Slice K (evidence viewer, Implemented): `docs/architecture/slice-k-evidence-viewer.md`
+- Slice L (GUI ↔ playwright-cli, Implemented): `docs/architecture/slice-l-gui-playwright-cli.md`
 - Plan/tasks: `tasks/plan.md`, `tasks/todo.md`
 - ADR: `docs/decisions/ADR-001-go-control-plane-pi-sidecar.md`
 - Naming: `docs/naming.md`
@@ -46,6 +47,7 @@ Build `Helios`, a business workflow compiler and auditable runtime:
 11. ~~**Slice I Feishu thicken**~~ — Implemented: `docs/architecture/slice-i-feishu-thicken.md`
 12. ~~**Slice J Pi live default**~~ — Implemented: `docs/architecture/slice-j-pi-live-default.md`
 13. ~~**Slice K evidence viewer**~~ — Implemented: `docs/architecture/slice-k-evidence-viewer.md`
+14. ~~**Slice L GUI playwright-cli align**~~ — Implemented: `docs/architecture/slice-l-gui-playwright-cli.md`
 
 ## Development Gate
 
@@ -189,6 +191,16 @@ Design: `docs/architecture/slice-k-evidence-viewer.md`
 cd backend && go test ./internal/httpapi/
 ./scripts/smoke-lead-sync-gui.sh
 # console: select gui step → PNG preview under evidence
+```
+
+## Slice L verification (GUI ↔ playwright-cli)
+
+Design: `docs/architecture/slice-l-gui-playwright-cli.md`
+
+```bash
+cd packages/gui-operator && npm test
+./scripts/smoke-gui-run.sh
+HELIOS_GUI_MODE=playwright ./scripts/smoke-gui-run.sh
 ```
 
 ## Coding Standards

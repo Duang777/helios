@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Helios demo form</title>
+  <style>
+    body { font-family: Georgia, serif; margin: 3rem; background: #f7f3ea; color: #1a1a1a; }
+    label { display: block; margin: 1rem 0 0.35rem; }
+    input, button { font: inherit; padding: 0.5rem 0.75rem; }
+  </style>
+</head>
+<body>
+  <h1>Demo form</h1>
+  <p id="status">Waiting for input.</p>
+  <label for="note">Note</label>
+  <input id="note" type="text" />
+  <label for="agree"><input id="agree" type="checkbox" /> Agree</label>
+  <p>
+    <button id="submit" type="button">Submit</button>
+  </p>
+  <script>
+    document.getElementById('submit').addEventListener('click', () => {
+      const note = document.getElementById('note').value || '';
+      const agree = document.getElementById('agree').checked;
+      document.body.dataset.submitted = '1';
+      document.getElementById('status').textContent =
+        'Submitted: ' + note + (agree ? ' (agreed)' : '');
+    });
+  </script>
+</body>
+</html>

@@ -94,3 +94,36 @@ test('human_help viewer html and shot', async () => {
     await new Promise((r) => server.close(r));
   }
 });
+
+test('actions/run fill click extract screenshot (fake)', async () => {
+  const { server } = createServer({ mode: 'fake' });
+  await new Promise((r) => server.listen(0, '127.0.0.1', r));
+  const { port } = server.address();
+  const root = `http://127.0.0.1:${port}`;
+  try {
+    const res = await fetch(`${root}/v1/actions/run`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        steps: [
+          { op: 'open', url: `${root}/fixture/form.html` },
+          { op: 'fill', selector: '#note', text: 'hello' },
+          { op: 'check', selector: '#agree' },
+          { op: 'click', selector: 'button#submit' },
+          { op: 'extract', selector: '#status' },
+          { op: 'screenshot' },
+        ],
+      }),
+    });
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    assert.equal(body.ok, true);
+    assert.equal(body.mode, 'fake');
+    assert.ok(Array.isArray(body.results));
+    assert.equal(body.results.length, 6);
+    assert.equal(body.results[4].text, 'fake:#status');
+    assert.ok(body.screenshotBase64.length > 20);
+  } finally {
+    await new Promise((r) => server.close(r));
+  }
+});

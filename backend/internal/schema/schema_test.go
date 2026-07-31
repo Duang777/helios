@@ -101,6 +101,20 @@ func findRepoRoot(t *testing.T) string {
 	return ""
 }
 
+func TestLoadGUIRunWorkflow(t *testing.T) {
+	root := findRepoRoot(t)
+	wf, err := schema.LoadWorkflowFile(filepath.Join(root, "workflows", "demo.gui-run.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := schema.SemanticValidate(wf); err != nil {
+		t.Fatal(err)
+	}
+	if wf.Steps[0].Action != "run" {
+		t.Fatalf("action=%s", wf.Steps[0].Action)
+	}
+}
+
 func TestLoadInventoryWorkflow(t *testing.T) {
 	root := findRepoRoot(t)
 	wf, err := schema.LoadWorkflowFile(filepath.Join(root, "workflows", "demo.inventory-create.yaml"))
