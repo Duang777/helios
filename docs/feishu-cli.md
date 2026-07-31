@@ -2,7 +2,8 @@
 
 使用官方 [`lark-cli`](https://github.com/larksuite/cli)（`@larksuite/cli`），经 Helios 包装命令 `helios-lark` 注册进 Runtime。
 
-设计：`docs/architecture/slice-i-feishu-thicken.md`（Slice I）· 试点剧本：`docs/architecture/slice-m-feishu-daily-brief.md`（Slice M / PRD Q1）
+设计：`docs/architecture/slice-i-feishu-thicken.md`（Slice I）· 试点剧本：`docs/architecture/slice-m-feishu-daily-brief.md`（Slice M / PRD Q1）  
+真人验收记录：`docs/acceptance/2026-08-01-feishu-live.md`
 
 ## 为什么要包装
 

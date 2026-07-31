@@ -30,6 +30,8 @@ Build `Helios`, a business workflow compiler and auditable runtime:
 - Slice L (GUI ↔ playwright-cli, Implemented): `docs/architecture/slice-l-gui-playwright-cli.md`
 - Slice M (Feishu daily-brief / Q1, Implemented): `docs/architecture/slice-m-feishu-daily-brief.md`
 - Slice N (live compile harden, Implemented): `docs/architecture/slice-n-live-compile-harden.md`
+- Slice O (MVP §15 closeout, Implemented): `docs/architecture/slice-o-mvp-acceptance.md`
+- Feishu live accept: `docs/acceptance/2026-08-01-feishu-live.md`
 - Plan/tasks: `tasks/plan.md`, `tasks/todo.md`
 - ADR: `docs/decisions/ADR-001-go-control-plane-pi-sidecar.md`
 - Naming: `docs/naming.md`
@@ -52,6 +54,7 @@ Build `Helios`, a business workflow compiler and auditable runtime:
 14. ~~**Slice L GUI playwright-cli align**~~ — Implemented: `docs/architecture/slice-l-gui-playwright-cli.md`
 15. ~~**Slice M Feishu daily-brief (Q1)**~~ — Implemented: `docs/architecture/slice-m-feishu-daily-brief.md`
 16. ~~**Slice N live compile harden**~~ — Implemented: `docs/architecture/slice-n-live-compile-harden.md`
+17. ~~**Slice O MVP §15 closeout**~~ — Implemented: `docs/architecture/slice-o-mvp-acceptance.md`
 
 ## Development Gate
 
@@ -227,6 +230,17 @@ Design: `docs/architecture/slice-n-live-compile-harden.md`
 cd packages/pi-sidecar && npm test
 ./scripts/smoke-compile.sh
 ./scripts/smoke-compile-live.sh   # expect validation=true when key present
+```
+
+## Slice O verification (MVP §15)
+
+Design: `docs/architecture/slice-o-mvp-acceptance.md`  
+Live Feishu: `docs/acceptance/2026-08-01-feishu-live.md`
+
+```bash
+./scripts/smoke-mvp-acceptance.sh
+# optional fuller:
+HELIOS_MVP_FULL=1 ./scripts/smoke-mvp-acceptance.sh
 ```
 
 ## Coding Standards
