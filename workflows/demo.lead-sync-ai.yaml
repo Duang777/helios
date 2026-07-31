@@ -1,0 +1,52 @@
+apiVersion: helios/v1
+kind: Workflow
+id: demo.lead-sync-ai
+version: 1
+description: Sync a CRM lead with an AI mapping step before ERP write
+params:
+  lead_id:
+    type: string
+    required: true
+requires:
+  clis:
+    - name: demo-crm
+      version: ">=1.0.0"
+    - name: demo-erp
+      version: ">=1.0.0"
+steps:
+  - id: fetch_lead
+    uses: cli
+    cli: demo-crm
+    sideEffect: read
+    argv: ["leads", "get", "--id", "${params.lead_id}", "--output", "json"]
+    out: lead
+
+  - id: map_po
+    uses: ai
+    needs: [fetch_lead]
+    aiPrompt: "Map CRM lead JSON to ERP poDraft fields. Return JSON with poDraft."
+    outputSchema:
+      type: object
+      required: [poDraft]
+    out: mapped
+
+  - id: create_po_dry
+    uses: cli
+    needs: [map_po]
+    cli: demo-erp
+    sideEffect: read
+    argv: ["po", "create", "--from-json", "${mapped.poDraft}", "--dry-run", "--output", "json"]
+    out: dry
+
+  - id: approve
+    uses: approval
+    needs: [create_po_dry]
+    prompt: "Create PO for lead ${params.lead_id}?"
+
+  - id: create_po
+    uses: cli
+    needs: [approve]
+    cli: demo-erp
+    sideEffect: write
+    argv: ["po", "create", "--from-json", "${mapped.poDraft}", "--output", "json"]
+    out: po

@@ -1,0 +1,34 @@
+apiVersion: helios/v1
+kind: Workflow
+id: demo.inventory-create
+version: 1
+description: Create an inventory item via factory-generated demo-inventory CLI
+params:
+  item_json:
+    type: string
+    required: true
+    description: JSON object for items create --from-json
+requires:
+  clis:
+    - name: demo-inventory
+      version: ">=0.1.0"
+steps:
+  - id: create_dry
+    uses: cli
+    cli: demo-inventory
+    sideEffect: read
+    argv: ["items", "create", "--from-json", "${params.item_json}", "--dry-run", "--output", "json"]
+    out: dry
+
+  - id: approve
+    uses: approval
+    needs: [create_dry]
+    prompt: "Create inventory item from dry-run?"
+
+  - id: create
+    uses: cli
+    needs: [approve]
+    cli: demo-inventory
+    sideEffect: write
+    argv: ["items", "create", "--from-json", "${params.item_json}", "--output", "json"]
+    out: item

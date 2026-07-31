@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://helios.local/contracts/workflow.schema.json",
+  "title": "Helios Workflow",
+  "type": "object",
+  "required": ["apiVersion", "kind", "id", "version", "params", "steps"],
+  "additionalProperties": false,
+  "properties": {
+    "apiVersion": { "const": "helios/v1" },
+    "kind": { "const": "Workflow" },
+    "id": { "type": "string", "minLength": 1, "pattern": "^[a-z0-9][a-z0-9._-]*$" },
+    "version": { "type": "integer", "minimum": 1 },
+    "description": { "type": "string" },
+    "params": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["type"],
+        "additionalProperties": false,
+        "properties": {
+          "type": { "enum": ["string", "number", "boolean", "object"] },
+          "required": { "type": "boolean" },
+          "description": { "type": "string" }
+        }
+      }
+    },
+    "requires": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "clis": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name"],
+            "additionalProperties": false,
+            "properties": {
+              "name": { "type": "string", "minLength": 1 },
+              "version": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "autoApprove": { "type": "boolean" },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "uses"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "minLength": 1, "pattern": "^[a-zA-Z0-9_-]+$" },
+          "uses": { "enum": ["cli", "gui", "ai", "approval", "code"] },
+          "needs": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "when": { "type": "string" },
+          "out": { "type": "string", "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$" },
+          "sideEffect": { "enum": ["none", "read", "write"] },
+          "cli": { "type": "string" },
+          "argv": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "prompt": { "type": "string" },
+          "action": { "type": "string" },
+          "gui": { "type": "object" },
+          "aiPrompt": { "type": "string" },
+          "aiModel": { "type": "string" },
+          "outputSchema": { "type": "object" }
+        },
+        "allOf": [
+          {
+            "if": { "properties": { "uses": { "const": "cli" } } },
+            "then": { "required": ["cli", "argv"] }
+          },
+          {
+            "if": { "properties": { "uses": { "const": "approval" } } },
+            "then": { "required": ["prompt"] }
+          },
+          {
+            "if": { "properties": { "uses": { "const": "ai" } } },
+            "then": { "required": ["aiPrompt"] }
+          },
+          {
+            "if": { "properties": { "uses": { "const": "gui" } } },
+            "then": {
+              "required": ["action", "gui"],
+              "properties": {
+                "gui": {
+                  "type": "object",
+                  "required": ["url"],
+                  "properties": {
+                    "url": { "type": "string", "minLength": 1 },
+                    "selector": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

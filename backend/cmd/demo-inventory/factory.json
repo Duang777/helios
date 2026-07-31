@@ -1,0 +1,70 @@
+{
+  "name": "demo-inventory",
+  "version": "0.1.0",
+  "description": "Demo inventory platform CLI (factory-generated HTTP client)",
+  "baseUrl": "http://127.0.0.1:8795",
+  "commands": [
+    {
+      "path": [
+        "items",
+        "create"
+      ],
+      "sideEffect": "write",
+      "dryRun": true,
+      "args": [
+        {
+          "name": "--from-json",
+          "type": "json",
+          "required": true
+        },
+        {
+          "name": "--dry-run",
+          "type": "boolean"
+        },
+        {
+          "name": "--output",
+          "type": "string",
+          "enum": [
+            "json"
+          ],
+          "default": "json"
+        }
+      ],
+      "handler": "httpCreate",
+      "resource": "items"
+    },
+    {
+      "path": [
+        "items",
+        "get"
+      ],
+      "sideEffect": "read",
+      "args": [
+        {
+          "name": "--id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--output",
+          "type": "string",
+          "enum": [
+            "json"
+          ],
+          "default": "json"
+        }
+      ],
+      "handler": "httpGet",
+      "resource": "items"
+    },
+    {
+      "path": [
+        "items",
+        "list"
+      ],
+      "sideEffect": "read",
+      "handler": "httpList",
+      "resource": "items"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "@helios/pi-sidecar",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "start:live": "HELIOS_PI_MODE=live node src/server.js",
+    "test": "HELIOS_PI_MODE=mock node --test src/*.test.js"
+  },
+  "dependencies": {
+    "@earendil-works/pi-coding-agent": "^0.83.0"
+  }
+}

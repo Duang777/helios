@@ -12,3 +12,12 @@ coverage/
 tmp/
 *.log
 backend/helios
+.helios-dev/
+backend/.tmp-factory-test/
+backend/.tmp-factory-smoke/
+backend/.tmp-factory-lathe-smoke/
+backend/.tmp-lathe-probe/
+backend/.tmp-lathe-factory-test/
+backend/helios-lark
+backend/**/bin/
+*.lathe

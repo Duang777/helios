@@ -1,0 +1,19 @@
+apiVersion: helios/v1
+kind: Workflow
+id: demo.human-help
+version: 1
+description: Blocks on gui human_help with optional page URL for session handoff viewer
+params:
+  login_url:
+    type: string
+    required: false
+    description: Optional URL opened in Playwright for the handoff viewer
+steps:
+  - id: need_help
+    uses: gui
+    action: human_help
+    sideEffect: write
+    prompt: "请在 viewer 中确认后继续"
+    gui:
+      url: "${params.login_url}"
+    out: help
