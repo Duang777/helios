@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test, before } from 'node:test';
-import { compileDraft, extractYAML, buildCompilePrompt } from './compile.js';
+import { compileDraft, extractYAML, buildCompilePrompt, normalizeHeliosDraft } from './compile.js';
 import { runAIStep } from './aiStep.js';
 import { createServer } from './server.js';
 
@@ -11,6 +11,42 @@ before(() => {
 test('extractYAML reads fenced block', () => {
   const yaml = extractYAML('here\n```yaml\napiVersion: helios/v1\nkind: Workflow\n```\n');
   assert.match(yaml, /apiVersion: helios\/v1/);
+});
+
+test('normalizeHeliosDraft strips cli@version and converts command/args', () => {
+  const raw = `kind: Workflow
+id: sync.lead.to.po
+version: 1
+steps:
+  - id: get_lead
+    cli: demo-crm@1.0.0
+    command: leads
+    args: ["get", "L-123"]
+    mode: dry-run
+  - id: approve_write
+    type: approval
+    prompt: "go"
+`;
+  const out = normalizeHeliosDraft(raw);
+  assert.match(out, /apiVersion: helios\/v1/);
+  assert.match(out, /cli: demo-crm\s*$/m);
+  assert.doesNotMatch(out, /cli: demo-crm@/);
+  assert.match(out, /uses: cli/);
+  assert.match(out, /argv: \["leads", "get", "L-123"\]/);
+  assert.match(out, /uses: approval/);
+  assert.doesNotMatch(out, /^\s*type: approval/m);
+  assert.doesNotMatch(out, /^\s*mode: dry-run/m);
+});
+
+test('buildCompilePrompt includes schema contract and anti-patterns', () => {
+  const prompt = buildCompilePrompt({
+    intent: 'x',
+    clis: [{ name: 'demo-crm', version: '1', commands: [{ path: ['leads', 'get'] }] }],
+  });
+  assert.match(prompt, /FORBIDDEN/);
+  assert.match(prompt, /cli: name@version/);
+  assert.match(prompt, /uses: cli/);
+  assert.match(prompt, /example\.lead-sync/);
 });
 
 test('mock compiles lead sync intent', async () => {
@@ -24,6 +60,15 @@ test('mock compiles lead sync intent', async () => {
   assert.match(out.yaml, /id: demo\.lead-sync/);
   assert.match(out.yaml, /uses: approval/);
   assert.equal(out.mode, 'mock');
+});
+
+test('mock compiles feishu daily brief intent', async () => {
+  const out = await compileDraft({
+    intent: '把今日飞书日程做成简报并发到群里',
+    clis: [{ name: 'helios-lark', version: '0.2.0', commands: [{ path: ['calendar', '+agenda'] }] }],
+  });
+  assert.match(out.yaml, /id: feishu\.daily-brief/);
+  assert.match(out.yaml, /calendar/);
 });
 
 test('mock does not silently map unrelated intent to lead-sync', async () => {

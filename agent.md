@@ -29,6 +29,7 @@ Build `Helios`, a business workflow compiler and auditable runtime:
 - Slice K (evidence viewer, Implemented): `docs/architecture/slice-k-evidence-viewer.md`
 - Slice L (GUI ↔ playwright-cli, Implemented): `docs/architecture/slice-l-gui-playwright-cli.md`
 - Slice M (Feishu daily-brief / Q1, Implemented): `docs/architecture/slice-m-feishu-daily-brief.md`
+- Slice N (live compile harden, Implemented): `docs/architecture/slice-n-live-compile-harden.md`
 - Plan/tasks: `tasks/plan.md`, `tasks/todo.md`
 - ADR: `docs/decisions/ADR-001-go-control-plane-pi-sidecar.md`
 - Naming: `docs/naming.md`
@@ -50,6 +51,7 @@ Build `Helios`, a business workflow compiler and auditable runtime:
 13. ~~**Slice K evidence viewer**~~ — Implemented: `docs/architecture/slice-k-evidence-viewer.md`
 14. ~~**Slice L GUI playwright-cli align**~~ — Implemented: `docs/architecture/slice-l-gui-playwright-cli.md`
 15. ~~**Slice M Feishu daily-brief (Q1)**~~ — Implemented: `docs/architecture/slice-m-feishu-daily-brief.md`
+16. ~~**Slice N live compile harden**~~ — Implemented: `docs/architecture/slice-n-live-compile-harden.md`
 
 ## Development Gate
 
@@ -215,6 +217,16 @@ cd backend && go test ./internal/schema/
 ./scripts/smoke-feishu-daily-brief.sh
 # logged-in:
 HELIOS_FEISHU_CHAT_ID=oc_xxx ./scripts/smoke-feishu-daily-brief.sh
+```
+
+## Slice N verification (live compile harden)
+
+Design: `docs/architecture/slice-n-live-compile-harden.md`
+
+```bash
+cd packages/pi-sidecar && npm test
+./scripts/smoke-compile.sh
+./scripts/smoke-compile-live.sh   # expect validation=true when key present
 ```
 
 ## Coding Standards

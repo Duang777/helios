@@ -101,14 +101,22 @@ if [[ "$HTTP_CODE" != "200" && "$HTTP_CODE" != "422" ]]; then
 fi
 
 python3 -c '
-import json,sys
+import json,sys,re
 d=json.load(sys.stdin)
 attempts=d.get("attempts") or []
 modes=[a.get("mode") for a in attempts] + ([d.get("mode")] if d.get("mode") else [])
 assert "live" in modes, {"modes": modes, "body": d}
-assert "yaml" in d and "apiVersion" in (d.get("yaml") or ""), d
+yaml=d.get("yaml") or ""
+assert "apiVersion" in yaml, d
+# Slice N: forbidden live patterns must not survive normalize
+assert not re.search(r"cli:\s*\S+@", yaml), yaml
+assert "type: approval" not in yaml, yaml
+ok=(d.get("validation") or {}).get("ok")
 print("live compile ok: http=%s mode=%s model=%s validation=%s attempts=%d" % (
   '"$HTTP_CODE"', d.get("mode") or (attempts[-1].get("mode") if attempts else None),
   d.get("model") or (attempts[-1].get("model") if attempts else None),
-  (d.get("validation") or {}).get("ok"), len(attempts)))
+  ok, len(attempts)))
+if not ok:
+    errs=(d.get("validation") or {}).get("errors") or []
+    print("WARN: validation still false after harden; errors=%s" % errs[:3])
 ' <<<"$BODY"
