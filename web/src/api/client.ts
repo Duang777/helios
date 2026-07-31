@@ -156,6 +156,12 @@ export async function getEvidence(runId: string): Promise<{ evidence: WorkflowRu
   return parseResponse(response);
 }
 
+/** Absolute URL for a file under a run directory (evidence PNG, stdout, …). */
+export function runFileURL(runId: string, relativePath: string): string {
+  const parts = relativePath.split(/[/\\]+/).filter(Boolean).map(encodeURIComponent);
+  return `${API_BASE}/runs/${encodeURIComponent(runId)}/files/${parts.join('/')}`;
+}
+
 async function parseResponse<T>(response: Response): Promise<T> {
   const payload = await parseJSON<T & ApiErrorResponse>(response);
   if (!response.ok) {

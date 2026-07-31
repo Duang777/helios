@@ -244,6 +244,73 @@ func TestPublishAndRunWorkflowRejectsUnknownParams(t *testing.T) {
 	}
 }
 
+func TestRunFileServesPNGAndBlocksEscape(t *testing.T) {
+	dataDir := t.TempDir()
+	reg, err := registry.New(dataDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	st, err := store.NewFS(dataDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	run := domain.Run{
+		ID:         "run_file_test",
+		WorkflowID: "demo",
+		Status:     domain.RunStatusCompleted,
+		Params:     map[string]any{},
+		StartedAt:  time.Now().UTC(),
+	}
+	if err := st.SaveRun(run); err != nil {
+		t.Fatal(err)
+	}
+	evDir := filepath.Join(st.RunDir(run.ID), "evidence")
+	if err := os.MkdirAll(evDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	png := []byte{0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x01}
+	if err := os.WriteFile(filepath.Join(evDir, "shot.png"), png, 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	engine := runtime.NewEngine(st, clirunner.New(reg))
+	srv := httptest.NewServer(httpapi.NewServer(st, reg, engine, nil).Handler())
+	defer srv.Close()
+
+	resp, err := http.Get(srv.URL + "/api/v1/runs/" + run.ID + "/files/evidence/shot.png")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("status=%d", resp.StatusCode)
+	}
+	if ct := resp.Header.Get("Content-Type"); ct != "image/png" {
+		t.Fatalf("content-type=%s", ct)
+	}
+	got := make([]byte, len(png)+8)
+	n, _ := resp.Body.Read(got)
+	if string(got[:n]) != string(png) {
+		t.Fatalf("body mismatch")
+	}
+
+	bad, err := http.Get(srv.URL + "/api/v1/runs/" + run.ID + "/files/../run.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer bad.Body.Close()
+	// Clean may resolve inside run dir for ../run.json — still under runDir, OK.
+	// True escape uses absolute-style traversal:
+	escape, err := http.Get(srv.URL + "/api/v1/runs/" + run.ID + "/files/../../etc/passwd")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer escape.Body.Close()
+	if escape.StatusCode == http.StatusOK {
+		t.Fatalf("expected non-OK for path escape, got %d", escape.StatusCode)
+	}
+}
+
 func findRepoRoot(t *testing.T) string {
 	t.Helper()
 	wd, _ := os.Getwd()

@@ -11,6 +11,7 @@ import {
   listWorkflows,
   publishWorkflow,
   resolveHumanHelp,
+  runFileURL,
   saveWorkflow,
   startRun,
   validateWorkflowYAML,
@@ -452,15 +453,44 @@ export function App() {
                 <Badge>{selectedStep.status}</Badge>
               </div>
               {selectedStep.error ? <p className="error-line">{selectedStep.error}</p> : null}
+              {typeof selectedStep.output?.viewerUrl === 'string' && selectedStep.output.viewerUrl ? (
+                <p className="viewer-link">
+                  <a href={selectedStep.output.viewerUrl as string} target="_blank" rel="noreferrer">
+                    打开协助 / 查看页
+                  </a>
+                </p>
+              ) : null}
               {selectedEvidence.length === 0 ? (
-                <p className="empty-line">此步骤暂无 CLI 证据</p>
+                <p className="empty-line">此步骤暂无证据</p>
               ) : (
                 selectedEvidence.map((item) => (
                   <div key={item.id} className="evidence-item">
                     <div>exit {item.exitCode ?? '—'} · {item.type}</div>
-                    <code>{JSON.stringify(item.inputSummary)}</code>
-                    <code>{JSON.stringify(item.outputSummary)}</code>
-                    {item.stdoutRef ? <small>{item.stdoutRef}</small> : null}
+                    {item.inputSummary ? <code>{JSON.stringify(item.inputSummary)}</code> : null}
+                    {item.outputSummary ? <code>{JSON.stringify(item.outputSummary)}</code> : null}
+                    {run && item.screenshotRef ? (
+                      <figure className="evidence-shot">
+                        <img
+                          src={runFileURL(run.id, item.screenshotRef)}
+                          alt={`${item.stepId} screenshot`}
+                        />
+                        <figcaption>{item.screenshotRef}</figcaption>
+                      </figure>
+                    ) : null}
+                    {run && item.stdoutRef ? (
+                      <p className="evidence-file">
+                        <a href={runFileURL(run.id, item.stdoutRef)} target="_blank" rel="noreferrer">
+                          stdout · {item.stdoutRef}
+                        </a>
+                      </p>
+                    ) : null}
+                    {run && item.stderrRef ? (
+                      <p className="evidence-file">
+                        <a href={runFileURL(run.id, item.stderrRef)} target="_blank" rel="noreferrer">
+                          stderr · {item.stderrRef}
+                        </a>
+                      </p>
+                    ) : null}
                   </div>
                 ))
               )}

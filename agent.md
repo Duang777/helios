@@ -26,6 +26,7 @@ Build `Helios`, a business workflow compiler and auditable runtime:
 - Slice H (human_help handoff, Implemented): `docs/architecture/slice-h-human-help-handoff.md`
 - Slice I (Feishu thicken, Implemented): `docs/architecture/slice-i-feishu-thicken.md` / `docs/feishu-cli.md`
 - Slice J (Pi live default, Implemented): `docs/architecture/slice-j-pi-live-default.md`
+- Slice K (evidence viewer, Implemented): `docs/architecture/slice-k-evidence-viewer.md`
 - Plan/tasks: `tasks/plan.md`, `tasks/todo.md`
 - ADR: `docs/decisions/ADR-001-go-control-plane-pi-sidecar.md`
 - Naming: `docs/naming.md`
@@ -44,6 +45,7 @@ Build `Helios`, a business workflow compiler and auditable runtime:
 10. ~~**Slice H human_help handoff**~~ — Implemented: `docs/architecture/slice-h-human-help-handoff.md`
 11. ~~**Slice I Feishu thicken**~~ — Implemented: `docs/architecture/slice-i-feishu-thicken.md`
 12. ~~**Slice J Pi live default**~~ — Implemented: `docs/architecture/slice-j-pi-live-default.md`
+13. ~~**Slice K evidence viewer**~~ — Implemented: `docs/architecture/slice-k-evidence-viewer.md`
 
 ## Development Gate
 
@@ -177,6 +179,16 @@ Design: `docs/architecture/slice-j-pi-live-default.md`
 cd packages/pi-sidecar && npm test
 ./scripts/smoke-compile.sh
 ./scripts/smoke-compile-live.sh   # SKIP without key
+```
+
+## Slice K verification (evidence viewer)
+
+Design: `docs/architecture/slice-k-evidence-viewer.md`
+
+```bash
+cd backend && go test ./internal/httpapi/
+./scripts/smoke-lead-sync-gui.sh
+# console: select gui step → PNG preview under evidence
 ```
 
 ## Coding Standards

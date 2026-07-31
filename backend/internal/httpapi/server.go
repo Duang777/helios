@@ -3,10 +3,12 @@ package httpapi
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/Duang777/helios/backend/internal/compile"
 	"github.com/Duang777/helios/backend/internal/manifest"
@@ -47,6 +49,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /api/v1/runs/{runId}/human-help", s.handleHumanHelp)
 	mux.HandleFunc("POST /api/v1/runs/{runId}/abort", s.handleAbort)
 	mux.HandleFunc("GET /api/v1/runs/{runId}/evidence", s.handleEvidence)
+	mux.HandleFunc("GET /api/v1/runs/{runId}/files/{path...}", s.handleRunFile)
 	mux.HandleFunc("GET /api/v1/clis", s.handleListCLIs)
 	mux.HandleFunc("POST /api/v1/clis/register", s.handleRegisterCLI)
 	return cors(mux)
@@ -337,6 +340,72 @@ func (s *Server) handleEvidence(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"evidence": run.Evidence, "runDir": s.store.RunDir(run.ID)})
+}
+
+func (s *Server) handleRunFile(w http.ResponseWriter, r *http.Request) {
+	runID := r.PathValue("runId")
+	rel := r.PathValue("path")
+	if runID == "" || rel == "" {
+		writeError(w, http.StatusBadRequest, "VALIDATION_FAILED", "runId and path are required")
+		return
+	}
+	if _, err := s.store.GetRun(runID); err != nil {
+		writeError(w, http.StatusNotFound, "NOT_FOUND", "run not found")
+		return
+	}
+	abs, err := safeRunFile(s.store.RunDir(runID), rel)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "INVALID_PATH", err.Error())
+		return
+	}
+	raw, err := os.ReadFile(abs)
+	if err != nil {
+		if os.IsNotExist(err) {
+			writeError(w, http.StatusNotFound, "NOT_FOUND", "file not found")
+			return
+		}
+		writeError(w, http.StatusInternalServerError, "READ_FAILED", err.Error())
+		return
+	}
+	ctype := contentTypeFor(abs)
+	w.Header().Set("Content-Type", ctype)
+	w.Header().Set("Cache-Control", "no-store")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(raw)
+}
+
+func safeRunFile(runDir, rel string) (string, error) {
+	cleanRel := filepath.Clean("/" + rel)
+	cleanRel = strings.TrimPrefix(cleanRel, "/")
+	if cleanRel == "" || cleanRel == "." {
+		return "", fmt.Errorf("empty path")
+	}
+	if strings.HasPrefix(cleanRel, "..") {
+		return "", fmt.Errorf("path escapes run directory")
+	}
+	abs := filepath.Join(runDir, cleanRel)
+	abs = filepath.Clean(abs)
+	root := filepath.Clean(runDir)
+	sep := string(os.PathSeparator)
+	if abs != root && !strings.HasPrefix(abs, root+sep) {
+		return "", fmt.Errorf("path escapes run directory")
+	}
+	return abs, nil
+}
+
+func contentTypeFor(path string) string {
+	switch strings.ToLower(filepath.Ext(path)) {
+	case ".png":
+		return "image/png"
+	case ".jpg", ".jpeg":
+		return "image/jpeg"
+	case ".json":
+		return "application/json; charset=utf-8"
+	case ".html":
+		return "text/html; charset=utf-8"
+	default:
+		return "text/plain; charset=utf-8"
+	}
 }
 
 type registerCLIRequest struct {
