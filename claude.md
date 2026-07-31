@@ -14,6 +14,8 @@ This repository builds `Helios`, a business workflow compiler and auditable runt
 - Real-path defaults: `docs/architecture/real-path-defaults.md`
 - Dev gate: `docs/architecture/dev-gate.md`
 - Slice G (Lathe): `docs/architecture/slice-g-lathe-adapter.md` / ADR-002
+- Slice H (human_help): `docs/architecture/slice-h-human-help-handoff.md`
+- Slice I (Feishu): `docs/architecture/slice-i-feishu-thicken.md` / `docs/feishu-cli.md`
 - Best-fit OSS: `docs/research/2026-08-01-best-fit-oss.md`
 
 ## Collaboration Rules
