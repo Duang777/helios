@@ -24,8 +24,8 @@ Date: 2026-08-01
 # HTTP inventory API + factory-generated CLI
 ./scripts/smoke-cli-factory.sh
 
-# Live Pi (optional; needs CFMax / provider key)
-HELIOS_PI_MODE=live ./scripts/smoke-compile.sh
+# Live Pi (gated; needs CFMax / provider key — skips cleanly without)
+./scripts/smoke-compile-live.sh
 ```
 
 ## Reuse

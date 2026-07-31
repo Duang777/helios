@@ -12,7 +12,8 @@ Pi sidecar is a first-class Helios component: mock-default, live-optional, self-
 
 | `HELIOS_PI_MODE` | Behavior |
 |---|---|
-| `mock` (default) | Deterministic compile + ai-step; offline CI |
+| unset | **auto** (Slice J): live if auth env present, else mock — `docs/architecture/slice-j-pi-live-default.md` |
+| `mock` | Deterministic compile + ai-step; offline CI (smokes set this explicitly) |
 | `live` | Real Pi session with `noTools: "all"` |
 
 ## Contracts

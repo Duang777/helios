@@ -80,16 +80,14 @@ function mockAIStep(req) {
  * @param {{ runId?: string, stepId?: string, prompt: string, input?: any, outputSchema?: any, model?: string }} req
  */
 export async function runAIStep(req) {
-  const mode = process.env.HELIOS_PI_MODE || 'mock';
+  const { resolvePiMode } = await import('./mode.js');
+  const mode = resolvePiMode();
   if (!req.prompt || typeof req.prompt !== 'string') {
     throw new Error('prompt is required');
   }
 
   if (mode === 'mock') {
     return mockAIStep(req);
-  }
-  if (mode !== 'live') {
-    throw new Error(`unknown HELIOS_PI_MODE=${mode}; use mock or live`);
   }
 
   const { runPiPrompt } = await import('./piSession.js');

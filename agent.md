@@ -25,6 +25,7 @@ Build `Helios`, a business workflow compiler and auditable runtime:
 - Slice G (Lathe, Implemented): `docs/architecture/slice-g-lathe-adapter.md`
 - Slice H (human_help handoff, Implemented): `docs/architecture/slice-h-human-help-handoff.md`
 - Slice I (Feishu thicken, Implemented): `docs/architecture/slice-i-feishu-thicken.md` / `docs/feishu-cli.md`
+- Slice J (Pi live default, Implemented): `docs/architecture/slice-j-pi-live-default.md`
 - Plan/tasks: `tasks/plan.md`, `tasks/todo.md`
 - ADR: `docs/decisions/ADR-001-go-control-plane-pi-sidecar.md`
 - Naming: `docs/naming.md`
@@ -42,6 +43,7 @@ Build `Helios`, a business workflow compiler and auditable runtime:
 9. ~~**Slice G Lathe adapter**~~ — Implemented: `docs/architecture/slice-g-lathe-adapter.md` / ADR-002
 10. ~~**Slice H human_help handoff**~~ — Implemented: `docs/architecture/slice-h-human-help-handoff.md`
 11. ~~**Slice I Feishu thicken**~~ — Implemented: `docs/architecture/slice-i-feishu-thicken.md`
+12. ~~**Slice J Pi live default**~~ — Implemented: `docs/architecture/slice-j-pi-live-default.md`
 
 ## Development Gate
 
@@ -165,6 +167,16 @@ Guide: `docs/feishu-cli.md`
 cd backend && go test ./internal/schema/ ./internal/registry/
 ./scripts/smoke-feishu-lark.sh
 # after login: console run feishu.calendar-agenda / feishu.chat-list
+```
+
+## Slice J verification (Pi live default)
+
+Design: `docs/architecture/slice-j-pi-live-default.md`
+
+```bash
+cd packages/pi-sidecar && npm test
+./scripts/smoke-compile.sh
+./scripts/smoke-compile-live.sh   # SKIP without key
 ```
 
 ## Coding Standards

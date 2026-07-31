@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { runAIStep } from './aiStep.js';
 import { compileDraft, extractYAML } from './compile.js';
 import { detectConfiguredProviderEnv, parseModelSpec } from './piSession.js';
+import { effectivePiMode, hasLiveAuth, modeWasExplicit } from './mode.js';
 
 function readJSON(req) {
   return new Promise((resolveBody, reject) => {
@@ -43,7 +44,16 @@ function send(res, status, body) {
 }
 
 function healthPayload() {
-  const mode = process.env.HELIOS_PI_MODE || 'mock';
+  let mode;
+  try {
+    mode = effectivePiMode();
+  } catch (err) {
+    return {
+      status: 'error',
+      service: 'helios-pi-sidecar',
+      error: err.message || String(err),
+    };
+  }
   const auth = detectConfiguredProviderEnv();
   const modelSpec = process.env.HELIOS_PI_MODEL || '';
   const parsed = parseModelSpec(modelSpec);
@@ -51,10 +61,8 @@ function healthPayload() {
     status: 'ok',
     service: 'helios-pi-sidecar',
     mode,
-    authConfigured:
-      mode === 'mock'
-        ? true
-        : auth.length > 0 || Boolean(process.env.HELIOS_PI_API_KEY || process.env.CFMAX_API_KEY),
+    modeExplicit: modeWasExplicit(),
+    authConfigured: mode === 'mock' ? true : hasLiveAuth() || auth.length > 0,
     provider: parsed.provider || undefined,
     model: modelSpec || undefined,
   };
@@ -128,10 +136,9 @@ export function createServer(opts = {}) {
 const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isMain) {
   const port = Number(process.env.HELIOS_PI_PORT || process.env.PORT || 8091);
+  const mode = effectivePiMode();
   const server = createServer();
   server.listen(port, '127.0.0.1', () => {
-    console.log(
-      `Helios pi-sidecar listening on http://127.0.0.1:${port} (mode=${process.env.HELIOS_PI_MODE || 'mock'})`,
-    );
+    console.log(`Helios pi-sidecar listening on http://127.0.0.1:${port} (mode=${mode})`);
   });
 }

@@ -160,7 +160,8 @@ function repairYAML(previousYAML, errors) {
  * @param {{ intent: string, clis?: any[], previousYAML?: string, previousErrors?: string[], hints?: Record<string, unknown> }} req
  */
 export async function compileDraft(req) {
-  const mode = process.env.HELIOS_PI_MODE || 'mock';
+  const { resolvePiMode } = await import('./mode.js');
+  const mode = resolvePiMode();
   if (mode === 'live') {
     const { runPiPrompt } = await import('./piSession.js');
     const system = [
@@ -182,9 +183,6 @@ export async function compileDraft(req) {
       model: out.model,
       rawTraceId: out.rawTraceId,
     };
-  }
-  if (mode !== 'mock') {
-    throw new Error(`unknown HELIOS_PI_MODE=${mode}; use mock or live`);
   }
 
   const errors = req.previousErrors || [];

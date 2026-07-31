@@ -36,6 +36,7 @@ type Attempt struct {
 type Result struct {
 	YAML       string           `json:"yaml"`
 	Mode       string           `json:"mode,omitempty"`
+	Model      string           `json:"model,omitempty"`
 	Validation Validation       `json:"validation"`
 	Warnings   []string         `json:"warnings"`
 	Attempts   []Attempt        `json:"attempts"`
@@ -98,6 +99,7 @@ func (c *Compiler) Compile(ctx context.Context, req Request) (Result, error) {
 		result.Attempts = append(result.Attempts, att)
 		result.YAML = yaml
 		result.Mode = draft.Mode
+		result.Model = draft.Model
 		result.Validation = Validation{OK: true, Errors: []string{}}
 		result.Warnings = warningsFor(wf)
 		result.Workflow = &wf
@@ -105,6 +107,11 @@ func (c *Compiler) Compile(ctx context.Context, req Request) (Result, error) {
 	}
 
 	result.YAML = yaml
+	if len(result.Attempts) > 0 {
+		last := result.Attempts[len(result.Attempts)-1]
+		result.Mode = last.Mode
+		result.Model = last.Model
+	}
 	result.Validation = Validation{OK: false, Errors: prevErrors}
 	return result, nil
 }
