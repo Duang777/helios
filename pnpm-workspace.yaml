@@ -1,2 +1,4 @@
 packages:
   - web
+  - packages/pi-sidecar
+  - packages/gui-operator

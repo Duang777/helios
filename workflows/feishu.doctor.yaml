@@ -1,0 +1,17 @@
+apiVersion: helios/v1
+kind: Workflow
+id: feishu.doctor
+version: 1
+description: Run Feishu/Lark CLI doctor health check (read-only)
+params: {}
+requires:
+  clis:
+    - name: helios-lark
+      version: ">=0.1.0"
+steps:
+  - id: doctor
+    uses: cli
+    cli: helios-lark
+    sideEffect: read
+    argv: ["doctor"]
+    out: doctor

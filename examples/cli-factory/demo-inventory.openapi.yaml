@@ -1,0 +1,39 @@
+openapi: 3.0.3
+info:
+  title: Demo Inventory API
+  version: 0.1.0
+servers:
+  - url: http://127.0.0.1:8795
+paths:
+  /items:
+    get:
+      operationId: listItems
+      summary: List inventory items
+      responses:
+        "200":
+          description: ok
+    post:
+      operationId: createItem
+      summary: Create inventory item
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "201":
+          description: created
+  /items/{id}:
+    get:
+      operationId: getItem
+      summary: Get inventory item by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ok

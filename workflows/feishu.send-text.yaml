@@ -1,0 +1,44 @@
+apiVersion: helios/v1
+kind: Workflow
+id: feishu.send-text
+version: 1
+description: Send a Feishu text message via official lark-cli (requires login)
+params:
+  chat_id:
+    type: string
+    required: true
+  text:
+    type: string
+    required: true
+requires:
+  clis:
+    - name: helios-lark
+      version: ">=0.1.0"
+steps:
+  - id: preview_auth
+    uses: cli
+    cli: helios-lark
+    sideEffect: read
+    argv: ["auth", "status"]
+    out: auth
+
+  - id: dry_run
+    uses: cli
+    needs: [preview_auth]
+    cli: helios-lark
+    sideEffect: read
+    argv: ["im", "+messages-send", "--chat-id", "${params.chat_id}", "--text", "${params.text}", "--dry-run"]
+    out: dry
+
+  - id: approve_send
+    uses: approval
+    needs: [dry_run]
+    prompt: "Send Feishu message to ${params.chat_id}: ${params.text}"
+
+  - id: send
+    uses: cli
+    needs: [approve_send]
+    cli: helios-lark
+    sideEffect: write
+    argv: ["im", "+messages-send", "--chat-id", "${params.chat_id}", "--text", "${params.text}"]
+    out: sent

@@ -1,137 +1,143 @@
-export type NodeType =
-  | 'llm_task'
-  | 'http_request'
-  | 'form'
-  | 'approval'
-  | 'code'
-  | 'human_task'
-  | 'report'
-  | 'dashboard';
+export type StepUses = 'cli' | 'gui' | 'ai' | 'approval' | 'code';
+export type SideEffect = 'none' | 'read' | 'write';
+export type RunStatus =
+  | 'PENDING'
+  | 'RUNNING'
+  | 'WAITING_APPROVAL'
+  | 'WAITING_HUMAN'
+  | 'PAUSED'
+  | 'COMPLETED'
+  | 'FAILED'
+  | 'ABORTED';
+export type StepStatus =
+  | 'PENDING'
+  | 'READY'
+  | 'RUNNING'
+  | 'WAITING_APPROVAL'
+  | 'WAITING_HUMAN'
+  | 'SKIPPED'
+  | 'COMPLETED'
+  | 'FAILED'
+  | 'ABORTED';
 
-export type RunStatus = 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED';
-export type NodeStatus = 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED';
-
-export interface WorkflowTemplate {
-  id: string;
-  name: string;
-  scenario: string;
-  goal: string;
-  summary: string;
-  nodes: WorkflowNode[];
-  edges: WorkflowEdge[];
-  agentRoles: AgentRole[];
-  appPages: AppPage[];
-  createdAt: string;
-}
-
-export interface WorkflowNode {
-  id: string;
-  title: string;
-  type: NodeType;
-  agentRoleId: string;
-  prompt: string;
-  inputs: string[];
-  outputs: string[];
-  dependencies: string[];
-  config?: Record<string, string>;
-}
-
-export interface WorkflowEdge {
-  from: string;
-  to: string;
-}
-
-export interface AgentRole {
-  id: string;
-  name: string;
-  scope: string;
-  permissions: string[];
-}
-
-export interface AppPage {
-  id: string;
-  nodeId: string;
-  kind: string;
-  title: string;
-  fields?: AppField[];
-  sections?: AppSection[];
-  meta?: Record<string, string>;
-}
-
-export interface AppField {
-  id: string;
-  label: string;
+export interface ParamSpec {
   type: string;
-  required: boolean;
-  options?: string[];
+  required?: boolean;
+  description?: string;
 }
 
-export interface AppSection {
-  title: string;
-  items: string[];
+export interface WorkflowStep {
+  id: string;
+  uses: StepUses;
+  needs?: string[];
+  when?: string;
+  out?: string;
+  sideEffect?: SideEffect;
+  cli?: string;
+  argv?: string[];
+  prompt?: string;
+  action?: string;
+  gui?: Record<string, unknown>;
+  aiPrompt?: string;
+  aiModel?: string;
+  outputSchema?: Record<string, unknown>;
+}
+
+export interface Workflow {
+  apiVersion: string;
+  kind: string;
+  id: string;
+  version: number;
+  description?: string;
+  params: Record<string, ParamSpec>;
+  requires?: {
+    clis?: Array<{ name: string; version?: string }>;
+  };
+  autoApprove?: boolean;
+  steps: WorkflowStep[];
+}
+
+export interface StepRun {
+  stepId: string;
+  uses: StepUses;
+  status: StepStatus;
+  startedAt?: string;
+  completedAt?: string;
+  error?: string;
+  output?: Record<string, unknown>;
+  prompt?: string;
+}
+
+export interface Evidence {
+  id: string;
+  runId: string;
+  stepId: string;
+  type: string;
+  startedAt: string;
+  endedAt: string;
+  status: StepStatus;
+  inputSummary?: Record<string, unknown>;
+  outputSummary?: Record<string, unknown>;
+  exitCode?: number;
+  stdoutRef?: string;
+  stderrRef?: string;
+  screenshotRef?: string;
+  error?: string;
+}
+
+export interface ApprovalRecord {
+  id: string;
+  runId: string;
+  stepId: string;
+  prompt: string;
+  decision?: string;
+  actor?: string;
+  createdAt: string;
+  decidedAt?: string;
 }
 
 export interface WorkflowRun {
   id: string;
   workflowId: string;
-  goal: string;
+  workflowVersion: number;
   status: RunStatus;
-  nodeRuns: NodeRun[];
+  params: Record<string, unknown>;
+  stepRuns: StepRun[];
   evidence: Evidence[];
-  artifacts: Artifact[];
-  approvals: Approval[];
-  adapters?: AdapterStatus[];
-  startedAt: string;
-  completedAt?: string;
-}
-
-export interface AdapterStatus {
-  id: string;
-  label: string;
-  kind: string;
-  available: boolean;
-  reason?: string;
-  command?: string;
-  endpoint?: string;
-  env?: string[];
-  meta?: Record<string, string>;
-}
-
-export interface NodeRun {
-  id: string;
-  nodeId: string;
-  title: string;
-  type: NodeType;
-  agentRoleId: string;
-  status: NodeStatus;
-  input: Record<string, string>;
-  output: Record<string, string>;
-  startedAt: string;
-  completedAt?: string;
+  approvals: ApprovalRecord[];
   error?: string;
+  startedAt: string;
+  completedAt?: string;
 }
 
-export interface Evidence {
-  id: string;
-  nodeId: string;
-  claim: string;
-  sources: string[];
-  confidence: number;
+export interface RegisteredCLI {
+  name: string;
+  version: string;
+  path: string;
 }
 
-export interface Artifact {
+export interface CompileResult {
+  yaml: string;
+  validation: {
+    ok: boolean;
+    errors: string[];
+  };
+  warnings?: string[];
+  attempts?: Array<{
+    yaml: string;
+    rawTraceId?: string;
+    error?: string;
+  }>;
+  workflow?: Workflow;
+}
+
+export interface Manifest {
   id: string;
-  nodeId: string;
-  kind: string;
+  version: number;
   title: string;
-  content: string;
+  params: Record<string, ParamSpec>;
+  sideEffectLevel: SideEffect;
+  requiresApprovals: boolean;
+  clis: string[];
 }
 
-export interface Approval {
-  id: string;
-  nodeId: string;
-  title: string;
-  decision: string;
-  reviewer: string;
-  rationale: string;
-}

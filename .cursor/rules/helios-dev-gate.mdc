@@ -1,0 +1,17 @@
+---
+description: Helios 开发门禁——无 Accepted 技术设计不得写实现；必须用指定 skills
+alwaysApply: true
+---
+
+# Helios Dev Gate
+
+Before implementing any new module or slice:
+
+1. There must be an **Accepted** tech design at `docs/architecture/slice-*.md` (or user explicitly says to implement a **Proposed** doc as-is).
+2. Read `docs/architecture/dev-gate.md` and the slice doc’s **Required skills**; **Read those skill files** before coding.
+3. Prefer real paths (`docs/architecture/real-path-defaults.md`); mock/fake only when the design says so.
+4. Do not fork Eko. Reuse picks: `docs/research/2026-08-01-best-fit-oss.md`.
+5. Deliver in thin vertical increments with tests; do not expand beyond the Accepted scope.
+6. After acceptance commands pass, set the slice Status to `Implemented` and align `agent.md`.
+
+Exceptions: typo/bugfix with no contract change; tests-only; docs-only.

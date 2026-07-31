@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Helios demo confirm</title>
+  <style>
+    body { font-family: Georgia, serif; margin: 3rem; background: #f7f3ea; color: #1a1a1a; }
+    h1 { font-size: 1.6rem; }
+    button { font: inherit; padding: 0.6rem 1.2rem; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>Confirm purchase order</h1>
+  <p>Demo fixture for Helios GUI escalation.</p>
+  <button id="confirm" type="button">Confirm</button>
+  <script>
+    document.getElementById('confirm').addEventListener('click', () => {
+      document.body.dataset.confirmed = '1';
+      document.querySelector('p').textContent = 'Confirmed.';
+    });
+  </script>
+</body>
+</html>

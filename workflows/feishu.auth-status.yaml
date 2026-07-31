@@ -1,0 +1,25 @@
+apiVersion: helios/v1
+kind: Workflow
+id: feishu.auth-status
+version: 1
+description: Check Feishu/Lark auth status after config init + login
+params: {}
+requires:
+  clis:
+    - name: helios-lark
+      version: ">=0.1.0"
+steps:
+  - id: auth_status
+    uses: cli
+    cli: helios-lark
+    sideEffect: read
+    argv: ["auth", "status"]
+    out: auth
+
+  - id: doctor
+    uses: cli
+    needs: [auth_status]
+    cli: helios-lark
+    sideEffect: read
+    argv: ["doctor"]
+    out: doctor

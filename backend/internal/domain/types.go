@@ -2,158 +2,182 @@ package domain
 
 import "time"
 
-type NodeType string
+type StepUses string
 
 const (
-	NodeTypeLLMTask     NodeType = "llm_task"
-	NodeTypeHTTPRequest NodeType = "http_request"
-	NodeTypeForm        NodeType = "form"
-	NodeTypeApproval    NodeType = "approval"
-	NodeTypeCode        NodeType = "code"
-	NodeTypeHumanTask   NodeType = "human_task"
-	NodeTypeReport      NodeType = "report"
-	NodeTypeDashboard   NodeType = "dashboard"
+	StepUsesCLI      StepUses = "cli"
+	StepUsesGUI      StepUses = "gui"
+	StepUsesAI       StepUses = "ai"
+	StepUsesApproval StepUses = "approval"
+	StepUsesCode     StepUses = "code"
+)
+
+type SideEffect string
+
+const (
+	SideEffectNone  SideEffect = "none"
+	SideEffectRead  SideEffect = "read"
+	SideEffectWrite SideEffect = "write"
 )
 
 type RunStatus string
 
 const (
-	RunStatusPending   RunStatus = "PENDING"
-	RunStatusRunning   RunStatus = "RUNNING"
-	RunStatusCompleted RunStatus = "COMPLETED"
-	RunStatusFailed    RunStatus = "FAILED"
+	RunStatusPending          RunStatus = "PENDING"
+	RunStatusRunning          RunStatus = "RUNNING"
+	RunStatusWaitingApproval  RunStatus = "WAITING_APPROVAL"
+	RunStatusWaitingHuman     RunStatus = "WAITING_HUMAN"
+	RunStatusPaused           RunStatus = "PAUSED"
+	RunStatusCompleted        RunStatus = "COMPLETED"
+	RunStatusFailed           RunStatus = "FAILED"
+	RunStatusAborted          RunStatus = "ABORTED"
 )
 
-type NodeStatus string
+type StepStatus string
 
 const (
-	NodeStatusPending   NodeStatus = "PENDING"
-	NodeStatusRunning   NodeStatus = "RUNNING"
-	NodeStatusCompleted NodeStatus = "COMPLETED"
-	NodeStatusFailed    NodeStatus = "FAILED"
+	StepStatusPending          StepStatus = "PENDING"
+	StepStatusReady            StepStatus = "READY"
+	StepStatusRunning          StepStatus = "RUNNING"
+	StepStatusWaitingApproval  StepStatus = "WAITING_APPROVAL"
+	StepStatusWaitingHuman     StepStatus = "WAITING_HUMAN"
+	StepStatusSkipped          StepStatus = "SKIPPED"
+	StepStatusCompleted        StepStatus = "COMPLETED"
+	StepStatusFailed           StepStatus = "FAILED"
+	StepStatusAborted          StepStatus = "ABORTED"
 )
 
-type WorkflowTemplate struct {
-	ID         string         `json:"id"`
-	Name       string         `json:"name"`
-	Scenario   string         `json:"scenario"`
-	Goal       string         `json:"goal"`
-	Summary    string         `json:"summary"`
-	Nodes      []WorkflowNode `json:"nodes"`
-	Edges      []WorkflowEdge `json:"edges"`
-	AgentRoles []AgentRole    `json:"agentRoles"`
-	AppPages   []AppPage      `json:"appPages"`
-	CreatedAt  time.Time      `json:"createdAt"`
+type Param struct {
+	Type        string `yaml:"type" json:"type"`
+	Required    bool   `yaml:"required,omitempty" json:"required,omitempty"`
+	Description string `yaml:"description,omitempty" json:"description,omitempty"`
 }
 
-type WorkflowNode struct {
-	ID           string            `json:"id"`
-	Title        string            `json:"title"`
-	Type         NodeType          `json:"type"`
-	AgentRoleID  string            `json:"agentRoleId"`
-	Prompt       string            `json:"prompt"`
-	Inputs       []string          `json:"inputs"`
-	Outputs      []string          `json:"outputs"`
-	Dependencies []string          `json:"dependencies"`
-	Config       map[string]string `json:"config,omitempty"`
+type CLIRequirement struct {
+	Name    string `yaml:"name" json:"name"`
+	Version string `yaml:"version,omitempty" json:"version,omitempty"`
 }
 
-type WorkflowEdge struct {
-	From string `json:"from"`
-	To   string `json:"to"`
+type Requires struct {
+	CLIs []CLIRequirement `yaml:"clis,omitempty" json:"clis,omitempty"`
 }
 
-type AgentRole struct {
-	ID          string   `json:"id"`
-	Name        string   `json:"name"`
-	Scope       string   `json:"scope"`
-	Permissions []string `json:"permissions"`
+type Step struct {
+	ID           string         `yaml:"id" json:"id"`
+	Uses         StepUses       `yaml:"uses" json:"uses"`
+	Needs        []string       `yaml:"needs,omitempty" json:"needs,omitempty"`
+	When         string         `yaml:"when,omitempty" json:"when,omitempty"`
+	Out          string         `yaml:"out,omitempty" json:"out,omitempty"`
+	SideEffect   SideEffect     `yaml:"sideEffect,omitempty" json:"sideEffect,omitempty"`
+	CLI          string         `yaml:"cli,omitempty" json:"cli,omitempty"`
+	Argv         []string       `yaml:"argv,omitempty" json:"argv,omitempty"`
+	Prompt       string         `yaml:"prompt,omitempty" json:"prompt,omitempty"`
+	Action       string         `yaml:"action,omitempty" json:"action,omitempty"`
+	GUI          map[string]any `yaml:"gui,omitempty" json:"gui,omitempty"`
+	AIPrompt     string         `yaml:"aiPrompt,omitempty" json:"aiPrompt,omitempty"`
+	AIModel      string         `yaml:"aiModel,omitempty" json:"aiModel,omitempty"`
+	OutputSchema map[string]any `yaml:"outputSchema,omitempty" json:"outputSchema,omitempty"`
 }
 
-type AppPage struct {
-	ID       string            `json:"id"`
-	NodeID   string            `json:"nodeId"`
-	Kind     string            `json:"kind"`
-	Title    string            `json:"title"`
-	Fields   []AppField        `json:"fields,omitempty"`
-	Sections []AppSection      `json:"sections,omitempty"`
-	Meta     map[string]string `json:"meta,omitempty"`
+type Workflow struct {
+	APIVersion  string           `yaml:"apiVersion" json:"apiVersion"`
+	Kind        string           `yaml:"kind" json:"kind"`
+	ID          string           `yaml:"id" json:"id"`
+	Version     int              `yaml:"version" json:"version"`
+	Description string           `yaml:"description,omitempty" json:"description,omitempty"`
+	Params      map[string]Param `yaml:"params" json:"params"`
+	Requires    Requires         `yaml:"requires,omitempty" json:"requires,omitempty"`
+	AutoApprove bool             `yaml:"autoApprove,omitempty" json:"autoApprove,omitempty"`
+	Steps       []Step           `yaml:"steps" json:"steps"`
 }
 
-type AppField struct {
-	ID       string   `json:"id"`
-	Label    string   `json:"label"`
-	Type     string   `json:"type"`
-	Required bool     `json:"required"`
-	Options  []string `json:"options,omitempty"`
+type Manifest struct {
+	ID                string           `json:"id"`
+	Version           int              `json:"version"`
+	Title             string           `json:"title"`
+	Params            map[string]Param `json:"params"`
+	SideEffectLevel   SideEffect       `json:"sideEffectLevel"`
+	RequiresApprovals bool             `json:"requiresApprovals"`
+	CLIs              []string         `json:"clis"`
 }
 
-type AppSection struct {
-	Title string   `json:"title"`
-	Items []string `json:"items"`
+type StepRun struct {
+	StepID      string         `json:"stepId"`
+	Uses        StepUses       `json:"uses"`
+	Status      StepStatus     `json:"status"`
+	StartedAt   *time.Time     `json:"startedAt,omitempty"`
+	CompletedAt *time.Time     `json:"completedAt,omitempty"`
+	Error       string         `json:"error,omitempty"`
+	Output      map[string]any `json:"output,omitempty"`
+	Prompt      string         `json:"prompt,omitempty"`
 }
 
-type WorkflowRun struct {
-	ID          string          `json:"id"`
-	WorkflowID  string          `json:"workflowId"`
-	Goal        string          `json:"goal"`
-	Status      RunStatus       `json:"status"`
-	NodeRuns    []NodeRun       `json:"nodeRuns"`
-	Evidence    []Evidence      `json:"evidence"`
-	Artifacts   []Artifact      `json:"artifacts"`
-	Approvals   []Approval      `json:"approvals"`
-	Adapters    []AdapterStatus `json:"adapters,omitempty"`
-	StartedAt   time.Time       `json:"startedAt"`
-	CompletedAt *time.Time      `json:"completedAt,omitempty"`
-}
-
-type AdapterStatus struct {
-	ID        string            `json:"id"`
-	Label     string            `json:"label"`
-	Kind      string            `json:"kind"`
-	Available bool              `json:"available"`
-	Reason    string            `json:"reason,omitempty"`
-	Command   string            `json:"command,omitempty"`
-	Endpoint  string            `json:"endpoint,omitempty"`
-	Env       []string          `json:"env,omitempty"`
-	Meta      map[string]string `json:"meta,omitempty"`
-}
-
-type NodeRun struct {
-	ID          string            `json:"id"`
-	NodeID      string            `json:"nodeId"`
-	Title       string            `json:"title"`
-	Type        NodeType          `json:"type"`
-	AgentRoleID string            `json:"agentRoleId"`
-	Status      NodeStatus        `json:"status"`
-	Input       map[string]string `json:"input"`
-	Output      map[string]string `json:"output"`
-	StartedAt   time.Time         `json:"startedAt"`
-	CompletedAt *time.Time        `json:"completedAt,omitempty"`
-	Error       string            `json:"error,omitempty"`
+type ApprovalRecord struct {
+	ID        string    `json:"id"`
+	RunID     string    `json:"runId"`
+	StepID    string    `json:"stepId"`
+	Prompt    string    `json:"prompt"`
+	Decision  string    `json:"decision,omitempty"`
+	Actor     string    `json:"actor,omitempty"`
+	CreatedAt time.Time `json:"createdAt"`
+	DecidedAt *time.Time `json:"decidedAt,omitempty"`
 }
 
 type Evidence struct {
-	ID         string   `json:"id"`
-	NodeID     string   `json:"nodeId"`
-	Claim      string   `json:"claim"`
-	Sources    []string `json:"sources"`
-	Confidence float64  `json:"confidence"`
+	ID            string         `json:"id"`
+	RunID         string         `json:"runId"`
+	StepID        string         `json:"stepId"`
+	Type          string         `json:"type"`
+	StartedAt     time.Time      `json:"startedAt"`
+	EndedAt       time.Time      `json:"endedAt"`
+	Status        StepStatus     `json:"status"`
+	InputSummary  map[string]any `json:"inputSummary,omitempty"`
+	OutputSummary map[string]any `json:"outputSummary,omitempty"`
+	ExitCode      *int           `json:"exitCode,omitempty"`
+	StdoutRef     string         `json:"stdoutRef,omitempty"`
+	StderrRef     string         `json:"stderrRef,omitempty"`
+	ScreenshotRef string         `json:"screenshotRef,omitempty"`
+	Error         string         `json:"error,omitempty"`
 }
 
-type Artifact struct {
-	ID      string `json:"id"`
-	NodeID  string `json:"nodeId"`
-	Kind    string `json:"kind"`
-	Title   string `json:"title"`
-	Content string `json:"content"`
+type Run struct {
+	ID          string           `json:"id"`
+	WorkflowID  string           `json:"workflowId"`
+	WorkflowVer int              `json:"workflowVersion"`
+	Status      RunStatus        `json:"status"`
+	Params      map[string]any   `json:"params"`
+	StepRuns    []StepRun        `json:"stepRuns"`
+	Evidence    []Evidence       `json:"evidence"`
+	Approvals   []ApprovalRecord `json:"approvals"`
+	Error       string           `json:"error,omitempty"`
+	StartedAt   time.Time        `json:"startedAt"`
+	CompletedAt *time.Time       `json:"completedAt,omitempty"`
 }
 
-type Approval struct {
-	ID        string `json:"id"`
-	NodeID    string `json:"nodeId"`
-	Title     string `json:"title"`
-	Decision  string `json:"decision"`
-	Reviewer  string `json:"reviewer"`
-	Rationale string `json:"rationale"`
+type CLIArgSpec struct {
+	Name     string   `json:"name"`
+	Type     string   `json:"type"`
+	Required bool     `json:"required,omitempty"`
+	Enum     []string `json:"enum,omitempty"`
+	Default  any      `json:"default,omitempty"`
+}
+
+type CLICommandSpec struct {
+	Path       []string     `json:"path"`
+	SideEffect SideEffect   `json:"sideEffect"`
+	DryRun     bool         `json:"dryRun,omitempty"`
+	Args       []CLIArgSpec `json:"args,omitempty"`
+}
+
+type CLIIntrospect struct {
+	Name     string           `json:"name"`
+	Version  string           `json:"version"`
+	Commands []CLICommandSpec `json:"commands"`
+}
+
+type RegisteredCLI struct {
+	Name       string        `json:"name"`
+	Version    string        `json:"version"`
+	Path       string        `json:"path"`
+	Introspect CLIIntrospect `json:"introspect"`
 }

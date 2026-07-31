@@ -1,0 +1,44 @@
+export const DEMO_LEAD_SYNC_YAML = `apiVersion: helios/v1
+kind: Workflow
+id: demo.lead-sync
+version: 1
+description: Sync a CRM lead into an ERP purchase order
+params:
+  lead_id:
+    type: string
+    required: true
+requires:
+  clis:
+    - name: demo-crm
+      version: ">=1.0.0"
+    - name: demo-erp
+      version: ">=1.0.0"
+steps:
+  - id: fetch_lead
+    uses: cli
+    cli: demo-crm
+    sideEffect: read
+    argv: ["leads", "get", "--id", "\${params.lead_id}", "--output", "json"]
+    out: lead
+
+  - id: create_po_dry
+    uses: cli
+    needs: [fetch_lead]
+    cli: demo-erp
+    sideEffect: read
+    argv: ["po", "create", "--from-json", "\${lead.data}", "--dry-run", "--output", "json"]
+    out: dry
+
+  - id: approve
+    uses: approval
+    needs: [create_po_dry]
+    prompt: "Create PO for lead \${params.lead_id}?"
+
+  - id: create_po
+    uses: cli
+    needs: [approve]
+    cli: demo-erp
+    sideEffect: write
+    argv: ["po", "create", "--from-json", "\${lead.data}", "--output", "json"]
+    out: po
+`;

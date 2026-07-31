@@ -1,90 +1,239 @@
-import {
-  AlertCircle,
-  Boxes,
-  CheckCircle2,
-  ChevronRight,
-  CircleSlash2,
-  FileClock,
-  GitBranch,
-  Loader2,
-  Play,
-  RefreshCw,
-  ServerCog,
-  ShieldCheck,
-  Sparkles,
-} from 'lucide-react';
+import { AlertCircle, CheckCircle2, Loader2, Play, RefreshCw, Save, ShieldCheck, Sparkles, Upload } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { compileWorkflow, listRuntimeAdapters, runWorkflow } from './api/client';
-import type { AdapterStatus, WorkflowNode, WorkflowRun, WorkflowTemplate } from './api/types';
-import { DetailPanels } from './components/DetailPanels';
-import { RunPanel } from './components/RunPanel';
-import { WorkflowCanvas } from './components/WorkflowCanvas';
-import { Badge, Button, DataTable, Panel, Textarea } from './components/ui/primitives';
-
-const defaultGoal = '构建企业业务能力沉淀 Agent：业务人员用自然语言创建客户洞察、项目复盘、合同风险和经营指标任务流，系统按角色权限调度数据与工具，输出带来源、口径、版本和人工确认点的可复用能力模板。';
+import {
+  approveRun,
+  compileIntent,
+  getRun,
+  getWorkflow,
+  getWorkflowYAML,
+  healthCheck,
+  listCLIs,
+  listWorkflows,
+  publishWorkflow,
+  resolveHumanHelp,
+  saveWorkflow,
+  startRun,
+  validateWorkflowYAML,
+} from './api/client';
+import type { RegisteredCLI, Workflow, WorkflowRun } from './api/types';
+import { Badge, Button, Input, Panel, Textarea } from './components/ui/primitives';
+import { DEMO_LEAD_SYNC_YAML } from './lib/demo-workflow';
 
 export function App() {
-  const [goal, setGoal] = useState(defaultGoal);
-  const [workflow, setWorkflow] = useState<WorkflowTemplate | null>(null);
+  const [online, setOnline] = useState(false);
+  const [intent, setIntent] = useState('把线索 L-123 同步成采购单，写前要审批');
+  const [yaml, setYaml] = useState(DEMO_LEAD_SYNC_YAML);
+  const [workflow, setWorkflow] = useState<Workflow | null>(null);
+  const [workflows, setWorkflows] = useState<Workflow[]>([]);
+  const [clis, setCLIs] = useState<RegisteredCLI[]>([]);
+  const [leadId, setLeadId] = useState('L-123');
   const [run, setRun] = useState<WorkflowRun | null>(null);
-  const [adapters, setAdapters] = useState<AdapterStatus[]>([]);
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-  const [isCompiling, setIsCompiling] = useState(false);
-  const [isRunning, setIsRunning] = useState(false);
+  const [selectedStepId, setSelectedStepId] = useState<string | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  const pendingApproval = useMemo(() => {
+    return run?.stepRuns.find((step) => step.status === 'WAITING_APPROVAL') ?? null;
+  }, [run]);
+
+  const pendingHumanHelp = useMemo(() => {
+    return run?.stepRuns.find((step) => step.status === 'WAITING_HUMAN') ?? null;
+  }, [run]);
+
+  const selectedStep = useMemo(() => {
+    return run?.stepRuns.find((step) => step.stepId === selectedStepId) ?? run?.stepRuns[0] ?? null;
+  }, [run, selectedStepId]);
+
+  const selectedEvidence = useMemo(() => {
+    if (!run || !selectedStep) {
+      return [];
+    }
+    return run.evidence.filter((item) => item.stepId === selectedStep.stepId);
+  }, [run, selectedStep]);
 
   useEffect(() => {
-    refreshAdapters();
+    void refreshMeta();
   }, []);
 
-  const selectedNode = useMemo<WorkflowNode | null>(() => {
-    return workflow?.nodes.find((node) => node.id === selectedNodeId) ?? workflow?.nodes[0] ?? null;
-  }, [selectedNodeId, workflow]);
+  useEffect(() => {
+    if (!run || isTerminal(run.status)) {
+      return;
+    }
+    const timer = window.setInterval(() => {
+      void refreshRun(run.id);
+    }, 800);
+    return () => window.clearInterval(timer);
+  }, [run?.id, run?.status]);
 
-  const availableAdapters = adapters.filter((adapter) => adapter.available).length;
-  const blockedAdapters = adapters.length - availableAdapters;
-
-  async function refreshAdapters() {
+  async function refreshMeta() {
+    const ok = await healthCheck();
+    setOnline(ok);
+    if (!ok) {
+      setError('后端未连接。先启动 Helios API，并注册 demo-crm / demo-erp。');
+      return;
+    }
     try {
-      const nextAdapters = await listRuntimeAdapters();
-      setAdapters(nextAdapters);
+      const [nextWorkflows, nextCLIs] = await Promise.all([listWorkflows(), listCLIs()]);
+      setWorkflows(nextWorkflows);
+      setCLIs(nextCLIs);
+      setError(null);
     } catch (err) {
-      setError(messageFromError(err, 'Runtime adapter 状态读取失败'));
+      setError(messageFromError(err, '读取工作流/CLI 失败'));
+    }
+  }
+
+  async function refreshRun(runId: string) {
+    try {
+      const next = await getRun(runId);
+      setRun(next);
+      if (!selectedStepId && next.stepRuns[0]) {
+        setSelectedStepId(next.stepRuns[0].stepId);
+      }
+    } catch (err) {
+      setError(messageFromError(err, '读取 Run 失败'));
     }
   }
 
   async function handleCompile() {
-    setIsCompiling(true);
+    setBusy('compile');
+    setError(null);
+    setNotice(null);
+    try {
+      const result = await compileIntent(intent.trim());
+      setYaml(result.yaml);
+      if (result.workflow) {
+        setWorkflow(result.workflow);
+      }
+      if (result.validation.ok) {
+        const warn = result.warnings?.length ? `；警告：${result.warnings.join('; ')}` : '';
+        setNotice(`编译通过：${result.workflow?.id ?? 'draft'}${warn}`);
+      } else {
+        setError(`编译草稿未通过校验：${(result.validation.errors ?? []).join('; ') || 'unknown'}`);
+      }
+    } catch (err) {
+      setError(messageFromError(err, '编译失败（确认 pi-sidecar 已启动）'));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function handleValidate() {
+    setBusy('validate');
+    setError(null);
+    setNotice(null);
+    try {
+      const next = await validateWorkflowYAML(yaml);
+      setWorkflow(next);
+      setNotice(`校验通过：${next.id} v${next.version}`);
+    } catch (err) {
+      setError(messageFromError(err, '校验失败'));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function handleSave() {
+    setBusy('save');
+    setError(null);
+    setNotice(null);
+    try {
+      const validated = await validateWorkflowYAML(yaml);
+      const saved = await saveWorkflow(validated.id, yaml);
+      setWorkflow(saved);
+      setNotice(`已保存 ${saved.id}`);
+      await refreshMeta();
+    } catch (err) {
+      setError(messageFromError(err, '保存失败'));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function handlePublish() {
+    setBusy('publish');
+    setError(null);
+    setNotice(null);
+    try {
+      const validated = await validateWorkflowYAML(yaml);
+      await saveWorkflow(validated.id, yaml);
+      const m = await publishWorkflow(validated.id);
+      setWorkflow(validated);
+      setNotice(`已发布 Manifest ${m.id} v${m.version}（params: ${Object.keys(m.params).join(', ') || 'none'}）`);
+      await refreshMeta();
+    } catch (err) {
+      setError(messageFromError(err, '发布失败'));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function handleLoad(id: string) {
+    setBusy('load');
     setError(null);
     try {
-      const nextWorkflow = await compileWorkflow(goal);
-      setWorkflow(nextWorkflow);
-      setRun(null);
-      setSelectedNodeId(nextWorkflow.nodes[0]?.id ?? null);
-      await refreshAdapters();
+      const [loaded, text] = await Promise.all([getWorkflow(id), getWorkflowYAML(id)]);
+      setWorkflow(loaded);
+      setYaml(text);
+      setNotice(`已加载 ${loaded.id}`);
     } catch (err) {
-      setError(messageFromError(err, '工作流编译失败'));
+      setError(messageFromError(err, '加载失败'));
     } finally {
-      setIsCompiling(false);
+      setBusy(null);
     }
   }
 
   async function handleRun() {
-    if (!workflow) {
+    setBusy('run');
+    setError(null);
+    setNotice(null);
+    try {
+      const validated = await validateWorkflowYAML(yaml);
+      await saveWorkflow(validated.id, yaml);
+      setWorkflow(validated);
+      const nextRun = await startRun(validated.id, { lead_id: leadId });
+      setRun(nextRun);
+      setSelectedStepId(nextRun.stepRuns[0]?.stepId ?? null);
+      setNotice(`已启动 ${nextRun.id}`);
+      await refreshMeta();
+    } catch (err) {
+      setError(messageFromError(err, '运行失败'));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function handleApprove(decision: 'approve' | 'reject') {
+    if (!run || !pendingApproval) {
       return;
     }
-    setIsRunning(true);
+    setBusy('approve');
     setError(null);
     try {
-      const nextRun = await runWorkflow(workflow.id);
-      setRun(nextRun);
-      setAdapters(nextRun.adapters ?? adapters);
-      const failedNode = nextRun.nodeRuns.find((nodeRun) => nodeRun.status === 'FAILED');
-      setSelectedNodeId(failedNode?.nodeId ?? nextRun.nodeRuns.at(-1)?.nodeId ?? selectedNodeId);
+      await approveRun(run.id, pendingApproval.stepId, decision);
+      await refreshRun(run.id);
+      setNotice(decision === 'approve' ? '已批准，继续执行' : '已拒绝');
     } catch (err) {
-      setError(messageFromError(err, '工作流运行失败'));
+      setError(messageFromError(err, '审批失败'));
     } finally {
-      setIsRunning(false);
+      setBusy(null);
+    }
+  }
+
+  async function handleHumanHelp(ok: boolean) {
+    if (!run || !pendingHumanHelp) {
+      return;
+    }
+    setBusy('human-help');
+    setError(null);
+    try {
+      await resolveHumanHelp(run.id, pendingHumanHelp.stepId, ok, ok ? 'console resolved' : 'console rejected');
+      await refreshRun(run.id);
+      setNotice(ok ? '人工协助已完成，继续执行' : '人工协助已拒绝');
+    } catch (err) {
+      setError(messageFromError(err, '人工协助失败'));
+    } finally {
+      setBusy(null);
     }
   }
 
@@ -97,25 +246,22 @@ export function App() {
           </span>
           <span>
             <strong>Helios</strong>
-            <small>AI Workflow Compiler</small>
+            <small>Workflow Runtime</small>
           </span>
         </a>
-        <div className="topbar-actions" aria-label="运行摘要">
-          <StatusChip label="Adapters" value={`${availableAdapters}/${adapters.length || 0}`} tone={blockedAdapters ? 'warn' : 'ok'} />
-          <StatusChip label="Workflow" value={workflow ? workflow.scenario : 'draft'} tone={workflow ? 'ok' : 'idle'} />
-          <Button type="button" variant="secondary" onClick={refreshAdapters}>
+        <div className="topbar-actions">
+          <StatusChip label="API" value={online ? 'online' : 'offline'} tone={online ? 'ok' : 'warn'} />
+          <StatusChip label="CLIs" value={String(clis.length)} tone={clis.length ? 'ok' : 'idle'} />
+          <StatusChip label="Run" value={run?.status ?? 'idle'} tone={runTone(run?.status)} />
+          <Button type="button" variant="secondary" onClick={() => void refreshMeta()}>
             <RefreshCw size={16} />
-            刷新 Adapter
+            刷新
           </Button>
         </div>
       </header>
 
       <section className="console-hero" id="workspace">
-        <div className="hero-kicker">
-          <Sparkles size={16} />
-          可审计 Runtime 编排工作台
-        </div>
-        <h1>把一句业务目标编译成可运行、可审批、可追溯的 Agent 工作流。</h1>
+        <h1>Intent 编译 · YAML 工作流 · CLI 执行 · 审批 · 证据</h1>
       </section>
 
       {error ? (
@@ -124,128 +270,236 @@ export function App() {
           <span>{error}</span>
         </div>
       ) : null}
+      {notice ? (
+        <div className="notice-banner" role="status">
+          <CheckCircle2 size={18} />
+          <span>{notice}</span>
+        </div>
+      ) : null}
 
-      <section className="workbench-grid" aria-label="Helios 工作台">
-        <Panel className="builder-panel">
+      <section className="ops-grid" aria-label="Helios 操作台">
+        <Panel className="ops-side">
           <div className="panel-header compact">
             <div>
-              <p className="eyebrow">Mission</p>
-              <h2>工作目标</h2>
+              <p className="eyebrow">Catalog</p>
+              <h2>工作流 / CLI</h2>
             </div>
-            <Badge>{workflow ? '已编译' : '草稿'}</Badge>
+          </div>
+          <div className="side-block">
+            <strong>Workflows</strong>
+            <ul className="side-list">
+              {workflows.map((item) => (
+                <li key={item.id}>
+                  <button type="button" className="side-link" onClick={() => void handleLoad(item.id)}>
+                    {item.id}
+                    <small>v{item.version}</small>
+                  </button>
+                </li>
+              ))}
+              {workflows.length === 0 ? <li className="empty-line">暂无已保存工作流</li> : null}
+            </ul>
+          </div>
+          <div className="side-block">
+            <strong>Registered CLIs</strong>
+            <ul className="side-list">
+              {clis.map((cli) => (
+                <li key={cli.name}>
+                  <span className="side-static">
+                    {cli.name}
+                    <small>{cli.version}</small>
+                  </span>
+                </li>
+              ))}
+              {clis.length === 0 ? <li className="empty-line">请先注册 demo-crm / demo-erp</li> : null}
+            </ul>
+          </div>
+        </Panel>
+
+        <Panel className="ops-main">
+          <div className="panel-header compact">
+            <div>
+              <p className="eyebrow">Compile</p>
+              <h2>Intent → YAML</h2>
+            </div>
+            <Badge>{workflow?.id ?? 'unsaved'}</Badge>
           </div>
           <Textarea
-            aria-label="工作目标"
-            value={goal}
-            onChange={(event) => setGoal(event.target.value)}
+            aria-label="Compile intent"
+            className="intent-editor"
+            value={intent}
+            onChange={(event) => setIntent(event.target.value)}
+            placeholder="用自然语言描述要编译的工作流"
+            rows={3}
           />
           <div className="builder-actions">
-            <Button type="button" variant="primary" onClick={handleCompile} disabled={isCompiling || goal.trim().length === 0}>
-              {isCompiling ? <Loader2 size={16} className="spin" /> : <GitBranch size={16} />}
-              编译 Workflow
+            <Button type="button" variant="primary" onClick={() => void handleCompile()} disabled={!!busy || !intent.trim()}>
+              {busy === 'compile' ? <Loader2 size={16} className="spin" /> : <Sparkles size={16} />}
+              编译
             </Button>
-            <Button type="button" variant="secondary" onClick={handleRun} disabled={!workflow || isRunning}>
-              {isRunning ? <Loader2 size={16} className="spin" /> : <Play size={16} />}
+          </div>
+          <div className="panel-header compact" style={{ marginTop: '1rem' }}>
+            <div>
+              <p className="eyebrow">Artifact</p>
+              <h2>Workflow YAML</h2>
+            </div>
+          </div>
+          <Textarea
+            aria-label="Workflow YAML"
+            className="yaml-editor"
+            value={yaml}
+            onChange={(event) => setYaml(event.target.value)}
+            spellCheck={false}
+          />
+          <div className="builder-actions">
+            <Button type="button" variant="secondary" onClick={() => void handleValidate()} disabled={!!busy}>
+              {busy === 'validate' ? <Loader2 size={16} className="spin" /> : <ShieldCheck size={16} />}
+              校验
+            </Button>
+            <Button type="button" variant="secondary" onClick={() => void handleSave()} disabled={!!busy}>
+              {busy === 'save' ? <Loader2 size={16} className="spin" /> : <Save size={16} />}
+              保存
+            </Button>
+            <Button type="button" variant="secondary" onClick={() => void handlePublish()} disabled={!!busy}>
+              {busy === 'publish' ? <Loader2 size={16} className="spin" /> : <Upload size={16} />}
+              发布
+            </Button>
+            <label className="param-field">
+              <span>lead_id</span>
+              <Input value={leadId} onChange={(event) => setLeadId(event.target.value)} aria-label="lead_id" />
+            </label>
+            <Button type="button" variant="primary" onClick={() => void handleRun()} disabled={!!busy || !leadId.trim()}>
+              {busy === 'run' ? <Loader2 size={16} className="spin" /> : <Play size={16} />}
               运行
             </Button>
           </div>
-          <div className="mission-summary">
-            <SummaryTile icon={<Boxes size={16} />} label="Nodes" value={workflow?.nodes.length ?? 0} />
-            <SummaryTile icon={<ShieldCheck size={16} />} label="Roles" value={workflow?.agentRoles.length ?? 0} />
-            <SummaryTile icon={<FileClock size={16} />} label="Evidence" value={run?.evidence.length ?? 0} />
-          </div>
-          <AdapterTable adapters={adapters} />
+          {workflow ? (
+            <ol className="step-outline">
+              {workflow.steps.map((step) => (
+                <li key={step.id}>
+                  <strong>{step.id}</strong>
+                  <span>{step.uses}{step.cli ? ` · ${step.cli}` : ''}</span>
+                </li>
+              ))}
+            </ol>
+          ) : null}
         </Panel>
 
-        <div className="center-stack">
-          <WorkflowCanvas
-            workflow={workflow}
-            selectedNodeId={selectedNode?.id ?? null}
-            nodeRuns={run?.nodeRuns ?? []}
-            onSelectNode={setSelectedNodeId}
-          />
-          <SelectedNodePanel node={selectedNode} />
-        </div>
+        <Panel className="ops-run">
+          <div className="panel-header compact">
+            <div>
+              <p className="eyebrow">Run</p>
+              <h2>{run?.id ?? '尚未运行'}</h2>
+            </div>
+            <Badge>{run?.status ?? 'idle'}</Badge>
+          </div>
 
-        <RunPanel workflow={workflow} run={run} isRunning={isRunning} onRun={handleRun} />
+          {pendingApproval ? (
+            <div className="approval-card">
+              <p>{pendingApproval.prompt || `步骤 ${pendingApproval.stepId} 等待审批`}</p>
+              <div className="builder-actions">
+                <Button type="button" variant="primary" onClick={() => void handleApprove('approve')} disabled={!!busy}>
+                  批准
+                </Button>
+                <Button type="button" variant="secondary" onClick={() => void handleApprove('reject')} disabled={!!busy}>
+                  拒绝
+                </Button>
+              </div>
+            </div>
+          ) : null}
+
+          {pendingHumanHelp ? (
+            <div className="approval-card">
+              <p>{pendingHumanHelp.prompt || `步骤 ${pendingHumanHelp.stepId} 等待人工协助`}</p>
+              {typeof pendingHumanHelp.output?.viewerUrl === 'string' && pendingHumanHelp.output.viewerUrl ? (
+                <p>
+                  <a href={pendingHumanHelp.output.viewerUrl as string} target="_blank" rel="noreferrer">
+                    打开协助页面
+                  </a>
+                </p>
+              ) : null}
+              <div className="builder-actions">
+                <Button type="button" variant="primary" onClick={() => void handleHumanHelp(true)} disabled={!!busy}>
+                  已处理
+                </Button>
+                <Button type="button" variant="secondary" onClick={() => void handleHumanHelp(false)} disabled={!!busy}>
+                  放弃
+                </Button>
+              </div>
+            </div>
+          ) : null}
+
+          <ul className="run-timeline">
+            {(run?.stepRuns ?? []).map((step) => (
+              <li key={step.stepId}>
+                <button
+                  type="button"
+                  className={`timeline-item ${selectedStep?.stepId === step.stepId ? 'active' : ''}`}
+                  onClick={() => setSelectedStepId(step.stepId)}
+                >
+                  <span className={`tone ${stepTone(step.status)}`}>{step.status}</span>
+                  <strong>{step.stepId}</strong>
+                  <small>{step.uses}</small>
+                </button>
+              </li>
+            ))}
+            {!run ? <li className="empty-line">保存并运行后显示步骤时间线</li> : null}
+          </ul>
+
+          {selectedStep ? (
+            <div className="evidence-card">
+              <div className="subhead">
+                <strong>{selectedStep.stepId}</strong>
+                <Badge>{selectedStep.status}</Badge>
+              </div>
+              {selectedStep.error ? <p className="error-line">{selectedStep.error}</p> : null}
+              {selectedEvidence.length === 0 ? (
+                <p className="empty-line">此步骤暂无 CLI 证据</p>
+              ) : (
+                selectedEvidence.map((item) => (
+                  <div key={item.id} className="evidence-item">
+                    <div>exit {item.exitCode ?? '—'} · {item.type}</div>
+                    <code>{JSON.stringify(item.inputSummary)}</code>
+                    <code>{JSON.stringify(item.outputSummary)}</code>
+                    {item.stdoutRef ? <small>{item.stdoutRef}</small> : null}
+                  </div>
+                ))
+              )}
+            </div>
+          ) : null}
+        </Panel>
       </section>
-
-      <DetailPanels workflow={workflow} run={run} selectedNode={selectedNode} />
     </main>
   );
 }
 
-function AdapterTable({ adapters }: { adapters: AdapterStatus[] }) {
-  return (
-    <div className="adapter-card" aria-label="Runtime adapter table">
-      <div className="subhead">
-        <ServerCog size={16} />
-        <strong>Runtime Adapters</strong>
-      </div>
-      <DataTable>
-        <thead>
-          <tr>
-            <th>Adapter</th>
-            <th>Kind</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {adapters.map((adapter) => (
-            <tr key={adapter.id}>
-              <td>
-                <strong>{adapter.label}</strong>
-                <span>{adapter.reason}</span>
-              </td>
-              <td>{adapter.kind}</td>
-              <td>
-                <span className={`adapter-state ${adapter.available ? 'ok' : 'blocked'}`}>
-                  {adapter.available ? <CheckCircle2 size={14} /> : <CircleSlash2 size={14} />}
-                  {adapter.available ? 'ready' : 'blocked'}
-                </span>
-              </td>
-            </tr>
-          ))}
-          {adapters.length === 0 ? (
-            <tr>
-              <td colSpan={3}>等待 Runtime API 返回 adapter 状态</td>
-            </tr>
-          ) : null}
-        </tbody>
-      </DataTable>
-    </div>
-  );
+function isTerminal(status: WorkflowRun['status']) {
+  return status === 'COMPLETED' || status === 'FAILED' || status === 'ABORTED';
 }
 
-function SelectedNodePanel({ node }: { node: WorkflowNode | null }) {
-  return (
-    <Panel className="selected-node-panel">
-      <div className="subhead">
-        <ChevronRight size={16} />
-        <strong>{node ? node.title : '未选择节点'}</strong>
-      </div>
-      {node ? (
-        <div className="node-contract-grid">
-          <ContractBlock label="Agent" value={node.agentRoleId} />
-          <ContractBlock label="Adapter" value={node.config?.runtimeAdapter ?? 'deterministic_mvp'} />
-          <ContractBlock label="Provider" value={node.config?.provider ?? 'template'} />
-          <ContractBlock label="Outputs" value={node.outputs.join(', ')} />
-        </div>
-      ) : (
-        <p className="empty-line">编译后会显示节点合同。</p>
-      )}
-    </Panel>
-  );
+function runTone(status?: WorkflowRun['status']): 'ok' | 'warn' | 'idle' {
+  if (!status) {
+    return 'idle';
+  }
+  if (status === 'COMPLETED') {
+    return 'ok';
+  }
+  if (status === 'FAILED' || status === 'ABORTED') {
+    return 'warn';
+  }
+  return 'ok';
 }
 
-function SummaryTile({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) {
-  return (
-    <div className="summary-tile">
-      {icon}
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </div>
-  );
+function stepTone(status: string) {
+  if (status === 'COMPLETED') {
+    return 'ok';
+  }
+  if (status === 'FAILED' || status === 'ABORTED') {
+    return 'bad';
+  }
+  if (status === 'WAITING_APPROVAL' || status === 'WAITING_HUMAN' || status === 'RUNNING') {
+    return 'live';
+  }
+  return 'idle';
 }
 
 function StatusChip({ label, value, tone }: { label: string; value: string; tone: 'ok' | 'warn' | 'idle' }) {
@@ -257,18 +511,9 @@ function StatusChip({ label, value, tone }: { label: string; value: string; tone
   );
 }
 
-function ContractBlock({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="contract-block">
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </div>
-  );
-}
-
 function messageFromError(err: unknown, fallback: string) {
   if (err instanceof TypeError && err.message === 'Failed to fetch') {
-    return 'Runtime API 未连接。静态预览页已加载，启动本地后端后即可编译和运行工作流。';
+    return 'Runtime API 未连接。先启动后端再刷新。';
   }
   return err instanceof Error ? err.message : fallback;
 }
