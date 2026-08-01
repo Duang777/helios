@@ -1,0 +1,5 @@
+upstream=https://github.com/proma-ai/Proma
+commit=1ae8a1a471b39753123d6a339658dfe6a1fdc19b
+cloned=2026-08-01
+license=AGPL-3.0
+helios_slice=T

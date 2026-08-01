@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Helios</title>
+    <script>
+      // 主题初始化脚本（在 React 加载前执行，避免闪烁）
+      // 从 localStorage 缓存读取主题模式和特殊风格，立即应用类名
+      ;(function() {
+        var mode = localStorage.getItem('helios-theme-mode')
+          || localStorage.getItem('proma-theme-mode')
+          || 'light'
+        // Helios 默认强制纸感浅色：忽略遗留的 dark 缓存
+        if (!localStorage.getItem('helios-theme-mode') && mode === 'dark') {
+          mode = 'light'
+        }
+        var style = localStorage.getItem('helios-theme-style')
+          || localStorage.getItem('proma-theme-style')
+        var html = document.documentElement
+        html.classList.remove('dark')
+
+        if (mode === 'special' && style && style !== 'default') {
+          html.classList.add('theme-' + style)
+          if (style.endsWith('-dark')) {
+            html.classList.add('dark')
+          }
+        } else if (mode === 'dark') {
+          html.classList.add('dark')
+        } else if (mode === 'system') {
+          if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            html.classList.add('dark')
+          }
+        }
+        // mode === 'light' 时不添加 dark 类
+      })()
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/main.tsx"></script>
+  </body>
+</html>
