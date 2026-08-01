@@ -1,0 +1,19 @@
+apiVersion: helios/v1
+kind: Workflow
+id: opencli.bilibili-hot
+version: 1
+description: >
+  Slice Q — browser-session OpenCLI path. Reads Bilibili hot list via crystallized
+  adapter (requires OpenCLI Browser Bridge; login optional for hot).
+params: {}
+requires:
+  clis:
+    - name: helios-opencli
+      version: ">=0.2.0"
+steps:
+  - id: hot
+    uses: cli
+    cli: helios-opencli
+    sideEffect: read
+    argv: ["bilibili", "hot", "--limit", "5", "-f", "json"]
+    out: hot
