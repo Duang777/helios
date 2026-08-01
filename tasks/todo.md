@@ -57,7 +57,7 @@
 **Verification:**
 - [x] `cd desktop && bun run typecheck`
 - [x] `cd desktop && bun run build:renderer`
-- [ ] Manual desktop run with Helios API on localhost.
+- [x] Manual desktop run with Helios API on localhost.
 
 **Dependencies:** Task 1
 

@@ -175,3 +175,4 @@ Manual:
 ## Status log
 
 - 2026-08-01: Implemented Workflow Studio active view, sidebar entry, compile/save/run UI, helper tests, and root `build:renderer` script.
+- 2026-08-01: Verified in browser against localhost Helios API: compile → save → run, reaching `WAITING_APPROVAL` for `run_168109111400f013`.
