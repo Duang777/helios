@@ -176,3 +176,4 @@ Manual:
 
 - 2026-08-01: Implemented Workflow Studio active view, sidebar entry, compile/save/run UI, helper tests, and root `build:renderer` script.
 - 2026-08-01: Verified in browser against localhost Helios API: compile → save → run, reaching `WAITING_APPROVAL` for `run_168109111400f013`.
+- 2026-08-02: Task 5 landed in the desktop shell as workflow folder import/export plumbing, folder preview UI, and `INTENT.md`/`manifest.json` export support; verified with `./scripts/smoke-workflow-folder.sh` and `cd desktop && bun run typecheck`.

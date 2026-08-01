@@ -97,13 +97,13 @@
 **Description:** Let desktop create and open Output-style workflow folders containing YAML, intent, manifest, fixtures, and later TS source.
 
 **Acceptance criteria:**
-- [ ] Desktop can import a workflow folder and show parsed workflow/validation.
-- [ ] Desktop can export current draft to `workflows/<id>/`.
-- [ ] Export records `INTENT.md` and `manifest.json`.
+- [x] Desktop can import a workflow folder and show parsed workflow/validation.
+- [x] Desktop can export current draft to `workflows/<id>/`.
+- [x] Export records `INTENT.md` and `manifest.json`.
 
 **Verification:**
-- [ ] `./scripts/smoke-workflow-folder.sh`
-- [ ] `cd desktop && bun run typecheck`
+- [x] `./scripts/smoke-workflow-folder.sh`
+- [x] `cd desktop && bun run typecheck`
 
 **Dependencies:** Task 3
 
@@ -192,10 +192,10 @@
 
 ## Checkpoint: Visual Workflow Studio
 
-- [ ] Tasks 4-5 complete.
-- [ ] User can preview graph and import/export workflow folders.
-- [ ] `cd desktop && bun run build:renderer`
-- [ ] `./scripts/smoke-workflow-folder.sh`
+- [x] Tasks 4-5 complete.
+- [x] User can preview graph and import/export workflow folders.
+- [x] `cd desktop && bun run build:renderer`
+- [x] `./scripts/smoke-workflow-folder.sh`
 
 ## Checkpoint: Reusable Authoring Layer
 

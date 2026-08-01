@@ -1,8 +1,10 @@
 import * as React from 'react'
-import { AlertCircle, CheckCircle2 } from 'lucide-react'
+import { AlertCircle, CheckCircle2, FolderOpen, FolderOutput, Loader2 } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import type { WorkflowFolderImportPreview } from '@/types/workflow-folder'
 import type { CompileIR, CompileResult, WorkflowRun } from '@/lib/helios/types'
 import { getCompileAttempts, getWorkflowDraftId } from './workflow-studio-helpers'
 import { WorkflowGraphPreview } from './WorkflowGraphPreview'
@@ -199,6 +201,109 @@ export function RunPanel({ run, usedDefaults }: { run: WorkflowRun | null; usedD
                 ))}
               </div>
             </section>
+          </>
+        )}
+      </div>
+    </ScrollArea>
+  )
+}
+
+export function FolderPanel({
+  preview,
+  result,
+  actionStatus,
+  errorMessage,
+  onImportFolder,
+  onExportFolder,
+}: {
+  preview: WorkflowFolderImportPreview | null
+  result: CompileResult | null
+  actionStatus: 'idle' | 'importing' | 'exporting'
+  errorMessage: string | null
+  onImportFolder: () => void
+  onExportFolder: () => void
+}): React.ReactElement {
+  const busy = actionStatus !== 'idle'
+  const canExport = result?.validation.ok === true && result.yaml.trim().length > 0 && Boolean(result.workflow?.id)
+
+  return (
+    <ScrollArea className="h-full min-h-[320px] rounded-md border border-border/60 bg-background/70">
+      <div className="space-y-4 p-4 text-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-2">
+            <FolderOpen className="size-4 text-primary" />
+            <h3 className="truncate text-sm font-medium">Workflow Folder</h3>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" variant="outline" onClick={onImportFolder} disabled={busy}>
+              {actionStatus === 'importing' ? <Loader2 className="animate-spin" /> : <FolderOpen />}
+              导入目录
+            </Button>
+            <Button size="sm" variant="outline" onClick={onExportFolder} disabled={busy || !canExport}>
+              {actionStatus === 'exporting' ? <Loader2 className="animate-spin" /> : <FolderOutput />}
+              导出目录
+            </Button>
+          </div>
+        </div>
+
+        {errorMessage && (
+          <Alert variant="destructive">
+            <AlertCircle className="size-4" />
+            <AlertTitle>文件夹操作失败</AlertTitle>
+            <AlertDescription>{errorMessage}</AlertDescription>
+          </Alert>
+        )}
+
+        {!preview ? (
+          <p className="text-muted-foreground">导入一个 workflow folder 后会显示 INTENT.md、manifest.json 和文件路径。</p>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3">
+              <SummaryCell label="Folder" value={preview.folderName} />
+              <SummaryCell label="YAML" value={preview.workflowYamlPath} />
+              <SummaryCell label="INTENT" value={preview.intentMdPath} />
+              <SummaryCell label="Manifest" value={preview.manifestPath} />
+              <SummaryCell label="Prompt" value={preview.promptMdPath} />
+              <SummaryCell label="README" value={preview.readmePath} />
+            </div>
+
+            <WorkflowSummary result={result} />
+            <ValidationPanel result={result} />
+
+            <section>
+              <h3 className="text-sm font-medium">INTENT.md</h3>
+              <div className="mt-2">
+                <CodeBlock value={preview.intentMarkdown ?? ''} empty="INTENT.md 不存在或为空。" />
+              </div>
+            </section>
+
+            <section>
+              <h3 className="text-sm font-medium">manifest.json</h3>
+              <div className="mt-2">
+                <CodeBlock
+                  value={preview.manifest ? JSON.stringify(preview.manifest, null, 2) : ''}
+                  empty={preview.manifestError ?? 'manifest.json 不存在。'}
+                />
+              </div>
+            </section>
+
+            {preview.promptMarkdown != null && (
+              <section>
+                <h3 className="text-sm font-medium">prompt.md</h3>
+                <div className="mt-2">
+                  <CodeBlock value={preview.promptMarkdown} empty="prompt.md 为空。" />
+                </div>
+              </section>
+            )}
+
+            {preview.readmeMarkdown != null && (
+              <section>
+                <h3 className="text-sm font-medium">README.md</h3>
+                <div className="mt-2">
+                  <CodeBlock value={preview.readmeMarkdown} empty="README.md 为空。" />
+                </div>
+              </section>
+            )}
           </>
         )}
       </div>

@@ -6,11 +6,13 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
-import { compileIntent, saveWorkflow, startRun, waitForRun } from '@/lib/helios/client'
+import { compileIntent, saveWorkflow, startRun, validateWorkflowYaml, waitForRun } from '@/lib/helios/client'
 import type { CompileResult, Workflow as HeliosWorkflow, WorkflowRun } from '@/lib/helios/types'
 import { cn } from '@/lib/utils'
+import type { WorkflowFolderImportPreview } from '@/types/workflow-folder'
 import {
   CodeBlock,
+  FolderPanel,
   GraphPanel,
   IRPanel,
   RunPanel,
@@ -21,6 +23,7 @@ import {
   type StudioStatus,
 } from './WorkflowStudioPanels'
 import {
+  buildFolderImportResult,
   buildStudioRunParams,
   canSaveDraft,
   getWorkflowDraftId,
@@ -28,19 +31,32 @@ import {
 
 const SAMPLE_INTENT = '把线索 L-123 同步成采购单，写前要审批'
 
+function childPath(folderPath: string, filename: string): string {
+  const separator = folderPath.includes('\\') && !folderPath.includes('/') ? '\\' : '/'
+  return `${folderPath.replace(/[/\\]$/, '')}${separator}${filename}`
+}
+
 export function WorkflowStudioView(): React.ReactElement {
   const [intent, setIntent] = React.useState(SAMPLE_INTENT)
   const [result, setResult] = React.useState<CompileResult | null>(null)
   const [savedWorkflow, setSavedWorkflow] = React.useState<HeliosWorkflow | null>(null)
   const [run, setRun] = React.useState<WorkflowRun | null>(null)
   const [usedDefaults, setUsedDefaults] = React.useState<string[]>([])
+  const [folderPreview, setFolderPreview] = React.useState<WorkflowFolderImportPreview | null>(null)
   const [status, setStatus] = React.useState<StudioStatus>('idle')
+  const [folderStatus, setFolderStatus] = React.useState<'idle' | 'importing' | 'exporting'>('idle')
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null)
+  const [folderErrorMessage, setFolderErrorMessage] = React.useState<string | null>(null)
 
   const yaml = result?.yaml ?? ''
   const workflowId = getWorkflowDraftId(result)
   const saveEnabled = canSaveDraft(result, yaml)
-  const busy = status === 'compiling' || status === 'saving' || status === 'running'
+  const busy = status === 'compiling' || status === 'saving' || status === 'running' || folderStatus !== 'idle'
+
+  const resetRunState = React.useCallback(() => {
+    setRun(null)
+    setUsedDefaults([])
+  }, [])
 
   const handleCompile = React.useCallback(async (repair = false): Promise<void> => {
     const trimmed = intent.trim()
@@ -51,8 +67,8 @@ export function WorkflowStudioView(): React.ReactElement {
     }
     setStatus('compiling')
     setErrorMessage(null)
-    setRun(null)
-    setUsedDefaults([])
+    setFolderErrorMessage(null)
+    resetRunState()
     try {
       const compiled = await compileIntent(trimmed, repair && result ? {
         previousYaml: result.yaml,
@@ -60,6 +76,7 @@ export function WorkflowStudioView(): React.ReactElement {
       } : undefined)
       setResult(compiled)
       setSavedWorkflow(null)
+      setFolderPreview(null)
       setStatus(compiled.validation.ok ? 'ready' : 'error')
       if (!compiled.validation.ok) {
         setErrorMessage('后端校验未通过，请查看 Validation。')
@@ -68,7 +85,7 @@ export function WorkflowStudioView(): React.ReactElement {
       setStatus('error')
       setErrorMessage(error instanceof Error ? error.message : '编译失败')
     }
-  }, [intent, result])
+  }, [intent, resetRunState, result])
 
   const saveCurrentDraft = React.useCallback(async (): Promise<HeliosWorkflow | null> => {
     if (!result || !saveEnabled || !workflowId) {
@@ -90,6 +107,90 @@ export function WorkflowStudioView(): React.ReactElement {
       return null
     }
   }, [result, saveEnabled, workflowId, yaml])
+
+  const handleImportFolder = React.useCallback(async (): Promise<void> => {
+    setFolderStatus('importing')
+    setErrorMessage(null)
+    setFolderErrorMessage(null)
+    try {
+      const selectedFolder = await window.electronAPI.openFolderDialog()
+      if (!selectedFolder) {
+        return
+      }
+      const folder = await window.electronAPI.readWorkflowFolder(selectedFolder.path)
+      const validation = await validateWorkflowYaml(folder.workflowYaml)
+      const imported = buildFolderImportResult(folder.workflowYaml, validation, folder.folderName)
+      setResult(imported)
+      setSavedWorkflow(null)
+      setRun(null)
+      setUsedDefaults([])
+      setFolderPreview(folder)
+      if (folder.intentMarkdown?.trim()) {
+        setIntent(folder.intentMarkdown.trim())
+      }
+      setStatus(imported.validation.ok ? 'ready' : 'error')
+      if (!imported.validation.ok) {
+        setErrorMessage('文件夹导入后的 workflow 校验未通过，请查看 Validation。')
+      } else {
+        toast.success(`已导入 ${folder.folderName}`)
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '导入 workflow folder 失败'
+      setStatus('error')
+      setErrorMessage(message)
+      setFolderErrorMessage(message)
+    } finally {
+      setFolderStatus('idle')
+    }
+  }, [])
+
+  const handleExportFolder = React.useCallback(async (): Promise<void> => {
+    const workflow = savedWorkflow ?? result?.workflow
+    if (!workflow || !result?.yaml.trim()) {
+      setErrorMessage('当前草稿还不能导出。')
+      setStatus('error')
+      return
+    }
+    setFolderStatus('exporting')
+    setErrorMessage(null)
+    setFolderErrorMessage(null)
+    try {
+      const exportRoot = folderPreview?.folderPath.replace(/[/\\][^/\\]+$/, '')
+      const rootSelection = exportRoot || (await window.electronAPI.openFolderDialog())?.path
+      if (!rootSelection) return
+      const exported = await window.electronAPI.exportWorkflowFolder({
+        rootPath: rootSelection,
+        workflowId: workflow.id,
+        workflowYaml: result.yaml,
+        intentMarkdown: intent,
+        workflowVersion: workflow.version,
+        workflowDescription: workflow.description,
+      })
+      setFolderPreview({
+        folderPath: exported.folderPath,
+        folderName: exported.folderName,
+        workflowYamlPath: exported.workflowYamlPath,
+        workflowYaml: result.yaml,
+        intentMdPath: exported.intentMdPath,
+        intentMarkdown: intent,
+        promptMdPath: childPath(exported.folderPath, 'prompt.md'),
+        promptMarkdown: null,
+        readmePath: childPath(exported.folderPath, 'README.md'),
+        readmeMarkdown: null,
+        manifestPath: exported.manifestPath,
+        manifest: exported.manifest,
+        manifestError: null,
+      })
+      toast.success(`已导出 ${workflow.id}`)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '导出 workflow folder 失败'
+      setStatus('error')
+      setErrorMessage(message)
+      setFolderErrorMessage(message)
+    } finally {
+      setFolderStatus('idle')
+    }
+  }, [folderPreview?.folderPath, intent, result?.workflow, result?.yaml, savedWorkflow])
 
   const handleRun = React.useCallback(async (): Promise<void> => {
     const workflow = savedWorkflow ?? await saveCurrentDraft()
@@ -186,14 +287,15 @@ export function WorkflowStudioView(): React.ReactElement {
               <TabsList className="h-8 rounded-md">
                 <TabsTrigger value="yaml" className="h-6 rounded-sm px-2 text-xs">YAML</TabsTrigger>
                 <TabsTrigger value="graph" className="h-6 rounded-sm px-2 text-xs">Graph</TabsTrigger>
-                <TabsTrigger value="validation" className="h-6 rounded-sm px-2 text-xs">Validation</TabsTrigger>
-                <TabsTrigger value="ir" className="h-6 rounded-sm px-2 text-xs">IR</TabsTrigger>
-                <TabsTrigger value="run" className="h-6 rounded-sm px-2 text-xs">Run</TabsTrigger>
-              </TabsList>
-            </div>
-            <div className={cn('min-h-0 flex-1 p-4', busy && 'cursor-progress')}>
-              <TabsContent value="yaml" className="m-0 h-full">
-                <CodeBlock value={yaml} empty="编译后会显示 Helios YAML。" />
+              <TabsTrigger value="validation" className="h-6 rounded-sm px-2 text-xs">Validation</TabsTrigger>
+              <TabsTrigger value="ir" className="h-6 rounded-sm px-2 text-xs">IR</TabsTrigger>
+              <TabsTrigger value="run" className="h-6 rounded-sm px-2 text-xs">Run</TabsTrigger>
+              <TabsTrigger value="folder" className="h-6 rounded-sm px-2 text-xs">Folder</TabsTrigger>
+            </TabsList>
+          </div>
+          <div className={cn('min-h-0 flex-1 p-4', busy && 'cursor-progress')}>
+            <TabsContent value="yaml" className="m-0 h-full">
+              <CodeBlock value={yaml} empty="编译后会显示 Helios YAML。" />
               </TabsContent>
               <TabsContent value="graph" className="m-0 h-full">
                 <GraphPanel result={result} run={run} />
@@ -206,6 +308,16 @@ export function WorkflowStudioView(): React.ReactElement {
               </TabsContent>
               <TabsContent value="run" className="m-0 h-full">
                 <RunPanel run={run} usedDefaults={usedDefaults} />
+              </TabsContent>
+              <TabsContent value="folder" className="m-0 h-full">
+                <FolderPanel
+                  preview={folderPreview}
+                  result={result}
+                  actionStatus={folderStatus}
+                  errorMessage={folderErrorMessage}
+                  onImportFolder={() => void handleImportFolder()}
+                  onExportFolder={() => void handleExportFolder()}
+                />
               </TabsContent>
             </div>
           </Tabs>
