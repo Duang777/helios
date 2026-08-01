@@ -67,6 +67,18 @@ func TestCompileRepairLoop(t *testing.T) {
 	if len(res.Attempts) != 2 {
 		t.Fatalf("expected 2 attempts, got %d", len(res.Attempts))
 	}
+	if len(res.RepairAttempts) != 2 {
+		t.Fatalf("expected 2 repairAttempts, got %d", len(res.RepairAttempts))
+	}
+	if res.IR == nil {
+		t.Fatal("expected compile IR")
+	}
+	if res.IR.ID != "fixed.draft" || len(res.IR.Steps) != 1 {
+		t.Fatalf("unexpected IR: %+v", res.IR)
+	}
+	if res.IR.Steps[0].ID != "approve" || res.IR.Steps[0].Uses != "approval" {
+		t.Fatalf("unexpected IR step: %+v", res.IR.Steps[0])
+	}
 }
 
 func TestCompileRequiresIntent(t *testing.T) {

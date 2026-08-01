@@ -1,0 +1,115 @@
+export type RunStatus =
+  | 'PENDING'
+  | 'RUNNING'
+  | 'WAITING_APPROVAL'
+  | 'WAITING_HUMAN'
+  | 'PAUSED'
+  | 'COMPLETED'
+  | 'FAILED'
+  | 'ABORTED'
+
+export type StepStatus =
+  | 'PENDING'
+  | 'READY'
+  | 'RUNNING'
+  | 'WAITING_APPROVAL'
+  | 'WAITING_HUMAN'
+  | 'SKIPPED'
+  | 'COMPLETED'
+  | 'FAILED'
+  | 'ABORTED'
+
+export interface WorkflowStep {
+  id: string
+  uses: string
+  prompt?: string
+  cli?: string
+  description?: string
+}
+
+export interface Workflow {
+  id: string
+  version: number
+  description?: string
+  steps: WorkflowStep[]
+  params?: Record<string, { type: string; required?: boolean; description?: string }>
+}
+
+export interface CompileIRParam {
+  type: string
+  required?: boolean
+  description?: string
+}
+
+export interface CompileIRStep {
+  id: string
+  uses: string
+  needs?: string[]
+  cli?: string
+  sideEffect?: string
+  prompt?: string
+}
+
+export interface CompileIR {
+  id: string
+  version: number
+  description?: string
+  params: Record<string, CompileIRParam>
+  steps: CompileIRStep[]
+}
+
+export interface CompileAttempt {
+  yaml: string
+  mode?: string
+  model?: string
+  rawTraceId?: string
+  error?: string
+}
+
+export interface StepRun {
+  stepId: string
+  uses: string
+  status: StepStatus
+  error?: string
+  output?: Record<string, unknown>
+  prompt?: string
+}
+
+export interface ApprovalRecord {
+  id: string
+  runId: string
+  stepId: string
+  prompt: string
+  decision?: string
+}
+
+export interface WorkflowRun {
+  id: string
+  workflowId: string
+  status: RunStatus
+  stepRuns: StepRun[]
+  approvals: ApprovalRecord[]
+  error?: string
+  params: Record<string, unknown>
+}
+
+export interface CompileResult {
+  yaml: string
+  mode?: string
+  model?: string
+  ir?: CompileIR
+  validation: { ok: boolean; errors: string[] }
+  warnings?: string[]
+  attempts?: CompileAttempt[]
+  repairAttempts?: CompileAttempt[]
+  workflow?: Workflow
+}
+
+export type CardEvent =
+  | { kind: 'text'; text: string }
+  | {
+      kind: 'tool'
+      toolName: 'confirm_intent' | 'show_step' | 'request_approval' | 'show_result'
+      input: Record<string, unknown>
+      output?: Record<string, unknown>
+    }

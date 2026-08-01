@@ -5,13 +5,13 @@
 **Description:** Define the desktop-facing compile result and workflow draft contract so backend, renderer, and future agents agree on one shape.
 
 **Acceptance criteria:**
-- [ ] Compile response includes `ir`, `yaml`, `validation`, `warnings`, and `repairAttempts`.
-- [ ] Desktop types in `lib/helios/types.ts` match backend JSON exactly.
-- [ ] Existing `POST /compile` callers keep working or have a compatibility shim.
+- [x] Compile response includes `ir`, `yaml`, `validation`, `warnings`, and `repairAttempts`.
+- [x] Desktop types in `lib/helios/types.ts` match backend JSON exactly.
+- [x] Existing `POST /compile` callers keep working or have a compatibility shim.
 
 **Verification:**
-- [ ] `cd backend && go test ./internal/httpapi ./internal/compile`
-- [ ] `cd desktop && bun run typecheck`
+- [x] `cd backend && go test ./internal/httpapi ./internal/compile`
+- [x] `cd desktop && bun run typecheck`
 
 **Dependencies:** None
 
