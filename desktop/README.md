@@ -215,6 +215,52 @@ bun run build:renderer
 bun run dist:fast
 ```
 
+## 本地启动
+
+桌面端建议同时起 Helios API 和 Electron 开发壳。默认情况下，桌面会连 `http://127.0.0.1:8080/api/v1`。
+
+### 1. 启动后端 API
+
+在仓库根目录打开一个终端：
+
+```bash
+cd backend
+go run ./cmd/helios
+```
+
+如果 8080 端口被占用，可以改端口再启动：
+
+```bash
+PORT=18112 go run ./cmd/helios
+```
+
+### 2. 启动桌面开发壳
+
+在另一个终端打开桌面目录：
+
+```bash
+cd desktop
+bun run dev
+```
+
+这会同时启动 Vite 预览和 Electron 主进程，桌面窗口会自动打开。
+
+### 3. 端口不一致时
+
+如果后端不是 8080，请把桌面端 API 地址一起改掉：
+
+```bash
+cd desktop
+VITE_HELIOS_API_BASE=http://127.0.0.1:18112/api/v1 bun run dev
+```
+
+### 4. 你应该看到什么
+
+- 桌面左侧导航里的 Workflow Studio。
+- Workflow Studio 里的 `Folder` 页签。
+- `导入目录` 可以读取 `workflows/demo.folder-smoke` 这类 workflow folder。
+- `导出目录` 可以把当前草稿写回 `workflows/<id>/`，并生成 `INTENT.md` 和 `manifest.json`。
+
 ## 技术栈
 
 | 层级 | 技术 |
