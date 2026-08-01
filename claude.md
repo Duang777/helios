@@ -7,6 +7,7 @@ This repository builds `Helios`, a business workflow compiler and auditable runt
 - PRD: `docs/prd/helios-prd-v0.1.md`
 - Research: `docs/research/2026-07-31-helios-reposition-research.md`
 - ADR: `docs/decisions/ADR-001-go-control-plane-pi-sidecar.md`
+- ADR-003 (Q2–Q5): `docs/decisions/ADR-003-mvp-open-questions-q2-q5.md`
 - Agent guide: `agent.md`
 - Slice E (GUI): `docs/architecture/slice-e-gui.md`
 - Slice C/D (Pi): `docs/architecture/slice-c-d-pi.md`

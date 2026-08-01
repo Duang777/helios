@@ -77,4 +77,5 @@ Status 枚举：`Proposed` | `Accepted` | `Implemented` | `Superseded`
 | G–N | `docs/architecture/slice-*.md` | 见各文档 | Implemented |
 | O | `docs/architecture/slice-o-mvp-acceptance.md` | 既有 smoke | Implemented |
 
-下一决策面：PRD Q2–Q6（非实现排队）。
+下一决策面：PRD **Q6**（开源/品牌）。Q2–Q5 已冻结见 ADR-003。  
+可选工程（需新切片设计）：Console 打磨、CI 挂 `smoke-mvp-acceptance.sh`、更多飞书剧本。

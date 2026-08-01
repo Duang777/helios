@@ -34,6 +34,7 @@ Build `Helios`, a business workflow compiler and auditable runtime:
 - Feishu live accept: `docs/acceptance/2026-08-01-feishu-live.md`
 - Plan/tasks: `tasks/plan.md`, `tasks/todo.md`
 - ADR: `docs/decisions/ADR-001-go-control-plane-pi-sidecar.md`
+- ADR-003 (Q2–Q5 freeze): `docs/decisions/ADR-003-mvp-open-questions-q2-q5.md`
 - Naming: `docs/naming.md`
 
 ## Current Plan
@@ -55,6 +56,7 @@ Build `Helios`, a business workflow compiler and auditable runtime:
 15. ~~**Slice M Feishu daily-brief (Q1)**~~ — Implemented: `docs/architecture/slice-m-feishu-daily-brief.md`
 16. ~~**Slice N live compile harden**~~ — Implemented: `docs/architecture/slice-n-live-compile-harden.md`
 17. ~~**Slice O MVP §15 closeout**~~ — Implemented: `docs/architecture/slice-o-mvp-acceptance.md`
+18. ~~**ADR-003 freeze Q2–Q5**~~ — Accepted: YAML DAG+契约 / TS 实现与工具链（非双主语言）/ Pi sidecar / fs evidence / local；**Q6 still open**
 
 ## Development Gate
 
