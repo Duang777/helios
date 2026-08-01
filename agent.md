@@ -75,6 +75,19 @@ See `docs/architecture/dev-gate.md`.
 
 Template: `docs/architecture/_templates/slice-tech-design.md`
 
+## Development Discipline
+
+For the desktop Workflow Studio work, agents must follow these rules:
+
+1. Work from `tasks/todo.md` in small, verifiable increments.
+2. Before changing behavior, read the relevant skill docs and add/adjust tests for the contract being changed.
+3. Keep public API changes additive and backward compatible unless a slice design explicitly accepts a breaking change.
+4. Update docs in the same increment as code: task status, architecture notes, ADRs, or user-facing guides as appropriate.
+5. Run the narrow verification command for the slice, then the broader gate before marking a task complete.
+6. Commit each completed increment with a focused message. Stage only files touched for that increment; the worktree may contain unrelated user or agent changes.
+7. Never commit secrets, build output, `node_modules`, or unrelated formatting churn.
+8. For desktop UI, prefer existing Proma/Electron patterns and reusable OSS packages with clear licenses over custom infrastructure.
+
 ## Slice A verification
 
 ```bash
