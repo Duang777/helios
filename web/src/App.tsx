@@ -433,8 +433,8 @@ export function App() {
         <Panel className="ops-run">
           <div className="panel-header compact">
             <div>
-              <p className="eyebrow">Run</p>
-              <h2>{run?.id ?? '尚未运行'}</h2>
+              <p className="eyebrow">结果</p>
+              <h2>{run?.id ?? '选左侧剧本后点运行'}</h2>
             </div>
             <Badge>{run?.status ?? 'idle'}</Badge>
           </div>
@@ -442,7 +442,15 @@ export function App() {
           {runInFlight ? (
             <div className="progress-card" role="status">
               <Loader2 size={16} className="spin" />
-              <span>正在执行 CLI，请稍候… 完成后结果会直接显示在下方。</span>
+              <span>正在执行 CLI，请稍候…</span>
+            </div>
+          ) : null}
+
+          {run?.status === 'COMPLETED' ? (
+            <div className="result-hero">
+              {(run.stepRuns.filter((s) => s.status === 'COMPLETED')).map((step) => (
+                <StepResult key={step.stepId} step={step} prominent />
+              ))}
             </div>
           ) : null}
 
@@ -513,7 +521,7 @@ export function App() {
                 </p>
               ) : null}
 
-              <StepResult step={selectedStep} />
+              {run?.status !== 'COMPLETED' ? <StepResult step={selectedStep} /> : null}
 
               {selectedStep.status === 'PENDING' || selectedStep.status === 'RUNNING' ? (
                 <p className="empty-line">等待执行…</p>
@@ -556,7 +564,7 @@ export function App() {
   );
 }
 
-function StepResult({ step }: { step: StepRun }) {
+function StepResult({ step, prominent = false }: { step: StepRun; prominent?: boolean }) {
   const output = step.output;
   if (!output || step.status !== 'COMPLETED') {
     return null;
@@ -566,19 +574,24 @@ function StepResult({ step }: { step: StepRun }) {
   const rows = summarizeRows(data);
   if (rows.length > 0) {
     return (
-      <div className="result-panel">
-        <p className="result-label">结果（{rows.length}）</p>
+      <div className={`result-panel ${prominent ? 'prominent' : ''}`}>
+        <p className="result-label">
+          {step.stepId} · 拿到 {rows.length} 条
+        </p>
         <ol className="result-list">
-          {rows.map((row) => (
+          {rows.map((row, index) => (
             <li key={row.key}>
-              {row.href ? (
-                <a href={row.href} target="_blank" rel="noreferrer">
-                  {row.title}
-                </a>
-              ) : (
-                <span>{row.title}</span>
-              )}
-              {row.meta ? <small>{row.meta}</small> : null}
+              <span className="result-index">{index + 1}</span>
+              <div>
+                {row.href ? (
+                  <a href={row.href} target="_blank" rel="noreferrer">
+                    {row.title}
+                  </a>
+                ) : (
+                  <span>{row.title}</span>
+                )}
+                {row.meta ? <small>{row.meta}</small> : null}
+              </div>
             </li>
           ))}
         </ol>
@@ -587,8 +600,8 @@ function StepResult({ step }: { step: StepRun }) {
   }
 
   return (
-    <div className="result-panel">
-      <p className="result-label">输出</p>
+    <div className={`result-panel ${prominent ? 'prominent' : ''}`}>
+      <p className="result-label">{step.stepId} · 输出</p>
       <pre className="result-json">{JSON.stringify(preferData(output), null, 2)}</pre>
     </div>
   );
