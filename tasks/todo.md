@@ -28,13 +28,13 @@
 **Description:** Port the Kestra-style generation discipline into Helios prompts and validation: allowed step types, registry-derived tools, side-effect flags, approvals, and no invented properties.
 
 **Acceptance criteria:**
-- [ ] Compiler prompt receives Helios workflow schema and CLI/tool registry summary.
-- [ ] Invalid step type/property fails validation before save/run.
-- [ ] Repair loop includes previous YAML plus validation errors, capped at 3 attempts.
+- [x] Compiler prompt receives Helios workflow schema and CLI/tool registry summary.
+- [x] Invalid step type/property fails validation before save/run.
+- [x] Repair loop includes previous YAML plus validation errors, capped at 3 attempts.
 
 **Verification:**
-- [ ] `cd backend && go test ./internal/compile ./internal/runtime`
-- [ ] `./scripts/smoke-desktop-nl-compile.sh`
+- [x] `cd backend && go test ./internal/compile ./internal/runtime`
+- [x] `./scripts/smoke-desktop-nl-compile.sh`
 
 **Dependencies:** Task 1
 
