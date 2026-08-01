@@ -23,6 +23,7 @@ This repository builds `Helios`, a business workflow compiler and auditable runt
 - Slice M (Feishu Q1 playbook): `docs/architecture/slice-m-feishu-daily-brief.md`
 - Slice N (live compile harden): `docs/architecture/slice-n-live-compile-harden.md`
 - Slice O (MVP §15): `docs/architecture/slice-o-mvp-acceptance.md`
+- Slice P (OpenCLI, Proposed): `docs/architecture/slice-p-opencli-adapter.md`
 - Feishu live accept: `docs/acceptance/2026-08-01-feishu-live.md`
 - Best-fit OSS: `docs/research/2026-08-01-best-fit-oss.md`
 
