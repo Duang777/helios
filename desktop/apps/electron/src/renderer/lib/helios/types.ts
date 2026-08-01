@@ -27,6 +27,36 @@ export interface WorkflowStep {
   description?: string
 }
 
+export type ConnectorSideEffect = 'none' | 'read' | 'write'
+
+export interface CLIArgSpec {
+  name: string
+  type: string
+  required?: boolean
+  enum?: string[]
+  default?: unknown
+}
+
+export interface CLICommandSpec {
+  path: string[]
+  sideEffect: ConnectorSideEffect
+  dryRun?: boolean
+  args?: CLIArgSpec[]
+}
+
+export interface CLIIntrospect {
+  name: string
+  version: string
+  commands: CLICommandSpec[]
+}
+
+export interface RegisteredCLI {
+  name: string
+  version: string
+  path: string
+  introspect: CLIIntrospect
+}
+
 export interface Workflow {
   id: string
   version: number

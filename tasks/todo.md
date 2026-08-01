@@ -142,9 +142,9 @@
 **Description:** Surface available CLI/tools as reusable desktop building blocks and feed the same registry into compiler prompts.
 
 **Acceptance criteria:**
-- [ ] Desktop lists available step types/connectors with parameters and side-effect markers.
-- [ ] Compiler generated workflow only references listed connectors.
-- [ ] User can insert a connector into prompt/draft from the UI.
+- [x] Desktop lists available step types/connectors with parameters and side-effect markers.
+- [x] Compiler generated workflow only references listed connectors.
+- [x] User can insert a connector into prompt/draft from the UI.
 
 **Verification:**
 - [ ] `cd backend && go test ./internal/registry ./internal/httpapi`

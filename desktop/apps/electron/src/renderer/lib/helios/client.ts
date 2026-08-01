@@ -1,4 +1,4 @@
-import type { CompileResult, Workflow, WorkflowRun, WorkflowValidationResponse } from './types'
+import type { CompileResult, RegisteredCLI, Workflow, WorkflowRun, WorkflowValidationResponse } from './types'
 
 const DEFAULT_BASE = 'http://127.0.0.1:8080/api/v1'
 
@@ -53,6 +53,12 @@ export async function getWorkflow(id: string): Promise<Workflow> {
   )
   const payload = await parseJSON<{ workflow: Workflow }>(response)
   return payload.workflow
+}
+
+export async function listCLIs(): Promise<RegisteredCLI[]> {
+  const response = await fetch(`${heliosBase()}/clis`, { cache: 'no-store' })
+  const payload = await parseJSON<{ clis: RegisteredCLI[] }>(response)
+  return payload?.clis ?? []
 }
 
 function requireRun(

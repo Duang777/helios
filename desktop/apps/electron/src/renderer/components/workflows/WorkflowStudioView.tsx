@@ -28,6 +28,8 @@ import {
   canSaveDraft,
   getWorkflowDraftId,
 } from './workflow-studio-helpers'
+import { insertTextAtSelection } from './connector-palette-helpers'
+import { ConnectorPalette } from './ConnectorPalette'
 
 const SAMPLE_INTENT = '把线索 L-123 同步成采购单，写前要审批'
 
@@ -37,6 +39,7 @@ function childPath(folderPath: string, filename: string): string {
 }
 
 export function WorkflowStudioView(): React.ReactElement {
+  const intentRef = React.useRef<HTMLTextAreaElement | null>(null)
   const [intent, setIntent] = React.useState(SAMPLE_INTENT)
   const [result, setResult] = React.useState<CompileResult | null>(null)
   const [savedWorkflow, setSavedWorkflow] = React.useState<HeliosWorkflow | null>(null)
@@ -52,6 +55,22 @@ export function WorkflowStudioView(): React.ReactElement {
   const workflowId = getWorkflowDraftId(result)
   const saveEnabled = canSaveDraft(result, yaml)
   const busy = status === 'compiling' || status === 'saving' || status === 'running' || folderStatus !== 'idle'
+
+  const insertIntentSnippet = React.useCallback((snippet: string): void => {
+    const textarea = intentRef.current
+    const current = textarea?.value ?? intent
+    const start = textarea?.selectionStart ?? current.length
+    const end = textarea?.selectionEnd ?? current.length
+    const insertion = start === end && start === current.length && current.trim().length > 0
+      ? `\n\n${snippet}`
+      : snippet
+    const next = insertTextAtSelection(current, start, end, insertion)
+    setIntent(next.value)
+    window.requestAnimationFrame(() => {
+      textarea?.focus()
+      textarea?.setSelectionRange(next.selectionStart, next.selectionEnd)
+    })
+  }, [intent])
 
   const resetRunState = React.useCallback(() => {
     setRun(null)
@@ -242,6 +261,7 @@ export function WorkflowStudioView(): React.ReactElement {
           </div>
           <div className="flex min-h-0 flex-1 flex-col gap-4 p-4">
             <Textarea
+              ref={intentRef}
               value={intent}
               onChange={(event) => setIntent(event.target.value)}
               className="min-h-[180px] flex-1 resize-none text-sm leading-relaxed"
@@ -274,6 +294,7 @@ export function WorkflowStudioView(): React.ReactElement {
                 运行
               </Button>
             </div>
+            <ConnectorPalette onInsert={insertIntentSnippet} disabled={busy} />
           </div>
         </section>
 
