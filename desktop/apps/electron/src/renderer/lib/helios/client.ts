@@ -1,4 +1,4 @@
-import type { CompileResult, Workflow, WorkflowRun } from './types'
+import type { CompileResult, Workflow, WorkflowRun, WorkflowValidationResponse } from './types'
 
 const DEFAULT_BASE = 'http://127.0.0.1:8080/api/v1'
 
@@ -128,6 +128,34 @@ export async function compileIntent(
     body: JSON.stringify({ intent, hints }),
   })
   return parseJSON<CompileResult>(response)
+}
+
+export async function validateWorkflowYaml(yaml: string): Promise<WorkflowValidationResponse> {
+  const response = await fetch(`${heliosBase()}/workflows/validate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/yaml' },
+    body: yaml,
+  })
+  const payload = await response.json().catch(() => null) as
+    | { ok?: boolean; workflow?: Workflow; error?: { message?: string } }
+    | null
+  if (!payload) {
+    throw new Error(`Helios 响应不是 JSON（HTTP ${response.status}）`)
+  }
+  if (response.ok) {
+    if (!payload.workflow) {
+      throw new Error('Helios 验证响应缺少 workflow')
+    }
+    return {
+      ok: true,
+      errors: [],
+      workflow: payload.workflow,
+    }
+  }
+  return {
+    ok: false,
+    errors: [payload.error?.message ?? `workflow 校验失败（HTTP ${response.status}）`],
+  }
 }
 
 export async function saveWorkflow(id: string, yaml: string): Promise<Workflow> {

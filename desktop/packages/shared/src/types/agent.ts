@@ -1618,6 +1618,10 @@ export const AGENT_IPC_CHANNELS = {
   OPEN_FOLDER_DIALOG: 'agent:open-folder-dialog',
   /** 打开支持文件与文件夹混合选择的 Composer 对话框 */
   OPEN_FILE_OR_FOLDER_DIALOG: 'agent:open-file-or-folder-dialog',
+  /** 读取 workflow folder 源制品 */
+  READ_WORKFLOW_FOLDER: 'agent:read-workflow-folder',
+  /** 导出 workflow folder 源制品 */
+  EXPORT_WORKFLOW_FOLDER: 'agent:export-workflow-folder',
   /** 附加外部目录到 Agent 会话 */
   ATTACH_DIRECTORY: 'agent:attach-directory',
   /** 移除会话的附加目录 */

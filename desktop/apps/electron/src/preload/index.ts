@@ -157,6 +157,9 @@ import type {
   MicPermissionResult,
   TrayCreateSessionData,
   TrayOpenAgentSessionData,
+  WorkflowFolderExportRequest,
+  WorkflowFolderExportResult,
+  WorkflowFolderImportPreview,
 } from '../types'
 import { QUICK_TASK_IPC_CHANNELS, TRAY_IPC_CHANNELS, VOICE_DICTATION_IPC_CHANNELS } from '../types'
 
@@ -723,6 +726,12 @@ export interface ElectronAPI {
 
   /** 打开支持文件与文件夹混合选择的 Composer 对话框 */
   openFileOrFolderDialog: () => Promise<FileOrFolderDialogResult>
+
+  /** 读取 workflow folder 源制品 */
+  readWorkflowFolder: (folderPath: string) => Promise<WorkflowFolderImportPreview>
+
+  /** 导出 workflow folder 源制品 */
+  exportWorkflowFolder: (input: WorkflowFolderExportRequest) => Promise<WorkflowFolderExportResult>
 
   /** 附加外部目录到 Agent 会话 */
   attachDirectory: (input: AgentAttachDirectoryInput) => Promise<string[]>
@@ -1957,6 +1966,14 @@ const electronAPI: ElectronAPI = {
 
   openFileOrFolderDialog: () => {
     return ipcRenderer.invoke(AGENT_IPC_CHANNELS.OPEN_FILE_OR_FOLDER_DIALOG)
+  },
+
+  readWorkflowFolder: (folderPath: string) => {
+    return ipcRenderer.invoke(AGENT_IPC_CHANNELS.READ_WORKFLOW_FOLDER, folderPath)
+  },
+
+  exportWorkflowFolder: (input: WorkflowFolderExportRequest) => {
+    return ipcRenderer.invoke(AGENT_IPC_CHANNELS.EXPORT_WORKFLOW_FOLDER, input)
   },
 
   attachDirectory: (input: AgentAttachDirectoryInput) => {

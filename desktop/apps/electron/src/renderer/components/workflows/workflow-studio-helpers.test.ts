@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 import type { CompileResult, Workflow } from '../../lib/helios/types'
 import {
+  buildFolderImportResult,
   buildStudioRunParams,
   canSaveDraft,
   getCompileAttempts,
@@ -64,6 +65,30 @@ describe('workflow studio helpers', () => {
     expect(buildStudioRunParams('同步线索', leadWorkflow)).toEqual({
       params: { lead_id: 'L-123' },
       usedDefaults: ['lead_id'],
+    })
+  })
+
+  test('builds folder import results and flags id mismatches', () => {
+    expect(buildFolderImportResult('id: demo.folder-smoke\n', {
+      ok: true,
+      errors: [],
+      workflow: { ...leadWorkflow, id: 'demo.folder-smoke' },
+    }, 'demo.folder-smoke')).toMatchObject({
+      yaml: 'id: demo.folder-smoke\n',
+      mode: 'folder-import',
+      validation: { ok: true, errors: [] },
+      workflow: { ...leadWorkflow, id: 'demo.folder-smoke' },
+    })
+
+    expect(buildFolderImportResult('id: demo.other\n', {
+      ok: true,
+      errors: [],
+      workflow: leadWorkflow,
+    }, 'wrong-name')).toMatchObject({
+      validation: {
+        ok: false,
+        errors: ['workflow id demo.lead-sync must match folder name wrong-name'],
+      },
     })
   })
 })

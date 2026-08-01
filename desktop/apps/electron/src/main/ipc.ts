@@ -136,7 +136,7 @@ import type {
   UpdatePlanningGroupInput,
   SnoozePlanningReminderInput,
 } from '@proma/shared'
-import type { UserProfile, AppSettings } from '../types'
+import type { UserProfile, AppSettings, WorkflowFolderExportRequest, WorkflowFolderExportResult, WorkflowFolderImportPreview } from '../types'
 import { getRuntimeStatus, getGitRepoStatus, reinitializeRuntime } from './lib/runtime-init'
 import { getUnstagedChanges, getFileDiff, getUntrackedContent, revertFile, getDiffContents, listWorktrees, getWorktreeChanges, getMainRepoRoot } from './lib/git-diff-service'
 import { registerPromaFilePath } from './lib/local-file-protocol'
@@ -178,6 +178,7 @@ import {
   openFileDialog,
   openFileOrFolderDialog,
 } from './lib/attachment-service'
+import { exportWorkflowFolder, readWorkflowFolder } from './lib/workflow-folder-service'
 import { extractTextFromAttachment } from './lib/document-parser'
 import { getTutorialContent, createWelcomeConversation } from './lib/tutorial-service'
 import { getUserProfile, updateUserProfile } from './lib/user-profile-service'
@@ -2870,6 +2871,27 @@ export function registerIpcHandlers(): void {
       const folderPath = result.filePaths[0]!
       const name = basename(folderPath) || 'folder'
       return { path: folderPath, name }
+    }
+  )
+
+  ipcMain.handle(
+    AGENT_IPC_CHANNELS.READ_WORKFLOW_FOLDER,
+    async (_, folderPath: string): Promise<WorkflowFolderImportPreview> => {
+      if (!isNonBlankString(folderPath)) throw new Error('folderPath 必填')
+      return readWorkflowFolder(folderPath)
+    }
+  )
+
+  ipcMain.handle(
+    AGENT_IPC_CHANNELS.EXPORT_WORKFLOW_FOLDER,
+    async (_, input: WorkflowFolderExportRequest): Promise<WorkflowFolderExportResult> => {
+      if (!input || typeof input !== 'object') throw new Error('input 必须是对象')
+      if (!isNonBlankString(input.rootPath)) throw new Error('rootPath 必填')
+      if (!isNonBlankString(input.workflowId)) throw new Error('workflowId 必填')
+      if (typeof input.workflowYaml !== 'string') throw new Error('workflowYaml 必须是字符串')
+      if (typeof input.intentMarkdown !== 'string') throw new Error('intentMarkdown 必须是字符串')
+      if (!Number.isFinite(input.workflowVersion)) throw new Error('workflowVersion 必须是数字')
+      return exportWorkflowFolder(input)
     }
   )
 

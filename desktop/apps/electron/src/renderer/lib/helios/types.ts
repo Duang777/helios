@@ -93,12 +93,21 @@ export interface WorkflowRun {
   params: Record<string, unknown>
 }
 
+export interface WorkflowValidation {
+  ok: boolean
+  errors: string[]
+}
+
+export interface WorkflowValidationResponse extends WorkflowValidation {
+  workflow?: Workflow
+}
+
 export interface CompileResult {
   yaml: string
   mode?: string
   model?: string
   ir?: CompileIR
-  validation: { ok: boolean; errors: string[] }
+  validation: WorkflowValidation
   warnings?: string[]
   attempts?: CompileAttempt[]
   repairAttempts?: CompileAttempt[]
