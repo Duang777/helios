@@ -32,6 +32,7 @@ Build `Helios`, a business workflow compiler and auditable runtime:
 - Slice N (live compile harden, Implemented): `docs/architecture/slice-n-live-compile-harden.md`
 - Slice O (MVP §15 closeout, Implemented): `docs/architecture/slice-o-mvp-acceptance.md`
 - Slice P (OpenCLI adapter, Implemented): `docs/architecture/slice-p-opencli-adapter.md` / `docs/opencli.md`
+- Slice Q (OpenCLI session read, Implemented): `docs/architecture/slice-q-opencli-session-read.md`
 - Feishu live accept: `docs/acceptance/2026-08-01-feishu-live.md`
 - Plan/tasks: `tasks/plan.md`, `tasks/todo.md`
 - ADR: `docs/decisions/ADR-001-go-control-plane-pi-sidecar.md`
@@ -59,6 +60,7 @@ Build `Helios`, a business workflow compiler and auditable runtime:
 17. ~~**Slice O MVP §15 closeout**~~ — Implemented: `docs/architecture/slice-o-mvp-acceptance.md`
 18. ~~**ADR-003 freeze Q2–Q5**~~ — Accepted: YAML DAG+契约 / TS 实现与工具链（非双主语言）/ Pi sidecar / fs evidence / local；**Q6 still open**
 19. ~~**Slice P OpenCLI adapter**~~ — Implemented: `docs/architecture/slice-p-opencli-adapter.md`
+20. ~~**Slice Q OpenCLI session read**~~ — Implemented: `docs/architecture/slice-q-opencli-session-read.md`（bilibili hot）
 
 ## Development Gate
 
@@ -236,15 +238,16 @@ cd packages/pi-sidecar && npm test
 ./scripts/smoke-compile-live.sh   # expect validation=true when key present
 ```
 
-## Slice P verification (OpenCLI)
+## Slice P / Q verification (OpenCLI)
 
-Design: `docs/architecture/slice-p-opencli-adapter.md`  
+Design: `docs/architecture/slice-p-opencli-adapter.md`, `docs/architecture/slice-q-opencli-session-read.md`  
 Guide: `docs/opencli.md`
 
 ```bash
 cd backend && go test ./cmd/helios-opencli/
 ./scripts/smoke-opencli.sh
-# or: ./scripts/register-opencli.sh then run opencli.demo-read
+./scripts/smoke-opencli-session.sh          # SKIP without Bridge
+# HELIOS_OPENCLI_REQUIRE_SESSION=1 ./scripts/smoke-opencli-session.sh
 ```
 
 ## Slice O verification (MVP §15)

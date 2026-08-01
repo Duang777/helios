@@ -27,7 +27,7 @@ curl -sf -X POST "http://127.0.0.1:${PORT}/api/v1/clis/register" \
 
 echo
 echo "Bootstrapping OpenCLI workflows..."
-for wf in opencli.demo-read.yaml; do
+for wf in opencli.demo-read.yaml opencli.bilibili-hot.yaml; do
   curl -sf -X PUT "http://127.0.0.1:${PORT}/api/v1/workflows/${wf%.yaml}" \
     -H 'content-type: application/yaml' \
     --data-binary @"$ROOT/workflows/$wf" >/dev/null
@@ -35,5 +35,7 @@ for wf in opencli.demo-read.yaml; do
 done
 
 echo
-echo "Next: run workflow opencli.demo-read (hackernews top via OpenCLI)"
-echo "Docs: docs/opencli.md | design: docs/architecture/slice-p-opencli-adapter.md"
+echo "Next:"
+echo "  - opencli.demo-read     (HN public, no Chrome)"
+echo "  - opencli.bilibili-hot  (needs OpenCLI Browser Bridge)"
+echo "Docs: docs/opencli.md | Slice P/Q designs under docs/architecture/"

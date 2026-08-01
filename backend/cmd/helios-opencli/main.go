@@ -11,7 +11,7 @@ import (
 	"github.com/Duang777/helios/backend/internal/domain"
 )
 
-const version = "0.1.0"
+const version = "0.2.0"
 
 func main() {
 	if len(os.Args) < 2 {
@@ -45,6 +45,19 @@ func writeIntrospect() {
 				{Name: "--limit", Type: "number"},
 				{Name: "-f", Type: "string"},
 				{Name: "--format", Type: "string"},
+			}},
+			// Browser-session site (Slice Q): Bilibili crystallized adapters.
+			{Path: []string{"bilibili", "hot"}, SideEffect: domain.SideEffectRead, Args: []domain.CLIArgSpec{
+				{Name: "--limit", Type: "number"},
+				{Name: "-f", Type: "string"},
+				{Name: "--format", Type: "string"},
+			}},
+			{Path: []string{"bilibili", "whoami"}, SideEffect: domain.SideEffectRead, Args: []domain.CLIArgSpec{
+				{Name: "-f", Type: "string"},
+				{Name: "--format", Type: "string"},
+			}},
+			{Path: []string{"bilibili", "login"}, SideEffect: domain.SideEffectWrite, Args: []domain.CLIArgSpec{
+				{Name: "--timeout", Type: "number"},
 			}},
 			{Path: []string{"introspect"}, SideEffect: domain.SideEffectNone},
 		},
