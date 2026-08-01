@@ -7,6 +7,7 @@ This repository builds `Helios`, a business workflow compiler and auditable runt
 - PRD: `docs/prd/helios-prd-v0.1.md`
 - Research: `docs/research/2026-07-31-helios-reposition-research.md`
 - ADR: `docs/decisions/ADR-001-go-control-plane-pi-sidecar.md`
+- ADR-003 (Q2–Q5): `docs/decisions/ADR-003-mvp-open-questions-q2-q5.md`
 - Agent guide: `agent.md`
 - Slice E (GUI): `docs/architecture/slice-e-gui.md`
 - Slice C/D (Pi): `docs/architecture/slice-c-d-pi.md`
@@ -22,6 +23,7 @@ This repository builds `Helios`, a business workflow compiler and auditable runt
 - Slice M (Feishu Q1 playbook): `docs/architecture/slice-m-feishu-daily-brief.md`
 - Slice N (live compile harden): `docs/architecture/slice-n-live-compile-harden.md`
 - Slice O (MVP §15): `docs/architecture/slice-o-mvp-acceptance.md`
+- Slice P (OpenCLI): `docs/architecture/slice-p-opencli-adapter.md` / `docs/opencli.md`
 - Feishu live accept: `docs/acceptance/2026-08-01-feishu-live.md`
 - Best-fit OSS: `docs/research/2026-08-01-best-fit-oss.md`
 
