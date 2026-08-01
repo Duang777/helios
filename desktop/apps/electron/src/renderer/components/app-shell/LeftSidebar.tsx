@@ -11,7 +11,7 @@
 import * as React from 'react'
 import { useAtom, useSetAtom, useAtomValue, useStore } from 'jotai'
 import { toast } from 'sonner'
-import { Pin, PinOff, Star, Settings, Plus, Trash2, Pencil, PanelLeftClose, PanelLeftOpen, ArrowRightLeft, Search, Archive, ArchiveRestore, ArrowLeft, Bot, MessageSquare, MoreHorizontal, FolderOpen, FolderInput, FolderPlus, GripVertical, Clock, AlarmClock, ChevronRight, Blocks, GitBranch, Download, Loader2, RotateCw } from 'lucide-react'
+import { Pin, PinOff, Star, Settings, Plus, Trash2, Pencil, PanelLeftClose, PanelLeftOpen, ArrowRightLeft, Search, Archive, ArchiveRestore, ArrowLeft, Bot, MessageSquare, MoreHorizontal, FolderOpen, FolderInput, FolderPlus, GripVertical, Clock, AlarmClock, ChevronRight, Blocks, GitBranch, Download, Loader2, RotateCw, Workflow } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { ModeSwitcher } from './ModeSwitcher'
@@ -216,6 +216,37 @@ interface AutomationSidebarEntryProps {
   count: number
   active: boolean
   onClick: () => void
+}
+
+interface WorkflowStudioSidebarEntryProps {
+  active: boolean
+  onClick: () => void
+}
+
+function WorkflowStudioSidebarEntry({ active, onClick }: WorkflowStudioSidebarEntryProps): React.ReactElement {
+  return (
+    <button
+      type="button"
+      aria-label="Workflow Studio"
+      onClick={onClick}
+      className={cn(
+        'group w-full flex items-center justify-between px-3 py-2 rounded-md text-[13px] transition-colors duration-100 titlebar-no-drag',
+        active
+          ? 'bg-accent-foreground/[0.10] text-foreground shadow-[0_1px_2px_0_rgba(0,0,0,0.05)]'
+          : 'text-foreground/60 hover:bg-accent-foreground/[0.08] hover:text-foreground',
+      )}
+    >
+      <span className="flex items-center gap-3 min-w-0">
+        <span className={cn('flex-shrink-0 w-[18px] h-[18px]', active ? 'text-accent-foreground' : 'text-foreground/45')}>
+          <Workflow size={16} className="block" />
+        </span>
+        <span className="truncate">Workflow Studio</span>
+      </span>
+      <span className={cn('ml-2 flex h-5 flex-shrink-0 items-center rounded-full px-1.5 text-[11px] font-medium', active ? 'bg-accent-foreground/[0.26] text-primary-foreground' : 'bg-foreground/[0.045] text-foreground/[0.42] group-hover:text-foreground/65')}>
+        YAML
+      </span>
+    </button>
+  )
 }
 
 function AutomationSidebarEntry({ count, active, onClick }: AutomationSidebarEntryProps): React.ReactElement {
@@ -1064,6 +1095,16 @@ export function LeftSidebar({ width, noTransition }: LeftSidebarProps): React.Re
     }
     setActiveView('agent-skills')
   }, [activeView, setActiveView])
+
+  /** 打开/关闭 Helios Workflow Studio */
+  const handleOpenWorkflowStudio = React.useCallback((): void => {
+    if (activeView === 'workflow-studio') {
+      setActiveView('conversations')
+      return
+    }
+    setAutomationForm({ open: false, draft: null })
+    setActiveView('workflow-studio')
+  }, [activeView, setAutomationForm, setActiveView])
 
   /** 打开当前工作区的 MCP 管理页 */
   const handleOpenMcpManagement = React.useCallback((): void => {
@@ -2547,6 +2588,25 @@ export function LeftSidebar({ width, noTransition }: LeftSidebarProps): React.Re
             <TooltipTrigger asChild>
               <button
                 type="button"
+                aria-label="Workflow Studio"
+                onClick={handleOpenWorkflowStudio}
+                className={cn(
+                  'relative size-10 flex items-center justify-center rounded-[12px] transition-colors titlebar-no-drag border',
+                  activeView === 'workflow-studio'
+                    ? 'border-primary/80 bg-primary text-primary-foreground shadow-sm'
+                    : 'border-border/45 bg-foreground/[0.025] text-foreground/45 hover:border-border/70 hover:bg-foreground/[0.045] hover:text-primary',
+                )}
+              >
+                <Workflow size={16} />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right">Workflow Studio</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
                 aria-label={`任务/日程，${automationCount} 个自动化任务`}
                 onClick={handleOpenAutomations}
                 className={cn(
@@ -2716,9 +2776,16 @@ export function LeftSidebar({ width, noTransition }: LeftSidebarProps): React.Re
         </Tooltip>
       </div>
 
+      <div className="px-3 pt-2 pb-0.5">
+        <WorkflowStudioSidebarEntry
+          active={activeView === 'workflow-studio'}
+          onClick={handleOpenWorkflowStudio}
+        />
+      </div>
+
       {/* 任务/日程入口：Helios 业务壳先藏起来，减少干扰 */}
       {!heliosBusiness && (
-        <div className="px-3 pt-2 pb-0.5">
+        <div className="px-3 pb-0.5">
           <AutomationSidebarEntry
             count={automationCount}
             active={activeView === 'planning'}

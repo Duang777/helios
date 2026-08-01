@@ -1,0 +1,196 @@
+import * as React from 'react'
+import { AlertCircle, CheckCircle2 } from 'lucide-react'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import type { CompileIR, CompileResult, WorkflowRun } from '@/lib/helios/types'
+import { getCompileAttempts, getWorkflowDraftId } from './workflow-studio-helpers'
+
+export type StudioStatus = 'idle' | 'compiling' | 'ready' | 'saving' | 'saved' | 'running' | 'error'
+
+export function statusLabel(status: StudioStatus): string {
+  switch (status) {
+    case 'compiling':
+      return '编译中'
+    case 'ready':
+      return '待保存'
+    case 'saving':
+      return '保存中'
+    case 'saved':
+      return '已保存'
+    case 'running':
+      return '运行中'
+    case 'error':
+      return '需要处理'
+    case 'idle':
+    default:
+      return '未编译'
+  }
+}
+
+export function ValidationBadge({ result }: { result: CompileResult | null }): React.ReactElement {
+  if (!result) return <Badge variant="outline">未校验</Badge>
+  if (result.validation.ok) {
+    return (
+      <Badge className="gap-1.5 bg-emerald-600 text-white hover:bg-emerald-600">
+        <CheckCircle2 className="size-3" />
+        Validation OK
+      </Badge>
+    )
+  }
+  return (
+    <Badge variant="destructive" className="gap-1.5">
+      <AlertCircle className="size-3" />
+      Validation Failed
+    </Badge>
+  )
+}
+
+export function WorkflowSummary({ result }: { result: CompileResult | null }): React.ReactElement {
+  const workflow = result?.workflow
+  const ir = result?.ir
+  const id = getWorkflowDraftId(result)
+  const steps = workflow?.steps ?? ir?.steps ?? []
+  const params = workflow?.params ?? ir?.params ?? {}
+
+  return (
+    <div className="grid grid-cols-2 gap-2 text-[12px] sm:grid-cols-4">
+      <SummaryCell label="Workflow" value={id ?? '-'} />
+      <SummaryCell label="Steps" value={String(steps.length)} />
+      <SummaryCell label="Params" value={String(Object.keys(params).length)} />
+      <SummaryCell label="Mode" value={result?.mode ?? '-'} />
+    </div>
+  )
+}
+
+function SummaryCell({ label, value }: { label: string; value: string }): React.ReactElement {
+  return (
+    <div className="min-w-0 rounded-md border border-border/60 bg-background/55 px-3 py-2">
+      <div className="text-[11px] uppercase text-muted-foreground">{label}</div>
+      <div className="mt-1 truncate font-mono text-[12px] text-foreground">{value}</div>
+    </div>
+  )
+}
+
+export function CodeBlock({ value, empty }: { value: string; empty: string }): React.ReactElement {
+  return (
+    <ScrollArea className="h-full min-h-[320px] rounded-md border border-border/60 bg-background/70">
+      <pre className="min-h-full whitespace-pre-wrap break-words p-4 font-mono text-[12px] leading-relaxed text-foreground">
+        {value.trim() ? value : empty}
+      </pre>
+    </ScrollArea>
+  )
+}
+
+export function ValidationPanel({ result }: { result: CompileResult | null }): React.ReactElement {
+  const errors = result?.validation.errors ?? []
+  const warnings = result?.warnings ?? []
+  const attempts = getCompileAttempts(result)
+
+  return (
+    <ScrollArea className="h-full min-h-[320px] rounded-md border border-border/60 bg-background/70">
+      <div className="space-y-4 p-4 text-sm">
+        {!result && <p className="text-muted-foreground">编译后会显示 schema 校验、warnings 和 repair attempts。</p>}
+        {result && (
+          <>
+            <section>
+              <h3 className="text-sm font-medium">校验结果</h3>
+              {errors.length === 0 ? (
+                <p className="mt-2 text-muted-foreground">没有 validation error。</p>
+              ) : (
+                <ul className="mt-2 space-y-2">
+                  {errors.map((error, index) => (
+                    <li key={`${index}-${error}`} className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-destructive">
+                      {error}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+            <section>
+              <h3 className="text-sm font-medium">Warnings</h3>
+              {warnings.length === 0 ? (
+                <p className="mt-2 text-muted-foreground">没有 warning。</p>
+              ) : (
+                <ul className="mt-2 space-y-2">
+                  {warnings.map((warning, index) => (
+                    <li key={`${index}-${warning}`} className="rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-amber-700 dark:text-amber-200">
+                      {warning}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+            <section>
+              <h3 className="text-sm font-medium">Repair attempts</h3>
+              {attempts.length === 0 ? (
+                <p className="mt-2 text-muted-foreground">没有 repair attempt。</p>
+              ) : (
+                <div className="mt-2 space-y-2">
+                  {attempts.map((attempt, index) => (
+                    <div key={`${index}-${attempt.rawTraceId ?? attempt.error ?? attempt.yaml.length}`} className="rounded-md border border-border/60 bg-background/60 px-3 py-2">
+                      <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                        <span>Attempt {index + 1}</span>
+                        <span>{attempt.mode ?? attempt.model ?? 'compile'}</span>
+                      </div>
+                      {attempt.error && <p className="mt-2 text-xs text-destructive">{attempt.error}</p>}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          </>
+        )}
+      </div>
+    </ScrollArea>
+  )
+}
+
+export function IRPanel({ ir }: { ir?: CompileIR }): React.ReactElement {
+  return (
+    <CodeBlock
+      value={ir ? JSON.stringify(ir, null, 2) : ''}
+      empty="编译后会显示 IR 摘要。"
+    />
+  )
+}
+
+export function RunPanel({ run, usedDefaults }: { run: WorkflowRun | null; usedDefaults: string[] }): React.ReactElement {
+  return (
+    <ScrollArea className="h-full min-h-[320px] rounded-md border border-border/60 bg-background/70">
+      <div className="space-y-4 p-4 text-sm">
+        {!run && <p className="text-muted-foreground">保存并运行后会显示 run id、状态和步骤结果。</p>}
+        {run && (
+          <>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+              <SummaryCell label="Run" value={run.id} />
+              <SummaryCell label="Status" value={run.status} />
+              <SummaryCell label="Workflow" value={run.workflowId} />
+            </div>
+            {usedDefaults.length > 0 && (
+              <Alert className="border-amber-500/30 bg-amber-500/10">
+                <AlertCircle className="size-4" />
+                <AlertTitle>使用默认参数</AlertTitle>
+                <AlertDescription>{usedDefaults.join(', ')}</AlertDescription>
+              </Alert>
+            )}
+            <section>
+              <h3 className="text-sm font-medium">Steps</h3>
+              <div className="mt-2 space-y-2">
+                {run.stepRuns.map((step) => (
+                  <div key={step.stepId} className="rounded-md border border-border/60 bg-background/60 px-3 py-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="min-w-0 truncate font-mono text-xs">{step.stepId}</span>
+                      <Badge variant="outline" className="shrink-0">{step.status}</Badge>
+                    </div>
+                    {step.error && <p className="mt-2 text-xs text-destructive">{step.error}</p>}
+                  </div>
+                ))}
+              </div>
+            </section>
+          </>
+        )}
+      </div>
+    </ScrollArea>
+  )
+}

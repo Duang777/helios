@@ -50,13 +50,13 @@
 **Description:** Add a real desktop view for natural-language workflow drafting with prompt input, YAML preview, validation panel, repair action, save, and run.
 
 **Acceptance criteria:**
-- [ ] Left sidebar or main nav exposes Workflow Studio.
-- [ ] User can generate from intent and see YAML/validation without leaving desktop.
-- [ ] User can save and run a validated draft via existing Helios API.
+- [x] Left sidebar or main nav exposes Workflow Studio.
+- [x] User can generate from intent and see YAML/validation without leaving desktop.
+- [x] User can save and run a validated draft via existing Helios API.
 
 **Verification:**
-- [ ] `cd desktop && bun run typecheck`
-- [ ] `cd desktop && bun run build:renderer`
+- [x] `cd desktop && bun run typecheck`
+- [x] `cd desktop && bun run build:renderer`
 - [ ] Manual desktop run with Helios API on localhost.
 
 **Dependencies:** Task 1

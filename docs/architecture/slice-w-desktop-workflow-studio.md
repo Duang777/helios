@@ -1,6 +1,6 @@
 # Slice W — Desktop Workflow Studio
 
-Status: Accepted
+Status: Implemented
 Date: 2026-08-01
 Accepted-by: user（对话确认：开始开发；先落 PRD、代码规范、完整设计）
 Parent: Task 3 in `tasks/todo.md` / Slice T / Slice V
@@ -171,3 +171,7 @@ Manual:
 - Task 5: workflow folder import/export.
 - Task 6: TypeScript DSL preview.
 - Task 8: run timeline, approvals, evidence panel.
+
+## Status log
+
+- 2026-08-01: Implemented Workflow Studio active view, sidebar entry, compile/save/run UI, helper tests, and root `build:renderer` script.

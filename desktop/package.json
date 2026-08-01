@@ -14,6 +14,7 @@
     "electron:build": "bun run --filter='@proma/electron' build",
     "electron:start": "bun run --filter='@proma/electron' start",
     "build": "bun run --filter='*' build",
+    "build:renderer": "bun run --filter='@proma/electron' build:renderer",
     "typecheck": "bun run --filter='*' typecheck",
     "test": "bun test"
   },
