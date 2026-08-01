@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import type { CompileIR, CompileResult, WorkflowRun } from '@/lib/helios/types'
 import { getCompileAttempts, getWorkflowDraftId } from './workflow-studio-helpers'
+import { WorkflowGraphPreview } from './WorkflowGraphPreview'
 
 export type StudioStatus = 'idle' | 'compiling' | 'ready' | 'saving' | 'saved' | 'running' | 'error'
 
@@ -153,6 +154,16 @@ export function IRPanel({ ir }: { ir?: CompileIR }): React.ReactElement {
       empty="编译后会显示 IR 摘要。"
     />
   )
+}
+
+export function GraphPanel({
+  result,
+  run,
+}: {
+  result: CompileResult | null
+  run: WorkflowRun | null
+}): React.ReactElement {
+  return <WorkflowGraphPreview result={result} run={run} />
 }
 
 export function RunPanel({ run, usedDefaults }: { run: WorkflowRun | null; usedDefaults: string[] }): React.ReactElement {

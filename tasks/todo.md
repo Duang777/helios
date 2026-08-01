@@ -74,14 +74,14 @@
 **Description:** Use a reusable graph library, preferably MIT `@xyflow/react`, to render workflow steps, dependencies, approvals, and run status.
 
 **Acceptance criteria:**
-- [ ] Valid YAML renders a stable graph with step nodes and edges.
-- [ ] Approval and failed states are visually distinct.
-- [ ] Preview is read-only in v1; editing stays in YAML/compiler panel.
+- [x] Valid YAML renders a stable graph with step nodes and edges.
+- [x] Approval and failed states are visually distinct.
+- [x] Preview is read-only in v1; editing stays in YAML/compiler panel.
 
 **Verification:**
-- [ ] `cd desktop && bun run typecheck`
-- [ ] `cd desktop && bun run build:renderer`
-- [ ] Browser/Electron screenshot check once dev server is running.
+- [x] `cd desktop && bun run typecheck`
+- [x] `cd desktop && bun run build:renderer`
+- [x] Browser/Electron screenshot check once dev server is running.
 
 **Dependencies:** Task 3
 

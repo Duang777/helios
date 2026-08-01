@@ -1,6 +1,6 @@
 # Slice X — Workflow Graph Preview
 
-Status: Proposed
+Status: Accepted
 Date: 2026-08-01
 Parent: Task 4 in `tasks/todo.md` / Slice W
 Reuse: `@xyflow/react` (MIT, official xyflow project)
@@ -50,8 +50,8 @@ Graph 只读，布局和样式由 preview 决定，不回写 YAML。
 
 输入以 `CompileResult` 为主：
 
-- `result.workflow` 优先
-- 没有 `workflow` 时回退 `result.ir`
+- `result.ir` 优先提供图结构，因为它携带 `needs`
+- `result.workflow` 作为兜底和文案补充
 - 节点数据只使用 `id`、`uses`、`needs`、`sideEffect`、`prompt`、`validation` 和 run status
 
 ### Graph rules
@@ -106,6 +106,10 @@ Browser verification:
 2. 编译一条有审批的 workflow
 3. 切到 Graph tab
 4. 确认 node / edge / status 可见，且无 console error
+
+Verification note:
+
+- 2026-08-02: Browser harness rendered a graph with `fetch_lead`, `approve_write`, `create_po`, start, and end nodes; approval and failed states were visually distinct.
 
 ## Risks / rollback
 

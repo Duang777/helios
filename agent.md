@@ -34,10 +34,14 @@ Build `Helios`, a business workflow compiler and auditable runtime:
 - Slice P (OpenCLI adapter, Implemented): `docs/architecture/slice-p-opencli-adapter.md` / `docs/opencli.md`
 - Slice Q (OpenCLI session read, Implemented): `docs/architecture/slice-q-opencli-session-read.md`
 - Slice R (console usability, Implemented): `docs/architecture/slice-r-console-usability.md`
+- Slice S (business chat shell, In progress): `docs/architecture/slice-s-business-chat-shell.md` — `web-business/`（assistant-ui clone + NL 卡片）
+- Slice T (desktop Proma shell, Implemented): `docs/architecture/slice-t-desktop-proma-shell.md` — `desktop/`（Proma clone 魔改；AGPL 见 ADR-004）
+- Slice V (desktop NL compile loop, Implemented): `docs/architecture/slice-v-desktop-nl-compile-loop.md` — 桌面 compile→确认→保存→运行
 - Feishu live accept: `docs/acceptance/2026-08-01-feishu-live.md`
 - Plan/tasks: `tasks/plan.md`, `tasks/todo.md`
 - ADR: `docs/decisions/ADR-001-go-control-plane-pi-sidecar.md`
 - ADR-003 (Q2–Q5 freeze): `docs/decisions/ADR-003-mvp-open-questions-q2-q5.md`
+- ADR-004 (Proma AGPL desktop): `docs/decisions/ADR-004-proma-agpl-desktop-shell.md`
 - Naming: `docs/naming.md`
 
 ## Current Plan
@@ -63,6 +67,10 @@ Build `Helios`, a business workflow compiler and auditable runtime:
 19. ~~**Slice P OpenCLI adapter**~~ — Implemented: `docs/architecture/slice-p-opencli-adapter.md`
 20. ~~**Slice Q OpenCLI session read**~~ — Implemented: `docs/architecture/slice-q-opencli-session-read.md`（bilibili hot）
 21. ~~**Slice R console usability**~~ — Implemented: `docs/architecture/slice-r-console-usability.md`
+22. **Slice S business chat shell** — In progress: `web-business/` 已 clone assistant-ui 并接 Helios 演示路径；见 `docs/architecture/slice-s-business-chat-shell.md`
+23. ~~**Slice T desktop Proma shell**~~ — Implemented: 业务对话落盘 + HN API smoke + AGPL 打包；见 `docs/architecture/slice-t-desktop-proma-shell.md`
+24. ~~**Slice U workflow engine reuse**~~ — Implemented (含真实 Hatchet): `docs/architecture/slice-u-workflow-engine-direction.md` / `docs/architecture/hatchet-local.md`
+25. ~~**Slice V desktop NL compile loop**~~ — Implemented: `docs/architecture/slice-v-desktop-nl-compile-loop.md`（mock 可验；Live follow-up）
 
 ## Development Gate
 
@@ -87,6 +95,15 @@ For the desktop Workflow Studio work, agents must follow these rules:
 6. Commit each completed increment with a focused message. Stage only files touched for that increment; the worktree may contain unrelated user or agent changes.
 7. Never commit secrets, build output, `node_modules`, or unrelated formatting churn.
 8. For desktop UI, prefer existing Proma/Electron patterns and reusable OSS packages with clear licenses over custom infrastructure.
+
+## Desktop Workflow Studio Code Standards
+
+1. Keep graph data transformation in pure helpers under `desktop/apps/electron/src/renderer/components/workflows/`; UI components only render the already-built model.
+2. Use `@xyflow/react` in read-only mode for preview tabs: no node editing, no inline connection creation, no hidden second source of truth.
+3. Prefer the compiled IR for dependency edges and runtime state for statuses; treat `workflow` payloads as fallback display data.
+4. Make each new workflow UI slice independently testable, then verify with `bun test`, `bun run typecheck`, `bun run build:renderer`, and a browser screenshot before commit.
+5. Update the slice design, `tasks/todo.md`, and any relevant ADR or guide in the same increment as the code.
+6. Keep preview copy short, literal, and operational; do not add tutorial text inside the app chrome.
 
 ## Slice A verification
 

@@ -11,6 +11,7 @@ import type { CompileResult, Workflow as HeliosWorkflow, WorkflowRun } from '@/l
 import { cn } from '@/lib/utils'
 import {
   CodeBlock,
+  GraphPanel,
   IRPanel,
   RunPanel,
   ValidationBadge,
@@ -184,6 +185,7 @@ export function WorkflowStudioView(): React.ReactElement {
               </div>
               <TabsList className="h-8 rounded-md">
                 <TabsTrigger value="yaml" className="h-6 rounded-sm px-2 text-xs">YAML</TabsTrigger>
+                <TabsTrigger value="graph" className="h-6 rounded-sm px-2 text-xs">Graph</TabsTrigger>
                 <TabsTrigger value="validation" className="h-6 rounded-sm px-2 text-xs">Validation</TabsTrigger>
                 <TabsTrigger value="ir" className="h-6 rounded-sm px-2 text-xs">IR</TabsTrigger>
                 <TabsTrigger value="run" className="h-6 rounded-sm px-2 text-xs">Run</TabsTrigger>
@@ -192,6 +194,9 @@ export function WorkflowStudioView(): React.ReactElement {
             <div className={cn('min-h-0 flex-1 p-4', busy && 'cursor-progress')}>
               <TabsContent value="yaml" className="m-0 h-full">
                 <CodeBlock value={yaml} empty="编译后会显示 Helios YAML。" />
+              </TabsContent>
+              <TabsContent value="graph" className="m-0 h-full">
+                <GraphPanel result={result} run={run} />
               </TabsContent>
               <TabsContent value="validation" className="m-0 h-full">
                 <ValidationPanel result={result} />

@@ -48,6 +48,7 @@
     "@fontsource-variable/inter": "5.2.8",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@pierre/diffs": "^1.1.20",
+    "@xyflow/react": "^12.11.2",
     "@xmldom/xmldom": "^0.8.11",
     "adm-zip": "^0.5.17",
     "dompurify": "^3.4.5",
