@@ -31,7 +31,7 @@ Build `Helios`, a business workflow compiler and auditable runtime:
 - Slice M (Feishu daily-brief / Q1, Implemented): `docs/architecture/slice-m-feishu-daily-brief.md`
 - Slice N (live compile harden, Implemented): `docs/architecture/slice-n-live-compile-harden.md`
 - Slice O (MVP §15 closeout, Implemented): `docs/architecture/slice-o-mvp-acceptance.md`
-- Slice P (OpenCLI adapter, **Proposed**): `docs/architecture/slice-p-opencli-adapter.md`
+- Slice P (OpenCLI adapter, Implemented): `docs/architecture/slice-p-opencli-adapter.md` / `docs/opencli.md`
 - Feishu live accept: `docs/acceptance/2026-08-01-feishu-live.md`
 - Plan/tasks: `tasks/plan.md`, `tasks/todo.md`
 - ADR: `docs/decisions/ADR-001-go-control-plane-pi-sidecar.md`
@@ -58,7 +58,7 @@ Build `Helios`, a business workflow compiler and auditable runtime:
 16. ~~**Slice N live compile harden**~~ — Implemented: `docs/architecture/slice-n-live-compile-harden.md`
 17. ~~**Slice O MVP §15 closeout**~~ — Implemented: `docs/architecture/slice-o-mvp-acceptance.md`
 18. ~~**ADR-003 freeze Q2–Q5**~~ — Accepted: YAML DAG+契约 / TS 实现与工具链（非双主语言）/ Pi sidecar / fs evidence / local；**Q6 still open**
-19. **Slice P OpenCLI adapter** — Proposed（待 Accepted）：`docs/architecture/slice-p-opencli-adapter.md`
+19. ~~**Slice P OpenCLI adapter**~~ — Implemented: `docs/architecture/slice-p-opencli-adapter.md`
 
 ## Development Gate
 
@@ -234,6 +234,17 @@ Design: `docs/architecture/slice-n-live-compile-harden.md`
 cd packages/pi-sidecar && npm test
 ./scripts/smoke-compile.sh
 ./scripts/smoke-compile-live.sh   # expect validation=true when key present
+```
+
+## Slice P verification (OpenCLI)
+
+Design: `docs/architecture/slice-p-opencli-adapter.md`  
+Guide: `docs/opencli.md`
+
+```bash
+cd backend && go test ./cmd/helios-opencli/
+./scripts/smoke-opencli.sh
+# or: ./scripts/register-opencli.sh then run opencli.demo-read
 ```
 
 ## Slice O verification (MVP §15)

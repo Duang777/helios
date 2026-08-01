@@ -1,0 +1,19 @@
+apiVersion: helios/v1
+kind: Workflow
+id: opencli.demo-read
+version: 1
+description: >
+  Slice P demo — no public platform API required. Uses OpenCLI crystallized
+  command (Hacker News top) through helios-opencli wrapper.
+params: {}
+requires:
+  clis:
+    - name: helios-opencli
+      version: ">=0.1.0"
+steps:
+  - id: hn_top
+    uses: cli
+    cli: helios-opencli
+    sideEffect: read
+    argv: ["hackernews", "top", "--limit", "5", "-f", "json"]
+    out: stories

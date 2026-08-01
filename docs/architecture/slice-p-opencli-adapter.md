@@ -1,11 +1,12 @@
 # Slice P — OpenCLI Adapter (Website → Helios CLI)
 
-Status: Proposed  
+Status: Implemented  
 Date: 2026-08-01  
 Parent: PRD §5.4 CLI / F-L*；接入梯子「无公开 API」档  
 Reuse: [jackwener/OpenCLI](https://github.com/jackwener/opencli)（Apache-2.0，`@jackwener/opencli`）  
 Gate: `docs/architecture/dev-gate.md`  
 Related: ADR-003（YAML DAG + TS 工具链）；`helios-lark` 包装模式  
+Guide: `docs/opencli.md`
 
 ## Goal
 
@@ -72,27 +73,21 @@ evidence on disk
 | Envelope | 若 stdout 已是 JSON 对象则包进 `data`；否则 `data: { raw: "..." }`；exit≠0 → `ok:false` |
 | dry-run | 写命令：若 upstream 无 `--dry-run`，wrapper **拒绝在无审批工作流中直写**（workflow 仍强制 approval）；MVP 可对写命令要求 workflow 必有 approval，wrapper 对 `--dry-run` 返回 exit 9 + 预览 argv |
 
-### Allowlist（MVP 建议，可在实现时微调）
-
-只读样板（优先选不需登录或易复现的内置命令，例如）：
+### Allowlist（v0.1.0，已锁定）
 
 | Path | SideEffect | 备注 |
 |------|------------|------|
-| `doctor`（若有）或 `list` | read | 健康/发现 |
-| `<demo-site> <demo-cmd>` | read | 一条稳定公共站命令（实现时锁定具体 site/cmd） |
+| `list` | read | 发现 |
+| `doctor` | read | 浏览器桥诊断 |
+| `hackernews top` | read | **样板**：公共 API，无需 Chrome |
 
-写样板（可选第二步）：
-
-| Path | SideEffect | DryRun |
-|------|------------|--------|
-| TBD 低风险写命令 | write | 尽量；否则仅 approval 后执行 |
+MVP **只读**（不含写路径）。`browser *` 明确拒绝。
 
 ### Workflow
 
 | ID | 步骤 |
 |----|------|
-| `opencli.demo-read` | `helios-opencli` 只读命令 → evidence |
-| （可选）`opencli.demo-write` | dry-run/预览 → approval → write |
+| `opencli.demo-read` | `hackernews top --limit 5 -f json` → evidence |
 
 ### Env
 
@@ -171,8 +166,8 @@ cd backend && go test ./cmd/helios-opencli/...   # if tests added
 - 真实业务站（内部系统）第一条剧本  
 - 推送并合并尚未上网的 ADR-003  
 
-## 待你确认（Accepted 前）
+## Decisions (Accepted)
 
-1. 样板站命令锁定哪条？（建议实现前用 `opencli list` 实测后填进本文）  
-2. MVP 是否包含写路径，还是只读一条即可？  
-3. 确认后将 Status 改为 **Accepted**（或回复「按该文档实现」）  
+1. 样板命令：`hackernews top`（实测公共 JSON，无登录）  
+2. MVP：只读一条剧本 `opencli.demo-read`  
+3. 用户确认：2026-08-01「OK」→ 实现  
