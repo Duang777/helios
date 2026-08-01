@@ -78,5 +78,6 @@ Status 枚举：`Proposed` | `Accepted` | `Implemented` | `Superseded`
 | O | `docs/architecture/slice-o-mvp-acceptance.md` | 既有 smoke | Implemented |
 | P | `docs/architecture/slice-p-opencli-adapter.md` | OpenCLI (Apache-2.0) | Implemented |
 | Q | `docs/architecture/slice-q-opencli-session-read.md` | OpenCLI bilibili | Implemented |
+| R | `docs/architecture/slice-r-console-usability.md` | console UX | Implemented |
 
-下一决策面：PRD **Q6**（开源/品牌）。可选：OpenCLI 写路径、更多站点、Console。
+下一决策面：PRD **Q6**（开源/品牌）。可选：OpenCLI 写路径、更多站点。
