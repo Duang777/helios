@@ -16,4 +16,7 @@ Desktop Workflow Studio consumes the additive compile contract:
 - `ir`: lightweight normalized workflow shape for graph preview and panels
 - `workflow`: full Helios workflow object kept for existing callers
 
+Validation uses strict YAML decoding: unknown root fields or unknown step fields are compile errors.
+Agents must only emit properties defined by the Helios workflow contract.
+
 Default sidecar mode is `HELIOS_PI_MODE=mock` (deterministic, no live model). Live Pi is a later switch.
