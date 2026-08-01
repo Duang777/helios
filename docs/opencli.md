@@ -16,9 +16,19 @@
 
 ## 一次性准备
 
+推荐一键（会装 CLI、下载扩展目录、打开 Chrome 商店；**需你点一次「添加至 Chrome」**）：
+
+```bash
+./scripts/setup-opencli.sh
+```
+
+手工等价：
+
 ```bash
 npm i -g @jackwener/opencli
-# 或: export HELIOS_OPENCLI_BIN=/path/to/opencli
+# Chrome Web Store: https://chromewebstore.google.com/detail/opencli/ildkmabpimmkaediidaifkhjpohdnifk
+# 或 Load unpacked: .helios-dev/opencli-extension/
+opencli doctor                # Connectivity 须 [OK]
 
 ./scripts/dev-api.sh          # 另开终端
 ./scripts/register-opencli.sh
