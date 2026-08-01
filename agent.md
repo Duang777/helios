@@ -33,6 +33,7 @@ Build `Helios`, a business workflow compiler and auditable runtime:
 - Slice O (MVP §15 closeout, Implemented): `docs/architecture/slice-o-mvp-acceptance.md`
 - Slice P (OpenCLI adapter, Implemented): `docs/architecture/slice-p-opencli-adapter.md` / `docs/opencli.md`
 - Slice Q (OpenCLI session read, Implemented): `docs/architecture/slice-q-opencli-session-read.md`
+- Slice R (console usability, Implemented): `docs/architecture/slice-r-console-usability.md`
 - Feishu live accept: `docs/acceptance/2026-08-01-feishu-live.md`
 - Plan/tasks: `tasks/plan.md`, `tasks/todo.md`
 - ADR: `docs/decisions/ADR-001-go-control-plane-pi-sidecar.md`
@@ -61,6 +62,7 @@ Build `Helios`, a business workflow compiler and auditable runtime:
 18. ~~**ADR-003 freeze Q2–Q5**~~ — Accepted: YAML DAG+契约 / TS 实现与工具链（非双主语言）/ Pi sidecar / fs evidence / local；**Q6 still open**
 19. ~~**Slice P OpenCLI adapter**~~ — Implemented: `docs/architecture/slice-p-opencli-adapter.md`
 20. ~~**Slice Q OpenCLI session read**~~ — Implemented: `docs/architecture/slice-q-opencli-session-read.md`（bilibili hot）
+21. ~~**Slice R console usability**~~ — Implemented: `docs/architecture/slice-r-console-usability.md`
 
 ## Development Gate
 

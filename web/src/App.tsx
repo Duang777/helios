@@ -16,23 +16,31 @@ import {
   startRun,
   validateWorkflowYAML,
 } from './api/client';
-import type { RegisteredCLI, Workflow, WorkflowRun } from './api/types';
+import type { RegisteredCLI, StepRun, Workflow, WorkflowRun } from './api/types';
 import { Badge, Button, Input, Panel, Textarea } from './components/ui/primitives';
 import { DEMO_LEAD_SYNC_YAML } from './lib/demo-workflow';
 
 export function App() {
   const [online, setOnline] = useState(false);
-  const [intent, setIntent] = useState('把线索 L-123 同步成采购单，写前要审批');
+  const [intent, setIntent] = useState('');
   const [yaml, setYaml] = useState(DEMO_LEAD_SYNC_YAML);
   const [workflow, setWorkflow] = useState<Workflow | null>(null);
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [clis, setCLIs] = useState<RegisteredCLI[]>([]);
-  const [leadId, setLeadId] = useState('L-123');
+  const [paramValues, setParamValues] = useState<Record<string, string>>({});
   const [run, setRun] = useState<WorkflowRun | null>(null);
   const [selectedStepId, setSelectedStepId] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+
+  const paramEntries = useMemo(() => Object.entries(workflow?.params ?? {}), [workflow]);
+
+  const missingRequired = useMemo(() => {
+    return paramEntries
+      .filter(([, spec]) => spec.required)
+      .some(([name]) => !String(paramValues[name] ?? '').trim());
+  }, [paramEntries, paramValues]);
 
   const pendingApproval = useMemo(() => {
     return run?.stepRuns.find((step) => step.status === 'WAITING_APPROVAL') ?? null;
@@ -53,6 +61,8 @@ export function App() {
     return run.evidence.filter((item) => item.stepId === selectedStep.stepId);
   }, [run, selectedStep]);
 
+  const runInFlight = !!run && !isTerminal(run.status);
+
   useEffect(() => {
     void refreshMeta();
   }, []);
@@ -71,7 +81,7 @@ export function App() {
     const ok = await healthCheck();
     setOnline(ok);
     if (!ok) {
-      setError('后端未连接。先启动 Helios API，并注册 demo-crm / demo-erp。');
+      setError('后端未连接。先启动 ./scripts/dev-api.sh');
       return;
     }
     try {
@@ -91,6 +101,13 @@ export function App() {
       if (!selectedStepId && next.stepRuns[0]) {
         setSelectedStepId(next.stepRuns[0].stepId);
       }
+      if (isTerminal(next.status)) {
+        setNotice(
+          next.status === 'COMPLETED'
+            ? `完成 ${next.id} — 右侧可直接看步骤结果`
+            : `${next.status} ${next.id}`,
+        );
+      }
     } catch (err) {
       setError(messageFromError(err, '读取 Run 失败'));
     }
@@ -105,6 +122,7 @@ export function App() {
       setYaml(result.yaml);
       if (result.workflow) {
         setWorkflow(result.workflow);
+        setParamValues(seedParams(result.workflow));
       }
       if (result.validation.ok) {
         const warn = result.warnings?.length ? `；警告：${result.warnings.join('; ')}` : '';
@@ -113,7 +131,7 @@ export function App() {
         setError(`编译草稿未通过校验：${(result.validation.errors ?? []).join('; ') || 'unknown'}`);
       }
     } catch (err) {
-      setError(messageFromError(err, '编译失败（确认 pi-sidecar 已启动）'));
+      setError(compileErrorMessage(err));
     } finally {
       setBusy(null);
     }
@@ -126,6 +144,7 @@ export function App() {
     try {
       const next = await validateWorkflowYAML(yaml);
       setWorkflow(next);
+      setParamValues((prev) => ({ ...seedParams(next), ...prev }));
       setNotice(`校验通过：${next.id} v${next.version}`);
     } catch (err) {
       setError(messageFromError(err, '校验失败'));
@@ -142,6 +161,7 @@ export function App() {
       const validated = await validateWorkflowYAML(yaml);
       const saved = await saveWorkflow(validated.id, yaml);
       setWorkflow(saved);
+      setParamValues((prev) => ({ ...seedParams(saved), ...prev }));
       setNotice(`已保存 ${saved.id}`);
       await refreshMeta();
     } catch (err) {
@@ -176,7 +196,11 @@ export function App() {
       const [loaded, text] = await Promise.all([getWorkflow(id), getWorkflowYAML(id)]);
       setWorkflow(loaded);
       setYaml(text);
-      setNotice(`已加载 ${loaded.id}`);
+      setIntent(loaded.description?.trim() || '');
+      setParamValues(seedParams(loaded));
+      setRun(null);
+      setSelectedStepId(null);
+      setNotice(`已加载 ${loaded.id} — 直接点「运行」即可（不必编译）`);
     } catch (err) {
       setError(messageFromError(err, '加载失败'));
     } finally {
@@ -192,10 +216,11 @@ export function App() {
       const validated = await validateWorkflowYAML(yaml);
       await saveWorkflow(validated.id, yaml);
       setWorkflow(validated);
-      const nextRun = await startRun(validated.id, { lead_id: leadId });
+      const params = buildRunParams(validated, paramValues);
+      const nextRun = await startRun(validated.id, params);
       setRun(nextRun);
       setSelectedStepId(nextRun.stepRuns[0]?.stepId ?? null);
-      setNotice(`已启动 ${nextRun.id}`);
+      setNotice(`执行中 ${nextRun.id}…（CLI 可能要几秒）`);
       await refreshMeta();
     } catch (err) {
       setError(messageFromError(err, '运行失败'));
@@ -262,7 +287,8 @@ export function App() {
       </header>
 
       <section className="console-hero" id="workspace">
-        <h1>Intent 编译 · YAML 工作流 · CLI 执行 · 审批 · 证据</h1>
+        <h1>左侧选剧本 → 运行 → 右侧看结果</h1>
+        <p className="hero-hint">「编译」可选（需 Pi sidecar）。试玩请直接加载 opencli.* / feishu.* 再运行。</p>
       </section>
 
       {error ? (
@@ -291,7 +317,11 @@ export function App() {
             <ul className="side-list">
               {workflows.map((item) => (
                 <li key={item.id}>
-                  <button type="button" className="side-link" onClick={() => void handleLoad(item.id)}>
+                  <button
+                    type="button"
+                    className={`side-link ${workflow?.id === item.id ? 'active' : ''}`}
+                    onClick={() => void handleLoad(item.id)}
+                  >
                     {item.id}
                     <small>v{item.version}</small>
                   </button>
@@ -311,7 +341,7 @@ export function App() {
                   </span>
                 </li>
               ))}
-              {clis.length === 0 ? <li className="empty-line">请先注册 demo-crm / demo-erp</li> : null}
+              {clis.length === 0 ? <li className="empty-line">请先 register-lark / register-opencli</li> : null}
             </ul>
           </div>
         </Panel>
@@ -319,7 +349,7 @@ export function App() {
         <Panel className="ops-main">
           <div className="panel-header compact">
             <div>
-              <p className="eyebrow">Compile</p>
+              <p className="eyebrow">Compile（可选）</p>
               <h2>Intent → YAML</h2>
             </div>
             <Badge>{workflow?.id ?? 'unsaved'}</Badge>
@@ -329,11 +359,11 @@ export function App() {
             className="intent-editor"
             value={intent}
             onChange={(event) => setIntent(event.target.value)}
-            placeholder="用自然语言描述要编译的工作流"
+            placeholder="可选：用自然语言生成新 YAML（需 ./scripts/dev-pi-sidecar.sh）"
             rows={3}
           />
           <div className="builder-actions">
-            <Button type="button" variant="primary" onClick={() => void handleCompile()} disabled={!!busy || !intent.trim()}>
+            <Button type="button" variant="secondary" onClick={() => void handleCompile()} disabled={!!busy || !intent.trim()}>
               {busy === 'compile' ? <Loader2 size={16} className="spin" /> : <Sparkles size={16} />}
               编译
             </Button>
@@ -344,6 +374,7 @@ export function App() {
               <h2>Workflow YAML</h2>
             </div>
           </div>
+          {workflow?.description ? <p className="wf-desc">{workflow.description}</p> : null}
           <Textarea
             aria-label="Workflow YAML"
             className="yaml-editor"
@@ -364,13 +395,23 @@ export function App() {
               {busy === 'publish' ? <Loader2 size={16} className="spin" /> : <Upload size={16} />}
               发布
             </Button>
-            <label className="param-field">
-              <span>lead_id</span>
-              <Input value={leadId} onChange={(event) => setLeadId(event.target.value)} aria-label="lead_id" />
-            </label>
-            <Button type="button" variant="primary" onClick={() => void handleRun()} disabled={!!busy || !leadId.trim()}>
-              {busy === 'run' ? <Loader2 size={16} className="spin" /> : <Play size={16} />}
-              运行
+            {paramEntries.map(([name, spec]) => (
+              <label key={name} className="param-field">
+                <span>
+                  {name}
+                  {spec.required ? ' *' : ''}
+                </span>
+                <Input
+                  value={paramValues[name] ?? ''}
+                  onChange={(event) => setParamValues((prev) => ({ ...prev, [name]: event.target.value }))}
+                  aria-label={name}
+                  placeholder={spec.description || name}
+                />
+              </label>
+            ))}
+            <Button type="button" variant="primary" onClick={() => void handleRun()} disabled={!!busy || missingRequired || runInFlight}>
+              {busy === 'run' || runInFlight ? <Loader2 size={16} className="spin" /> : <Play size={16} />}
+              {runInFlight ? '执行中…' : '运行'}
             </Button>
           </div>
           {workflow ? (
@@ -378,7 +419,11 @@ export function App() {
               {workflow.steps.map((step) => (
                 <li key={step.id}>
                   <strong>{step.id}</strong>
-                  <span>{step.uses}{step.cli ? ` · ${step.cli}` : ''}</span>
+                  <span>
+                    {step.uses}
+                    {step.cli ? ` · ${step.cli}` : ''}
+                    {step.argv?.length ? ` · ${step.argv.join(' ')}` : ''}
+                  </span>
                 </li>
               ))}
             </ol>
@@ -388,11 +433,26 @@ export function App() {
         <Panel className="ops-run">
           <div className="panel-header compact">
             <div>
-              <p className="eyebrow">Run</p>
-              <h2>{run?.id ?? '尚未运行'}</h2>
+              <p className="eyebrow">结果</p>
+              <h2>{run?.id ?? '选左侧剧本后点运行'}</h2>
             </div>
             <Badge>{run?.status ?? 'idle'}</Badge>
           </div>
+
+          {runInFlight ? (
+            <div className="progress-card" role="status">
+              <Loader2 size={16} className="spin" />
+              <span>正在执行 CLI，请稍候…</span>
+            </div>
+          ) : null}
+
+          {run?.status === 'COMPLETED' ? (
+            <div className="result-hero">
+              {(run.stepRuns.filter((s) => s.status === 'COMPLETED')).map((step) => (
+                <StepResult key={step.stepId} step={step} prominent />
+              ))}
+            </div>
+          ) : null}
 
           {pendingApproval ? (
             <div className="approval-card">
@@ -443,7 +503,7 @@ export function App() {
                 </button>
               </li>
             ))}
-            {!run ? <li className="empty-line">保存并运行后显示步骤时间线</li> : null}
+            {!run ? <li className="empty-line">加载剧本后点「运行」</li> : null}
           </ul>
 
           {selectedStep ? (
@@ -460,46 +520,147 @@ export function App() {
                   </a>
                 </p>
               ) : null}
-              {selectedEvidence.length === 0 ? (
-                <p className="empty-line">此步骤暂无证据</p>
-              ) : (
+
+              {run?.status !== 'COMPLETED' ? <StepResult step={selectedStep} /> : null}
+
+              {selectedStep.status === 'PENDING' || selectedStep.status === 'RUNNING' ? (
+                <p className="empty-line">等待执行…</p>
+              ) : null}
+
+              {selectedEvidence.length > 0 ? (
                 selectedEvidence.map((item) => (
                   <div key={item.id} className="evidence-item">
-                    <div>exit {item.exitCode ?? '—'} · {item.type}</div>
-                    {item.inputSummary ? <code>{JSON.stringify(item.inputSummary)}</code> : null}
-                    {item.outputSummary ? <code>{JSON.stringify(item.outputSummary)}</code> : null}
+                    <div className="evidence-meta">
+                      exit {item.exitCode ?? '—'} · {item.type}
+                    </div>
                     {run && item.screenshotRef ? (
                       <figure className="evidence-shot">
-                        <img
-                          src={runFileURL(run.id, item.screenshotRef)}
-                          alt={`${item.stepId} screenshot`}
-                        />
+                        <img src={runFileURL(run.id, item.screenshotRef)} alt={`${item.stepId} screenshot`} />
                         <figcaption>{item.screenshotRef}</figcaption>
                       </figure>
                     ) : null}
                     {run && item.stdoutRef ? (
                       <p className="evidence-file">
                         <a href={runFileURL(run.id, item.stdoutRef)} target="_blank" rel="noreferrer">
-                          stdout · {item.stdoutRef}
+                          原始 stdout
                         </a>
                       </p>
                     ) : null}
                     {run && item.stderrRef ? (
                       <p className="evidence-file">
                         <a href={runFileURL(run.id, item.stderrRef)} target="_blank" rel="noreferrer">
-                          stderr · {item.stderrRef}
+                          stderr
                         </a>
                       </p>
                     ) : null}
                   </div>
                 ))
-              )}
+              ) : null}
             </div>
           ) : null}
         </Panel>
       </section>
     </main>
   );
+}
+
+function StepResult({ step, prominent = false }: { step: StepRun; prominent?: boolean }) {
+  const output = step.output;
+  if (!output || step.status !== 'COMPLETED') {
+    return null;
+  }
+
+  const data = output.data;
+  const rows = summarizeRows(data);
+  if (rows.length > 0) {
+    return (
+      <div className={`result-panel ${prominent ? 'prominent' : ''}`}>
+        <p className="result-label">
+          {step.stepId} · 拿到 {rows.length} 条
+        </p>
+        <ol className="result-list">
+          {rows.map((row, index) => (
+            <li key={row.key}>
+              <span className="result-index">{index + 1}</span>
+              <div>
+                {row.href ? (
+                  <a href={row.href} target="_blank" rel="noreferrer">
+                    {row.title}
+                  </a>
+                ) : (
+                  <span>{row.title}</span>
+                )}
+                {row.meta ? <small>{row.meta}</small> : null}
+              </div>
+            </li>
+          ))}
+        </ol>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`result-panel ${prominent ? 'prominent' : ''}`}>
+      <p className="result-label">{step.stepId} · 输出</p>
+      <pre className="result-json">{JSON.stringify(preferData(output), null, 2)}</pre>
+    </div>
+  );
+}
+
+function preferData(output: Record<string, unknown>) {
+  if ('data' in output) {
+    return output.data;
+  }
+  return output;
+}
+
+function summarizeRows(data: unknown): Array<{ key: string; title: string; href?: string; meta?: string }> {
+  if (!Array.isArray(data)) {
+    return [];
+  }
+  return data.slice(0, 20).map((item, index) => {
+    if (!item || typeof item !== 'object') {
+      return { key: String(index), title: String(item) };
+    }
+    const row = item as Record<string, unknown>;
+    const title = String(row.title ?? row.name ?? row.summary ?? row.text ?? row.id ?? `item ${index + 1}`);
+    const href = typeof row.url === 'string' ? row.url : typeof row.link === 'string' ? row.link : undefined;
+    const metaParts = [row.author, row.score != null ? `score ${row.score}` : null, row.rank != null ? `#${row.rank}` : null].filter(
+      Boolean,
+    );
+    return {
+      key: String(row.id ?? index),
+      title,
+      href,
+      meta: metaParts.length ? metaParts.join(' · ') : undefined,
+    };
+  });
+}
+
+function seedParams(wf: Workflow): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [name, spec] of Object.entries(wf.params ?? {})) {
+    if (name === 'lead_id') {
+      out[name] = 'L-123';
+    } else if (name === 'chat_id') {
+      out[name] = '';
+    } else {
+      out[name] = '';
+    }
+    void spec;
+  }
+  return out;
+}
+
+function buildRunParams(wf: Workflow, values: Record<string, string>): Record<string, unknown> {
+  const params: Record<string, unknown> = {};
+  for (const name of Object.keys(wf.params ?? {})) {
+    const raw = String(values[name] ?? '').trim();
+    if (raw !== '') {
+      params[name] = raw;
+    }
+  }
+  return params;
 }
 
 function isTerminal(status: WorkflowRun['status']) {
@@ -539,6 +700,14 @@ function StatusChip({ label, value, tone }: { label: string; value: string; tone
       <strong>{value}</strong>
     </span>
   );
+}
+
+function compileErrorMessage(err: unknown) {
+  const msg = err instanceof Error ? err.message : String(err);
+  if (/8091|pi sidecar|connection refused|ECONNREFUSED|unreachable/i.test(msg)) {
+    return '编译需要 Pi sidecar。另开终端执行：HELIOS_PI_MODE=mock ./scripts/dev-pi-sidecar.sh — 或跳过编译，左侧直接选剧本运行。';
+  }
+  return messageFromError(err, '编译失败');
 }
 
 function messageFromError(err: unknown, fallback: string) {
