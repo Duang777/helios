@@ -1550,6 +1550,8 @@ export const AGENT_IPC_CHANNELS = {
   GET_MCP_CONFIG: 'agent:get-mcp-config',
   /** 保存工作区 MCP 配置 */
   SAVE_MCP_CONFIG: 'agent:save-mcp-config',
+  /** 写入或更新单个工作区 MCP 服务器 */
+  UPSERT_MCP_SERVER: 'agent:upsert-mcp-server',
   /** 测试 MCP 服务器连接 */
   TEST_MCP_SERVER: 'agent:test-mcp-server',
   /** 启用或关闭 Proma 内置 MCP */

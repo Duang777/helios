@@ -191,3 +191,5 @@ Manual:
 - 2026-08-02: Tightened the Connector Registry launcher into a compact tool-row entry and flattened the MCP center summary into lightweight badges, with the source/provenance documented in `docs/architecture/connector-center.md`.
 - 2026-08-02: Added a curated open-source MCP section to the Connector Registry, seeding the panel with public OpenWork and Craft entry points and moving that layer ahead of the broader community registry.
 - 2026-08-02: Expanded the curated open-source MCP layer with direct upstream packages for GitHub, Filesystem, Git, Sequential Thinking, Time, and Fetch, and kept the renderer copy aligned with the new official/project provenance badges.
+- 2026-08-02: Added a one-click “接入工作区” flow for curated MCP entries, writing the selected template into the current workspace `mcp.json` through the main-process workspace manager so the same entry immediately appears in workspace capabilities and agent runtime injection.
+- 2026-08-02: Finished the Chinese UI pass for the MCP center launch surface and curated open-source cards, including Chinese transport labels and separate “已接入 / 已写入” state markers for workspace-bound entries.

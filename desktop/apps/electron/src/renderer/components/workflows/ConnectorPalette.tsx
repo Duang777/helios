@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { ChevronRight, Workflow } from 'lucide-react'
+import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { listCLIs, listCommunityMcpServers } from '@/lib/helios/client'
@@ -7,6 +8,7 @@ import type { CommunityMcpRegistryResponse, RegisteredCLI } from '@/lib/helios/t
 import type { WorkspaceCapabilities } from '@proma/shared'
 import { ConnectorRegistryDialog } from './ConnectorRegistryDialog'
 import { CURATED_OPEN_SOURCE_MCP_CATALOG } from './open-source-mcp-catalog'
+import { buildCuratedOpenSourceMcpWorkspacePlan } from './connector-palette-helpers'
 
 interface ConnectorPaletteProps {
   onInsert: (snippet: string) => void
@@ -27,6 +29,8 @@ export function ConnectorPalette({
   const [loadingClis, setLoadingClis] = React.useState(true)
   const [loadingWorkspace, setLoadingWorkspace] = React.useState(false)
   const [loadingCommunity, setLoadingCommunity] = React.useState(true)
+  const [attachingOpenSourceId, setAttachingOpenSourceId] = React.useState<string | null>(null)
+  const [workspaceRootPath, setWorkspaceRootPath] = React.useState<string | null>(null)
   const [cliError, setCliError] = React.useState<string | null>(null)
   const [workspaceError, setWorkspaceError] = React.useState<string | null>(null)
   const [communityError, setCommunityError] = React.useState<string | null>(null)
@@ -43,7 +47,7 @@ export function ConnectorPalette({
       .catch((error: unknown) => {
         if (!active) return
         setClis([])
-        setCliError(error instanceof Error ? error.message : '加载 CLI 连接器失败')
+        setCliError(error instanceof Error ? error.message : '加载命令行连接器失败')
       })
       .finally(() => {
         if (active) setLoadingClis(false)
@@ -57,20 +61,26 @@ export function ConnectorPalette({
     let active = true
     if (!workspaceSlug) {
       setWorkspaceCaps(null)
+      setWorkspaceRootPath(null)
       setWorkspaceError(null)
       setLoadingWorkspace(false)
       return
     }
     setLoadingWorkspace(true)
     setWorkspaceError(null)
-    void window.electronAPI.getWorkspaceCapabilities(workspaceSlug)
-      .then((caps) => {
+    void Promise.all([
+      window.electronAPI.getWorkspaceCapabilities(workspaceSlug),
+      window.electronAPI.listAgentWorkspaces(),
+    ])
+      .then(([caps, workspaces]) => {
         if (!active) return
         setWorkspaceCaps(caps)
+        setWorkspaceRootPath(workspaces.find((workspace) => workspace.slug === workspaceSlug)?.projectRootPath ?? null)
       })
       .catch((error: unknown) => {
         if (!active) return
         setWorkspaceCaps(null)
+        setWorkspaceRootPath(null)
         setWorkspaceError(error instanceof Error ? error.message : '加载工作区平台失败')
       })
       .finally(() => {
@@ -116,6 +126,33 @@ export function ConnectorPalette({
     if (!disabled) setOpen(true)
   }, [disabled])
 
+  const handleAttachOpenSource = React.useCallback(async (source: (typeof CURATED_OPEN_SOURCE_MCP_CATALOG)[number]) => {
+    if (!workspaceSlug) {
+      toast.error('请先选择一个工作区。')
+      return
+    }
+
+    setAttachingOpenSourceId(source.id)
+    try {
+      const workspaceFilesPath = workspaceRootPath
+        || await window.electronAPI.getWorkspaceFilesPath(workspaceSlug).catch(() => '')
+      const plan = buildCuratedOpenSourceMcpWorkspacePlan(source, workspaceFilesPath || undefined)
+      if (!plan) {
+        toast.error('这个 MCP 还需要手动补全后再接入。')
+        return
+      }
+
+      const caps = await window.electronAPI.upsertWorkspaceMcpServer(workspaceSlug, plan.name, plan.entry)
+      setWorkspaceCaps(caps)
+      setOpen(true)
+      toast.success(plan.attachNote)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : '接入工作区失败')
+    } finally {
+      setAttachingOpenSourceId(null)
+    }
+  }, [workspaceRootPath, workspaceSlug])
+
   return (
     <>
       <section className="rounded-md border border-border/60 bg-background/25 px-2.5 py-2">
@@ -136,16 +173,16 @@ export function ConnectorPalette({
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <h3 className="text-sm font-medium text-foreground">MCP 中心</h3>
-                  <Badge variant="outline" className="font-mono text-[11px]">registry</Badge>
+                  <Badge variant="outline" className="font-mono text-[11px]">目录</Badge>
                 </div>
                 <p className="mt-0.5 text-xs leading-5 text-muted-foreground">
-                  开源 MCP、官方参考服务器、工作区和 CLI 一起看。
+                  开源 MCP、官方参考服务器、工作区和命令行一起看。
                 </p>
               </div>
             </div>
             <div className="mt-2 flex flex-wrap gap-1.5 text-[11px] text-muted-foreground">
               <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-background/70 px-2 py-0.5">开源 {openSourceCount}</span>
-              <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-background/70 px-2 py-0.5">CLI {clis.length}</span>
+              <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-background/70 px-2 py-0.5">命令行 {clis.length}</span>
               <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-background/70 px-2 py-0.5">平台 {totalWorkspacePlatforms}</span>
               <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-background/70 px-2 py-0.5">社区 {communityCount}</span>
               {communityLoadedCount > 0 && <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-background/70 px-2 py-0.5">已加载</span>}
@@ -175,6 +212,8 @@ export function ConnectorPalette({
         workspaceError={workspaceError}
         communityError={communityError}
         onInsert={onInsert}
+        onAttachOpenSource={handleAttachOpenSource}
+        attachingOpenSourceId={attachingOpenSourceId}
         disabled={disabled}
       />
     </>

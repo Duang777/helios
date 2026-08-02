@@ -26,7 +26,10 @@ import {
   formatBuiltinMcpTools,
   formatConnectorArg,
   formatConnectorCommandPath,
+  formatConnectorSideEffect,
+  formatCommunityTransportLabel,
   formatMcpTransportLabel,
+  getCuratedOpenSourceMcpWorkspaceName,
 } from './connector-palette-helpers'
 import { CURATED_OPEN_SOURCE_MCP_CATALOG, type CuratedOpenSourceMcp } from './open-source-mcp-catalog'
 
@@ -49,6 +52,8 @@ interface ConnectorRegistryDialogProps {
   communityError: string | null
   disabled?: boolean
   onInsert: (snippet: string) => void
+  onAttachOpenSource: (source: CuratedOpenSourceMcp) => void
+  attachingOpenSourceId: string | null
 }
 
 export function ConnectorRegistryDialog({
@@ -68,6 +73,8 @@ export function ConnectorRegistryDialog({
   communityError,
   disabled = false,
   onInsert,
+  onAttachOpenSource,
+  attachingOpenSourceId,
 }: ConnectorRegistryDialogProps): React.ReactElement {
   const searchInputRef = React.useRef<HTMLInputElement>(null)
   const [source, setSource] = React.useState<ConnectorRegistrySource>('all')
@@ -89,6 +96,14 @@ export function ConnectorRegistryDialog({
   const communityHasMore = Boolean(communityCatalog?.metadata?.nextCursor)
   const workspaceBuiltin = workspaceCaps?.builtinMcpServers ?? []
   const workspaceServers = workspaceCaps?.mcpServers ?? []
+  const workspaceServerNames = React.useMemo(
+    () => new Set(workspaceServers.map((server) => server.name)),
+    [workspaceServers],
+  )
+  const workspaceServerEnabledMap = React.useMemo(
+    () => new Map(workspaceServers.map((server) => [server.name, server.enabled] as const)),
+    [workspaceServers],
+  )
   const openSourceMcp = CURATED_OPEN_SOURCE_MCP_CATALOG
 
   const filteredOpenSourceMcp = React.useMemo(
@@ -156,7 +171,7 @@ export function ConnectorRegistryDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent hideClose className="!h-[min(860px,calc(100vh-2rem))] !max-w-none !w-[min(1240px,calc(100vw-2rem))] overflow-hidden p-0">
-        <DialogTitle className="sr-only">Connector Registry</DialogTitle>
+        <DialogTitle className="sr-only">MCP 中心</DialogTitle>
         <div className="flex h-full min-h-0 flex-col">
           <div className="flex shrink-0 items-start justify-between gap-4 border-b border-border/60 px-5 py-4">
             <div className="min-w-0">
@@ -165,13 +180,13 @@ export function ConnectorRegistryDialog({
                   <Workflow className="size-4" />
                 </div>
                 <div className="min-w-0">
-                  <DialogDescription className="text-xs uppercase tracking-wide text-muted-foreground">Registry</DialogDescription>
+                  <DialogDescription className="text-xs uppercase tracking-wide text-muted-foreground">目录</DialogDescription>
                   <h2 className="text-lg font-semibold text-foreground">MCP 中心</h2>
                 </div>
-                <Badge variant="outline" className="font-mono text-[11px]">desktop</Badge>
+                <Badge variant="outline" className="font-mono text-[11px]">桌面</Badge>
               </div>
               <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
-                开源 MCP、官方目录、工作区和 CLI 放在同一个浏览面板里，直接插入即可。
+                开源 MCP、官方目录、工作区和命令行放在同一个浏览面板里，直接插入即可。
               </p>
             </div>
             <Button variant="ghost" size="icon" className="shrink-0" onClick={() => onOpenChange(false)} aria-label="关闭 MCP 中心">
@@ -188,7 +203,7 @@ export function ConnectorRegistryDialog({
                   <TabsTrigger value="community" className="h-8 text-xs">社区</TabsTrigger>
                   <TabsTrigger value="workspace" className="h-8 text-xs">工作区</TabsTrigger>
                   <TabsTrigger value="builtin" className="h-8 text-xs">平台</TabsTrigger>
-                  <TabsTrigger value="cli" className="h-8 text-xs">CLI</TabsTrigger>
+                  <TabsTrigger value="cli" className="h-8 text-xs">命令行</TabsTrigger>
                 </TabsList>
               </Tabs>
 
@@ -208,7 +223,7 @@ export function ConnectorRegistryDialog({
             <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
               <span className="font-medium text-foreground">当前目录</span>
               <span className="rounded-full border border-border/60 bg-background/65 px-2 py-0.5">开源 {filteredOpenSourceMcp.length}/{openSourceMcp.length}</span>
-              <span className="rounded-full border border-border/60 bg-background/65 px-2 py-0.5">CLI {filteredCliCommands.length}/{totalCliCommands}</span>
+              <span className="rounded-full border border-border/60 bg-background/65 px-2 py-0.5">命令行 {filteredCliCommands.length}/{totalCliCommands}</span>
               <span className="rounded-full border border-border/60 bg-background/65 px-2 py-0.5">工作区 {filteredWorkspaceMcp.length}/{workspaceServers.length}</span>
               <span className="rounded-full border border-border/60 bg-background/65 px-2 py-0.5">平台 {filteredBuiltinMcp.length}/{workspaceBuiltin.length}</span>
               <span className="rounded-full border border-border/60 bg-background/65 px-2 py-0.5">社区 {filteredCommunityMcp.length}/{communityCount}</span>
@@ -230,7 +245,7 @@ export function ConnectorRegistryDialog({
                     title="开源 MCP"
                     description="可直接接入的开源项目与官方参考服务器，带可复制命令和源码地址。"
                     count={String(filteredOpenSourceMcp.length)}
-                    meta="oss"
+                    meta="开源"
                   >
                     {filteredOpenSourceMcp.length === 0 ? (
                       <EmptyState text="没有匹配的开源 MCP。换个关键词再试试。" />
@@ -241,6 +256,11 @@ export function ConnectorRegistryDialog({
                             key={sourceItem.id}
                             source={sourceItem}
                             onInsert={onInsert}
+                            onAttach={onAttachOpenSource}
+                            attached={workspaceServerNames.has(getCuratedOpenSourceMcpWorkspaceName(sourceItem))}
+                            attachedEnabled={workspaceServerEnabledMap.get(getCuratedOpenSourceMcpWorkspaceName(sourceItem)) ?? false}
+                            attaching={attachingOpenSourceId === sourceItem.id}
+                            canAttach={Boolean(workspaceSlug)}
                             disabled={disabled}
                           />
                         ))}
@@ -252,9 +272,9 @@ export function ConnectorRegistryDialog({
                 {visibleSections.includes('community') && (
                   <ConnectorSection
                     title="社区 MCP"
-                    description="来自 MCP Registry，适合快速找到现成业务平台。"
+                    description="来自社区 MCP 目录，适合快速找到现成业务平台。"
                     count={communityCatalog?.metadata?.count ? `${filteredCommunityMcp.length}/${communityCatalog.metadata.count}` : String(filteredCommunityMcp.length)}
-                    meta={communityHasMore ? '可继续浏览' : 'registry'}
+                    meta={communityHasMore ? '可继续浏览' : '目录'}
                   >
                     {loadingCommunity ? (
                       <LoadingState label="正在加载社区 MCP 目录..." />
@@ -331,17 +351,17 @@ export function ConnectorRegistryDialog({
 
                 {visibleSections.includes('cli') && (
                   <ConnectorSection
-                    title="CLI"
-                    description="按命令维度展示本地 CLI 连接器，适合直接编进草稿。"
+                    title="命令行"
+                    description="按命令维度展示本地命令行连接器，适合直接编进草稿。"
                     count={String(filteredCliCommands.length)}
-                    meta={String(filteredClis.length)}
+                    meta="命令行"
                   >
                     {loadingClis ? (
-                      <LoadingState label="正在加载可用 CLI..." />
+                      <LoadingState label="正在加载可用命令行连接器..." />
                     ) : filteredClis.length === 0 ? (
-                      <EmptyState text="没有匹配的 CLI 连接器。" />
+                      <EmptyState text="没有匹配的命令行连接器。" />
                     ) : filteredCliCommands.length === 0 ? (
-                      <EmptyState text="没有匹配的 CLI 命令。" />
+                      <EmptyState text="没有匹配的命令行命令。" />
                     ) : (
                       <div className="space-y-4">
                         {filteredClis.map((cli) => {
@@ -440,10 +460,10 @@ function CommunityMcpCard({
           <div className="flex flex-wrap items-center gap-2">
             <Globe2 className="size-4 shrink-0 text-primary" />
             <h4 className="truncate text-sm font-semibold text-foreground">{server.title ?? server.name}</h4>
-            {server.transport && <Badge variant="outline" className="text-[11px]">{server.transport}</Badge>}
+            {server.transport && <Badge variant="outline" className="text-[11px]">{formatCommunityTransportLabel(server.transport)}</Badge>}
           </div>
           <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
-            {server.description ?? server.installHint ?? '来自 MCP Registry'}
+            {server.description ?? server.installHint ?? '来自社区 MCP 目录'}
           </p>
         </div>
         <Button size="sm" variant="outline" className="shrink-0" onClick={() => onInsert(buildCommunityMcpInsertText(server))} disabled={disabled}>
@@ -465,7 +485,7 @@ function CommunityMcpCard({
       <div className="mt-3 space-y-2 text-xs text-muted-foreground">
         <div className="flex items-start gap-2">
           <Command className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
-          <span className="line-clamp-2">{server.installHint ?? 'MCP Registry 安装提示'}</span>
+          <span className="line-clamp-2">{server.installHint ?? '社区 MCP 安装提示'}</span>
         </div>
         {(server.repositoryUrl || server.websiteUrl) && (
           <a
@@ -486,10 +506,20 @@ function CommunityMcpCard({
 function OpenSourceMcpCard({
   source,
   onInsert,
+  onAttach,
+  attached,
+  attachedEnabled,
+  attaching,
+  canAttach,
   disabled,
 }: {
   source: CuratedOpenSourceMcp
   onInsert: (snippet: string) => void
+  onAttach: (source: CuratedOpenSourceMcp) => void
+  attached: boolean
+  attachedEnabled: boolean
+  attaching: boolean
+  canAttach: boolean
   disabled: boolean
 }): React.ReactElement {
   const icon = source.id === 'craft-session-mcp'
@@ -506,20 +536,38 @@ function OpenSourceMcpCard({
             {icon}
             <h4 className="truncate text-sm font-semibold text-foreground">{source.title}</h4>
             <Badge variant="outline" className="text-[11px]">{source.origin}</Badge>
-            <Badge variant="outline" className="text-[11px]">{source.transport}</Badge>
+            <Badge variant="outline" className="text-[11px]">{formatMcpTransportLabel(source.transport)}</Badge>
+            {attached && (
+              <Badge variant={attachedEnabled ? 'secondary' : 'outline'} className="text-[11px]">
+                {attachedEnabled ? '已接入' : '已写入'}
+              </Badge>
+            )}
           </div>
           <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{source.description}</p>
         </div>
-        <Button size="sm" variant="outline" className="shrink-0" onClick={() => onInsert(buildOpenSourceMcpInsertText(source))} disabled={disabled}>
-          <Plus className="size-4" />
-          插入
-        </Button>
       </div>
 
       <div className="mt-3 flex flex-wrap gap-2">
         {source.tags.map((tag) => (
           <Badge key={tag} variant="secondary" className="text-[11px]">{tag}</Badge>
         ))}
+      </div>
+
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Button size="sm" variant="outline" className="shrink-0" onClick={() => onInsert(buildOpenSourceMcpInsertText(source))} disabled={disabled}>
+          <Plus className="size-4" />
+          插入草稿
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          className="shrink-0"
+          onClick={() => onAttach(source)}
+          disabled={disabled || attaching || !canAttach}
+        >
+          <Plug className="size-4" />
+          {attaching ? '正在接入' : attached ? '更新工作区' : '接入工作区'}
+        </Button>
       </div>
 
       <div className="mt-3 space-y-2 text-xs text-muted-foreground">
@@ -646,9 +694,9 @@ function CliCommandCard({
                 command.sideEffect === 'read' && 'border-emerald-500/40 text-emerald-600 dark:text-emerald-300',
               )}
             >
-              {command.sideEffect}
+              {formatConnectorSideEffect(command.sideEffect)}
             </Badge>
-            {command.dryRun && <Badge variant="outline" className="text-[11px]">dry-run</Badge>}
+            {command.dryRun && <Badge variant="outline" className="text-[11px]">试运行</Badge>}
           </div>
           <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{argSummary}</p>
         </div>

@@ -1,4 +1,4 @@
-import type { BuiltinMcpServerSummary, McpTransportType, WorkspaceCapabilities } from '@proma/shared'
+import type { BuiltinMcpServerSummary, McpServerEntry, McpTransportType, WorkspaceCapabilities } from '@proma/shared'
 import type { CLIArgSpec, CLICommandSpec, CommunityMcpRegistryServerSummary, RegisteredCLI } from '@/lib/helios/types'
 import type { CuratedOpenSourceMcp } from './open-source-mcp-catalog'
 
@@ -9,12 +9,12 @@ export function normalizeConnectorQuery(query: string): string {
 export function formatConnectorSideEffect(sideEffect: string): string {
   switch (sideEffect) {
     case 'write':
-      return 'write'
+      return '写入'
     case 'read':
-      return 'read'
+      return '读取'
     case 'none':
     default:
-      return 'none'
+      return '无副作用'
   }
 }
 
@@ -44,20 +44,37 @@ export function buildConnectorInsertText(cli: RegisteredCLI, command: CLICommand
   return [
     `请优先使用连接器 \`${cli.name} ${commandPath}\`（${sideEffect}）。`,
     `参数：${argSummary}`,
-    command.dryRun ? '如果需要验证，可优先使用 dry-run。' : '按真实执行路径编排。',
+    command.dryRun ? '如果需要验证，可优先使用试运行。' : '按真实执行路径编排。',
   ].join('\n')
 }
 
 export function formatMcpTransportLabel(type: McpTransportType): string {
   switch (type) {
     case 'stdio':
-      return 'stdio'
+      return '标准输入输出'
     case 'http':
-      return 'HTTP'
+      return '超文本传输'
     case 'sse':
-      return 'SSE'
+      return '服务器推送'
     default:
       return type
+  }
+}
+
+export function formatCommunityTransportLabel(transport?: string): string {
+  switch (transport) {
+    case 'stdio':
+      return '标准输入输出'
+    case 'http':
+      return '超文本传输'
+    case 'sse':
+      return '服务器推送'
+    case 'streamable-http':
+    case 'streamableHttp':
+    case 'streamable_http':
+      return '流式超文本传输'
+    default:
+      return transport ?? '未知'
   }
 }
 
@@ -84,19 +101,152 @@ export function buildWorkspaceMcpInsertText(name: string, type: McpTransportType
 export function buildCommunityMcpInsertText(server: CommunityMcpRegistryServerSummary): string {
   return [
     `请优先使用社区 MCP \`${server.title ?? server.name}\`（${server.name}）。`,
-    `版本：${server.version ?? 'latest'}；传输：${server.transport ?? 'unknown'}。`,
-    server.installHint ? `安装建议：${server.installHint}。` : '从 MCP Registry 安装后再接入。',
-    server.websiteUrl || server.repositoryUrl ? `来源：${server.websiteUrl ?? server.repositoryUrl}。` : '来源：MCP Registry。',
+    `版本：${server.version ?? '最新'}；传输：${formatCommunityTransportLabel(server.transport)}。`,
+    server.installHint ? `安装建议：${server.installHint}。` : '从社区 MCP 目录安装后再接入。',
+    server.websiteUrl || server.repositoryUrl ? `来源：${server.websiteUrl ?? server.repositoryUrl}。` : '来源：社区 MCP 目录。',
   ].join('\n')
 }
 
 export function buildOpenSourceMcpInsertText(source: CuratedOpenSourceMcp): string {
   return [
-    `请优先使用开源 MCP \`${source.title}\`（${source.transport}）。`,
+    `请优先使用开源 MCP \`${source.title}\`（${formatMcpTransportLabel(source.transport)}）。`,
     `连接方式：${source.installHint}。`,
     `能力：${source.description}。`,
     `来源：${source.sourceUrl}。`,
   ].join('\n')
+}
+
+export interface CuratedOpenSourceMcpWorkspacePlan {
+  name: string
+  entry: McpServerEntry
+  attachNote: string
+}
+
+export function getCuratedOpenSourceMcpWorkspaceName(source: CuratedOpenSourceMcp): string {
+  switch (source.id) {
+    case 'openwork-mcp':
+      return 'openwork'
+    case 'craft-agents-docs-mcp':
+      return 'craft-docs'
+    case 'craft-session-mcp':
+      return 'craft-session'
+    case 'github-mcp-server':
+      return 'github'
+    case 'filesystem-mcp-server':
+      return 'filesystem'
+    case 'git-mcp-server':
+      return 'git'
+    case 'sequential-thinking-mcp-server':
+      return 'sequential-thinking'
+    case 'time-mcp-server':
+      return 'time'
+    case 'fetch-mcp-server':
+      return 'fetch'
+    default:
+      return source.id
+  }
+}
+
+export function buildCuratedOpenSourceMcpWorkspacePlan(
+  source: CuratedOpenSourceMcp,
+  workspaceFilesPath?: string,
+): CuratedOpenSourceMcpWorkspacePlan | null {
+  switch (source.id) {
+    case 'openwork-mcp':
+      return {
+        name: getCuratedOpenSourceMcpWorkspaceName(source),
+        entry: {
+          type: 'http',
+          url: 'https://api.openworklabs.com/mcp/agent',
+          enabled: true,
+        },
+        attachNote: '已写入 OpenWork 公开端点，启用后即可在工作流和智能体中使用。',
+      }
+    case 'craft-agents-docs-mcp':
+      return {
+        name: getCuratedOpenSourceMcpWorkspaceName(source),
+        entry: {
+          type: 'http',
+          url: 'https://agents.craft.do/docs/mcp',
+          enabled: true,
+        },
+        attachNote: '已写入 Craft 文档端点，启用后即可直接检索说明。',
+      }
+    case 'craft-session-mcp':
+      return null
+    case 'github-mcp-server':
+      return {
+        name: getCuratedOpenSourceMcpWorkspaceName(source),
+        entry: {
+          type: 'http',
+          url: 'https://api.githubcopilot.com/mcp/',
+          headers: {
+            Authorization: 'Bearer <你的 GitHub 个人访问令牌>',
+          },
+          enabled: false,
+        },
+        attachNote: '已写入 GitHub 官方远程 MCP 模板，补全 GitHub 个人访问令牌后再启用。',
+      }
+    case 'filesystem-mcp-server':
+      if (!workspaceFilesPath) return null
+      return {
+        name: getCuratedOpenSourceMcpWorkspaceName(source),
+        entry: {
+          type: 'stdio',
+          command: 'npx',
+          args: ['-y', '@modelcontextprotocol/server-filesystem', workspaceFilesPath],
+          enabled: true,
+        },
+        attachNote: `已指向当前工作区目录：${workspaceFilesPath}。`,
+      }
+    case 'git-mcp-server':
+      if (!workspaceFilesPath) return null
+      return {
+        name: getCuratedOpenSourceMcpWorkspaceName(source),
+        entry: {
+          type: 'stdio',
+          command: 'uvx',
+          args: ['mcp-server-git', '--repository', workspaceFilesPath],
+          enabled: true,
+        },
+        attachNote: `已指向当前工作区仓库：${workspaceFilesPath}。`,
+      }
+    case 'sequential-thinking-mcp-server':
+      return {
+        name: getCuratedOpenSourceMcpWorkspaceName(source),
+        entry: {
+          type: 'stdio',
+          command: 'npx',
+          args: ['-y', '@modelcontextprotocol/server-sequential-thinking'],
+          enabled: true,
+        },
+        attachNote: '已写入顺序思考服务器。',
+      }
+    case 'time-mcp-server':
+      return {
+        name: getCuratedOpenSourceMcpWorkspaceName(source),
+        entry: {
+          type: 'stdio',
+          command: 'uvx',
+          args: ['mcp-server-time'],
+          enabled: true,
+        },
+        attachNote: '已写入时间服务器。',
+      }
+    case 'fetch-mcp-server':
+      return {
+        name: getCuratedOpenSourceMcpWorkspaceName(source),
+        entry: {
+          type: 'stdio',
+          command: 'uvx',
+          args: ['mcp-server-fetch'],
+          enabled: true,
+        },
+        attachNote: '已写入网页抓取服务器。',
+      }
+    default:
+      return null
+  }
 }
 
 export function insertTextAtSelection(
@@ -128,6 +278,7 @@ export function matchesConnectorQuery(
     cli.version,
     command.path.join(' '),
     command.sideEffect,
+    formatConnectorSideEffect(command.sideEffect),
     ...(command.args ?? []).map((arg) => [
       arg.name,
       arg.type,
@@ -163,6 +314,7 @@ export function matchesBuiltinMcpQuery(server: BuiltinMcpServerSummary, query: s
     server.displayName,
     server.description,
     server.category,
+    formatBuiltinMcpTools(server),
     ...(server.tools ?? []).flatMap((tool) => [tool.name, tool.description]),
     server.availabilityReason ?? '',
   ].join(' ').toLowerCase()
@@ -179,7 +331,12 @@ export function matchesWorkspaceMcpQuery(
 ): boolean {
   const normalized = normalizeConnectorQuery(query)
   if (!normalized) return true
-  const haystack = [server.name, server.type, server.enabled ? 'enabled' : 'disabled'].join(' ').toLowerCase()
+  const haystack = [
+    server.name,
+    server.type,
+    server.enabled ? 'enabled' : 'disabled',
+    server.enabled ? '已启用' : '已关闭',
+  ].join(' ').toLowerCase()
   return normalized.split(/\s+/).every((token) => haystack.includes(token))
 }
 
@@ -199,6 +356,7 @@ export function matchesCommunityMcpQuery(server: CommunityMcpRegistryServerSumma
     server.description ?? '',
     server.version ?? '',
     server.transport ?? '',
+    formatCommunityTransportLabel(server.transport),
     server.installHint ?? '',
     server.status ?? '',
     server.repositoryUrl ?? '',
@@ -223,6 +381,7 @@ export function matchesOpenSourceMcpQuery(source: CuratedOpenSourceMcp, query: s
     source.description,
     source.origin,
     source.transport,
+    formatMcpTransportLabel(source.transport),
     source.installHint,
     source.sourceUrl,
     source.repositoryUrl,

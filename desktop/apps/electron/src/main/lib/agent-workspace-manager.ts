@@ -716,6 +716,19 @@ export function saveWorkspaceMcpConfig(workspaceSlug: string, config: WorkspaceM
   }
 }
 
+/** 原子写入或更新单个工作区 MCP 服务器，供桌面端一键接入流程使用。 */
+export function upsertWorkspaceMcpServer(workspaceSlug: string, name: string, entry: WorkspaceMcpConfig['servers'][string]): WorkspaceCapabilities {
+  const current = getWorkspaceMcpConfig(workspaceSlug)
+  const next: WorkspaceMcpConfig = {
+    servers: {
+      ...current.servers,
+      [name]: entry,
+    },
+  }
+  saveWorkspaceMcpConfig(workspaceSlug, next)
+  return getWorkspaceCapabilities(workspaceSlug)
+}
+
 // ===== Skill 目录扫描 =====
 
 /** 扫描工作区活跃 Skills，仅返回 skills/ 下的 Skill */

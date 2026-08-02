@@ -258,6 +258,7 @@ import {
   ensureDefaultWorkspace,
   getWorkspaceMcpConfig,
   saveWorkspaceMcpConfig,
+  upsertWorkspaceMcpServer,
   getAllWorkspaceSkills,
   getOtherWorkspaceSkills,
   getDefaultSkillSlugs,
@@ -2262,6 +2263,14 @@ export function registerIpcHandlers(): void {
     AGENT_IPC_CHANNELS.SAVE_MCP_CONFIG,
     async (_, workspaceSlug: string, config: WorkspaceMcpConfig): Promise<void> => {
       return saveWorkspaceMcpConfig(workspaceSlug, config)
+    }
+  )
+
+  // 写入或更新单个工作区 MCP 服务器
+  ipcMain.handle(
+    AGENT_IPC_CHANNELS.UPSERT_MCP_SERVER,
+    async (_, workspaceSlug: string, name: string, entry: WorkspaceMcpConfig['servers'][string]): Promise<WorkspaceCapabilities> => {
+      return upsertWorkspaceMcpServer(workspaceSlug, name, entry)
     }
   )
 

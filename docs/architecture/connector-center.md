@@ -13,6 +13,7 @@ Workflow Studio now uses a two-stage connector surface:
 The launcher is intentionally small. It should read like a tool entry, not a second panel inside the workflow workspace.
 
 The dialog now surfaces a dedicated open-source layer before the broader community registry, so the first thing a business user sees is a small set of directly usable, well-known MCP entry points rather than a giant generic catalog.
+All visible labels in this surface should stay Chinese, including the transport badges, tab labels, and the attach-state markers shown on curated open-source cards.
 
 ## Data sources
 
@@ -28,6 +29,8 @@ It also includes a curated open-source MCP layer in the renderer, seeded from di
 - [craft-ai-agents/craft-agents-oss](https://github.com/craft-ai-agents/craft-agents-oss) via the published Craft docs and session MCP entry points.
 - [github/github-mcp-server](https://github.com/github/github-mcp-server) via the official GitHub MCP server package.
 - [modelcontextprotocol/servers](https://github.com/modelcontextprotocol/servers) via the filesystem, git, sequential-thinking, time, and fetch reference servers.
+
+These curated entries are not just descriptive cards. The workflow palette can upsert a selected entry into the current Helios workspace MCP config, and the main-process agent runtime already consumes that workspace `mcp.json` when it builds MCP server injection for sessions.
 
 ## What was borrowed
 
@@ -45,6 +48,7 @@ The current implementation uses Helios-owned code and runtime data paths:
 - `desktop/apps/electron/src/renderer/components/workflows/ConnectorPalette.tsx`
 - `desktop/apps/electron/src/renderer/components/workflows/ConnectorRegistryDialog.tsx`
 - `desktop/apps/electron/src/renderer/components/workflows/connector-palette-helpers.ts`
+- `desktop/apps/electron/src/main/lib/agent-workspace-manager.ts`
 - `desktop/apps/electron/src/renderer/lib/helios/client.ts`
 - `backend/internal/httpapi/registry_mcp.go`
 
@@ -56,6 +60,7 @@ So the registry is real, the UI is Helios-native, and the open-source MCP sectio
 - Use the dialog for browsing and insertion.
 - Put open-source MCPs first so the panel feels like a curated entry point rather than a dump.
 - Use small counts and badges for source state.
+- Distinguish already-written templates from already-enabled MCPs in the curated open-source cards.
 - Avoid nested summary cards at the top of the workflow column.
 - Prefer card grids inside the expandable dialog, not in the launcher.
 

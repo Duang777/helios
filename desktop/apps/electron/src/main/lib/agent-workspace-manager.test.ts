@@ -87,6 +87,18 @@ describe('Agent 工作区 MCP 配置', () => {
     expect(Object.keys(normalized.servers).sort()).toEqual(['github'])
     expect(normalized.servers.github?.command).toBe('github-mcp')
   })
+
+  test('Given 单个 MCP 接入请求 When 写入工作区 Then 配置与能力摘要同步更新', () => {
+    const workspaceSlug = 'workspace-upsert'
+    const caps = manager.upsertWorkspaceMcpServer(workspaceSlug, 'openwork', {
+      type: 'http',
+      url: 'https://api.openworklabs.com/mcp/agent',
+      enabled: true,
+    })
+
+    expect(caps.mcpServers.find((server) => server.name === 'openwork')?.enabled).toBe(true)
+    expect(manager.getWorkspaceMcpConfig(workspaceSlug).servers.openwork?.url).toBe('https://api.openworklabs.com/mcp/agent')
+  })
 })
 
 describe('项目术语迁移', () => {

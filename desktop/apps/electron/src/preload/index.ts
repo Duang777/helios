@@ -579,6 +579,9 @@ export interface ElectronAPI {
   /** 保存工作区 MCP 配置 */
   saveWorkspaceMcpConfig: (workspaceSlug: string, config: WorkspaceMcpConfig) => Promise<void>
 
+  /** 写入或更新单个工作区 MCP 服务器并返回最新能力摘要 */
+  upsertWorkspaceMcpServer: (workspaceSlug: string, name: string, entry: import('@proma/shared').McpServerEntry) => Promise<WorkspaceCapabilities>
+
   /** 测试 MCP 服务器连接 */
   testMcpServer: (name: string, entry: import('@proma/shared').McpServerEntry) => Promise<{ success: boolean; message: string }>
 
@@ -1734,6 +1737,10 @@ const electronAPI: ElectronAPI = {
 
   saveWorkspaceMcpConfig: (workspaceSlug: string, config: WorkspaceMcpConfig) => {
     return ipcRenderer.invoke(AGENT_IPC_CHANNELS.SAVE_MCP_CONFIG, workspaceSlug, config)
+  },
+
+  upsertWorkspaceMcpServer: (workspaceSlug: string, name: string, entry: import('@proma/shared').McpServerEntry) => {
+    return ipcRenderer.invoke(AGENT_IPC_CHANNELS.UPSERT_MCP_SERVER, workspaceSlug, name, entry)
   },
 
   testMcpServer: (name: string, entry: import('@proma/shared').McpServerEntry) => {
