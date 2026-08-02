@@ -252,15 +252,18 @@ export function WorkflowStudioView(): React.ReactElement {
       <main className="titlebar-no-drag grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-y-auto px-6 pb-8 sm:px-8 lg:grid-cols-[minmax(320px,0.9fr)_minmax(420px,1.4fr)] lg:overflow-hidden xl:px-10">
         <section className="flex min-h-[520px] flex-col rounded-lg border border-border/60 bg-background/35 lg:min-h-0">
           <div className="border-b border-border/60 px-4 py-3">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex min-w-0 items-center gap-2">
-                <Sparkles className="size-4 text-primary" />
-                <h2 className="truncate text-sm font-medium">意图</h2>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-2">
+                  <Sparkles className="size-4 text-primary" />
+                  <h2 className="truncate text-sm font-medium">意图</h2>
+                </div>
+                <div className="flex items-center gap-2">
+                  <ConnectorPalette onInsert={insertIntentSnippet} workspaceSlug={workspaceSlug} disabled={busy} />
+                  <Badge variant="outline" className="font-mono">{workflowId ?? '未保存'}</Badge>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <ConnectorPalette onInsert={insertIntentSnippet} workspaceSlug={workspaceSlug} disabled={busy} />
-                <Badge variant="outline" className="font-mono">{workflowId ?? '未保存'}</Badge>
-              </div>
+              <p className="text-xs text-muted-foreground">先写一句业务目标，再点“编译”。编译后右侧才会出现配置、图和校验结果。</p>
             </div>
           </div>
           <div className="flex min-h-0 flex-1 flex-col gap-4 p-4">
@@ -280,23 +283,29 @@ export function WorkflowStudioView(): React.ReactElement {
                 <AlertDescription>{errorMessage}</AlertDescription>
               </Alert>
             )}
-            <div className="grid grid-cols-2 gap-2">
-              <Button onClick={() => void handleCompile(false)} disabled={busy || intent.trim().length === 0}>
-                {status === 'compiling' ? <Loader2 className="animate-spin" /> : <Wand2 />}
-                编译
-              </Button>
-              <Button variant="outline" onClick={() => void handleCompile(true)} disabled={busy || !result}>
-                <Wand2 />
-                修复
-              </Button>
-              <Button variant="secondary" onClick={() => void saveCurrentDraft()} disabled={busy || !saveEnabled}>
-                {status === 'saving' ? <Loader2 className="animate-spin" /> : <Save />}
-                保存
-              </Button>
-              <Button variant="secondary" onClick={() => void handleRun()} disabled={busy || !saveEnabled}>
-                {status === 'running' ? <Loader2 className="animate-spin" /> : <Play />}
-                运行
-              </Button>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-3">
+                <h3 className="text-xs font-medium text-foreground">操作</h3>
+                <p className="text-[11px] text-muted-foreground">先编译，再保存和运行。</p>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <Button onClick={() => void handleCompile(false)} disabled={busy || intent.trim().length === 0}>
+                  {status === 'compiling' ? <Loader2 className="animate-spin" /> : <Wand2 />}
+                  编译
+                </Button>
+                <Button variant="outline" onClick={() => void handleCompile(true)} disabled={busy || !result}>
+                  <Wand2 />
+                  修复
+                </Button>
+                <Button variant="secondary" onClick={() => void saveCurrentDraft()} disabled={busy || !saveEnabled}>
+                  {status === 'saving' ? <Loader2 className="animate-spin" /> : <Save />}
+                  保存
+                </Button>
+                <Button variant="secondary" onClick={() => void handleRun()} disabled={busy || !saveEnabled}>
+                  {status === 'running' ? <Loader2 className="animate-spin" /> : <Play />}
+                  运行
+                </Button>
+              </div>
             </div>
           </div>
         </section>
@@ -304,16 +313,19 @@ export function WorkflowStudioView(): React.ReactElement {
         <section className="flex min-h-[520px] flex-col rounded-lg border border-border/60 bg-background/35 lg:min-h-0">
           <Tabs defaultValue="yaml" className="flex min-h-0 flex-1 flex-col">
             <div className="flex items-center justify-between gap-3 border-b border-border/60 px-4 py-3">
-              <div className="flex min-w-0 items-center gap-2">
-                <FileCode2 className="size-4 text-primary" />
-                <h2 className="truncate text-sm font-medium">编译结果</h2>
+              <div className="min-w-0">
+                <div className="flex min-w-0 items-center gap-2">
+                  <FileCode2 className="size-4 text-primary" />
+                  <h2 className="truncate text-sm font-medium">编译结果</h2>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">这里查看编译出来的配置、步骤图、校验、运行记录和工作流文件夹。</p>
               </div>
               <TabsList className="h-8 rounded-md">
-                <TabsTrigger value="yaml" className="h-6 rounded-sm px-2 text-xs">配置</TabsTrigger>
-                <TabsTrigger value="graph" className="h-6 rounded-sm px-2 text-xs">图</TabsTrigger>
+                <TabsTrigger value="yaml" className="h-6 rounded-sm px-2 text-xs">工作流配置</TabsTrigger>
+                <TabsTrigger value="graph" className="h-6 rounded-sm px-2 text-xs">步骤图</TabsTrigger>
                 <TabsTrigger value="validation" className="h-6 rounded-sm px-2 text-xs">校验</TabsTrigger>
                 <TabsTrigger value="ir" className="h-6 rounded-sm px-2 text-xs">中间表示</TabsTrigger>
-                <TabsTrigger value="run" className="h-6 rounded-sm px-2 text-xs">运行</TabsTrigger>
+                <TabsTrigger value="run" className="h-6 rounded-sm px-2 text-xs">运行状态</TabsTrigger>
                 <TabsTrigger value="folder" className="h-6 rounded-sm px-2 text-xs">文件夹</TabsTrigger>
               </TabsList>
             </div>

@@ -116,12 +116,21 @@ export function WorkflowSummary({ result }: { result: CompileResult | null }): R
   const params = workflow?.params ?? ir?.params ?? {}
 
   return (
-    <div className="grid grid-cols-2 gap-2 text-[12px] sm:grid-cols-4">
-      <SummaryCell label="工作流" value={id ?? '-'} />
-      <SummaryCell label="步骤" value={String(steps.length)} />
-      <SummaryCell label="参数" value={String(Object.keys(params).length)} />
-      <SummaryCell label="模式" value={result?.mode ?? '-'} />
-    </div>
+    <section className="space-y-2">
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="text-xs font-medium text-foreground">结果摘要</h3>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">编译后会显示草稿 ID、步骤数、参数项和编译模式。</p>
+        </div>
+        <Badge variant="outline" className="shrink-0 text-[11px]">编译结果</Badge>
+      </div>
+      <div className="grid grid-cols-2 gap-2 text-[12px] sm:grid-cols-4">
+        <SummaryCell label="草稿 ID" value={id ?? '待编译'} />
+        <SummaryCell label="步骤数" value={String(steps.length)} />
+        <SummaryCell label="参数项" value={String(Object.keys(params).length)} />
+        <SummaryCell label="编译模式" value={result?.mode ?? '待编译'} />
+      </div>
+    </section>
   )
 }
 
@@ -152,7 +161,7 @@ export function ValidationPanel({ result }: { result: CompileResult | null }): R
   return (
     <ScrollArea className="h-full min-h-[320px] rounded-md border border-border/60 bg-background/70">
       <div className="space-y-4 p-4 text-sm">
-        {!result && <p className="text-muted-foreground">编译后会显示结构校验、警告和修复尝试。</p>}
+        {!result && <p className="text-muted-foreground">先在左侧点“编译”，这里会显示结构校验、警告和修复尝试。</p>}
         {result && (
           <>
             <section>
@@ -212,7 +221,7 @@ export function IRPanel({ ir }: { ir?: CompileIR }): React.ReactElement {
   return (
     <CodeBlock
       value={ir ? JSON.stringify(ir, null, 2) : ''}
-      empty="编译后会显示中间表示摘要。"
+      empty="先在左侧点“编译”，这里会显示中间表示摘要。"
     />
   )
 }
@@ -231,7 +240,7 @@ export function RunPanel({ run, usedDefaults }: { run: WorkflowRun | null; usedD
   return (
     <ScrollArea className="h-full min-h-[320px] rounded-md border border-border/60 bg-background/70">
       <div className="space-y-4 p-4 text-sm">
-        {!run && <p className="text-muted-foreground">保存并运行后会显示运行编号、状态和步骤结果。</p>}
+        {!run && <p className="text-muted-foreground">保存并运行后会显示运行编号、状态和每个步骤的执行结果。</p>}
         {run && (
           <>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
