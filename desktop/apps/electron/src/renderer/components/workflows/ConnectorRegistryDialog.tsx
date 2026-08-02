@@ -24,6 +24,8 @@ import {
   filterConnectorCommands,
   filterWorkspaceMcpCatalog,
   formatBuiltinMcpTools,
+  formatBuiltinMcpCategoryLabel,
+  formatCommunityStatusLabel,
   formatConnectorArg,
   formatConnectorCommandPath,
   formatConnectorSideEffect,
@@ -300,7 +302,7 @@ export function ConnectorRegistryDialog({
                     title="工作区 MCP"
                     description="当前项目已经配置好的 MCP 连接器。"
                     count={String(filteredWorkspaceMcp.length)}
-                    meta={workspaceSlug || 'workspace'}
+                    meta={workspaceSlug || '工作区'}
                   >
                     {loadingWorkspace ? (
                       <LoadingState label="正在加载工作区 MCP..." />
@@ -326,7 +328,7 @@ export function ConnectorRegistryDialog({
                 {visibleSections.includes('builtin') && (
                   <ConnectorSection
                     title="内置平台"
-                    description="Helios 自带的平台能力，适合直接插入到工作流草稿。"
+                    description="桌面内置的平台能力，适合直接插入到工作流里。"
                     count={String(filteredBuiltinMcp.length)}
                     meta={String(workspaceBuiltin.length)}
                   >
@@ -352,7 +354,7 @@ export function ConnectorRegistryDialog({
                 {visibleSections.includes('cli') && (
                   <ConnectorSection
                     title="命令行"
-                    description="按命令维度展示本地命令行连接器，适合直接编进草稿。"
+                    description="按命令维度展示本地命令行连接器，适合直接插入到意图里。"
                     count={String(filteredCliCommands.length)}
                     meta="命令行"
                   >
@@ -476,10 +478,10 @@ function CommunityMcpCard({
         {server.version && <Badge variant="secondary" className="text-[11px]">v{server.version}</Badge>}
         {server.status && (
           <Badge variant={server.status === 'active' ? 'secondary' : 'outline'} className="text-[11px]">
-            {server.status}
+            {formatCommunityStatusLabel(server.status)}
           </Badge>
         )}
-        {server.isLatest && <Badge variant="outline" className="text-[11px]">latest</Badge>}
+        {server.isLatest && <Badge variant="outline" className="text-[11px]">最新版</Badge>}
       </div>
 
       <div className="mt-3 space-y-2 text-xs text-muted-foreground">
@@ -556,7 +558,7 @@ function OpenSourceMcpCard({
       <div className="mt-3 flex flex-wrap gap-2">
         <Button size="sm" variant="outline" className="shrink-0" onClick={() => onInsert(buildOpenSourceMcpInsertText(source))} disabled={disabled}>
           <Plus className="size-4" />
-          插入草稿
+          插入到意图
         </Button>
         <Button
           size="sm"
@@ -642,7 +644,7 @@ function BuiltinMcpCard({
           <div className="flex flex-wrap items-center gap-2">
             <Bot className="size-4 shrink-0 text-primary" />
             <h4 className="truncate text-sm font-semibold text-foreground">{server.displayName}</h4>
-            <Badge variant="outline" className="text-[11px]">{server.category}</Badge>
+            <Badge variant="outline" className="text-[11px]">{formatBuiltinMcpCategoryLabel(server.category)}</Badge>
           </div>
           <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{server.description}</p>
         </div>

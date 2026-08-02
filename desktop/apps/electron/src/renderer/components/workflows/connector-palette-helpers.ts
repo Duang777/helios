@@ -61,6 +61,23 @@ export function formatMcpTransportLabel(type: McpTransportType): string {
   }
 }
 
+export function formatBuiltinMcpCategoryLabel(category: string): string {
+  switch (category) {
+    case 'collaboration':
+      return '协作'
+    case 'automation':
+      return '自动化'
+    case 'knowledge':
+      return '知识'
+    case 'developer':
+      return '开发'
+    case 'productivity':
+      return '效率'
+    default:
+      return category
+  }
+}
+
 export function formatCommunityTransportLabel(transport?: string): string {
   switch (transport) {
     case 'stdio':
@@ -78,6 +95,21 @@ export function formatCommunityTransportLabel(transport?: string): string {
   }
 }
 
+export function formatCommunityStatusLabel(status?: string): string {
+  switch (status) {
+    case 'active':
+      return '可用'
+    case 'deprecated':
+      return '已废弃'
+    case 'archived':
+      return '已归档'
+    case 'inactive':
+      return '未启用'
+    default:
+      return status ?? '未知'
+  }
+}
+
 export function formatBuiltinMcpTools(server: Pick<BuiltinMcpServerSummary, 'tools'>): string {
   if (server.tools.length === 0) return '无工具'
   return server.tools.map((tool) => tool.name).join(' · ')
@@ -85,7 +117,7 @@ export function formatBuiltinMcpTools(server: Pick<BuiltinMcpServerSummary, 'too
 
 export function buildBuiltinMcpInsertText(server: BuiltinMcpServerSummary): string {
   return [
-    `请优先使用工作区平台连接器 \`${server.displayName}\`（${server.category}）。`,
+    `请优先使用工作区平台连接器 \`${server.displayName}\`（${formatBuiltinMcpCategoryLabel(server.category)}）。`,
     `工具：${formatBuiltinMcpTools(server)}。`,
     server.availabilityReason ? `可用性提示：${server.availabilityReason}。` : '当前平台在工作区可用。',
   ].join('\n')
@@ -109,10 +141,7 @@ export function buildCommunityMcpInsertText(server: CommunityMcpRegistryServerSu
 
 export function buildOpenSourceMcpInsertText(source: CuratedOpenSourceMcp): string {
   return [
-    `请优先使用开源 MCP \`${source.title}\`（${formatMcpTransportLabel(source.transport)}）。`,
-    `连接方式：${source.installHint}。`,
-    `能力：${source.description}。`,
-    `来源：${source.sourceUrl}。`,
+    `当前工作流优先使用开源 MCP \`${source.title}\`。`,
   ].join('\n')
 }
 

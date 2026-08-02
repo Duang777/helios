@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { useAtomValue } from 'jotai'
-import { AlertCircle, FileCode2, Loader2, Play, Save, Sparkles, Wand2, Workflow } from 'lucide-react'
+import { AlertCircle, FileCode2, Loader2, Play, Save, Sparkles, Wand2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
@@ -103,7 +103,7 @@ export function WorkflowStudioView(): React.ReactElement {
       setFolderPreview(null)
       setStatus(compiled.validation.ok ? 'ready' : 'error')
       if (!compiled.validation.ok) {
-        setErrorMessage('后端校验未通过，请查看 Validation。')
+        setErrorMessage('后端校验未通过，请查看校验结果。')
       }
     } catch (error) {
       setStatus('error')
@@ -113,7 +113,7 @@ export function WorkflowStudioView(): React.ReactElement {
 
   const saveCurrentDraft = React.useCallback(async (): Promise<HeliosWorkflow | null> => {
     if (!result || !saveEnabled || !workflowId) {
-      setErrorMessage('当前草稿还不能保存。')
+      setErrorMessage('当前内容还不能保存。')
       setStatus('error')
       return null
     }
@@ -154,7 +154,7 @@ export function WorkflowStudioView(): React.ReactElement {
       }
       setStatus(imported.validation.ok ? 'ready' : 'error')
       if (!imported.validation.ok) {
-        setErrorMessage('文件夹导入后的 workflow 校验未通过，请查看 Validation。')
+        setErrorMessage('文件夹导入后的工作流校验未通过，请查看校验结果。')
       } else {
         toast.success(`已导入 ${folder.folderName}`)
       }
@@ -171,7 +171,7 @@ export function WorkflowStudioView(): React.ReactElement {
   const handleExportFolder = React.useCallback(async (): Promise<void> => {
     const workflow = savedWorkflow ?? result?.workflow
     if (!workflow || !result?.yaml.trim()) {
-      setErrorMessage('当前草稿还不能导出。')
+      setErrorMessage('当前内容还不能导出。')
       setStatus('error')
       return
     }
@@ -240,12 +240,8 @@ export function WorkflowStudioView(): React.ReactElement {
     <div className="flex h-full flex-col overflow-hidden bg-content-area">
       <header className="titlebar-drag-region flex w-full items-start justify-between gap-4 px-6 pb-4 pt-8 sm:px-8 xl:px-10">
         <div className="min-w-0">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Workflow className="size-4" />
-            <span className="text-xs font-medium uppercase">Helios</span>
-          </div>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-wrap-balance">Workflow Studio</h1>
-          <p className="mt-1 text-sm text-muted-foreground">把自然语言编译成可保存、可运行的 Helios workflow。</p>
+          <h1 className="text-2xl font-semibold tracking-tight text-wrap-balance">工作流工作台</h1>
+          <p className="mt-1 text-sm text-muted-foreground">把自然语言编译成可保存、可运行的工作流。</p>
         </div>
         <div className="titlebar-no-drag flex shrink-0 items-center gap-2">
           <Badge variant="outline">{statusLabel(status)}</Badge>
@@ -259,9 +255,12 @@ export function WorkflowStudioView(): React.ReactElement {
             <div className="flex items-center justify-between gap-3">
               <div className="flex min-w-0 items-center gap-2">
                 <Sparkles className="size-4 text-primary" />
-                <h2 className="truncate text-sm font-medium">Intent</h2>
+                <h2 className="truncate text-sm font-medium">意图</h2>
               </div>
-              <Badge variant="outline" className="font-mono">{workflowId ?? 'draft'}</Badge>
+              <div className="flex items-center gap-2">
+                <ConnectorPalette onInsert={insertIntentSnippet} workspaceSlug={workspaceSlug} disabled={busy} />
+                <Badge variant="outline" className="font-mono">{workflowId ?? '未保存'}</Badge>
+              </div>
             </div>
           </div>
           <div className="flex min-h-0 flex-1 flex-col gap-4 p-4">
@@ -299,7 +298,6 @@ export function WorkflowStudioView(): React.ReactElement {
                 运行
               </Button>
             </div>
-            <ConnectorPalette onInsert={insertIntentSnippet} workspaceSlug={workspaceSlug} disabled={busy} />
           </div>
         </section>
 
@@ -308,20 +306,20 @@ export function WorkflowStudioView(): React.ReactElement {
             <div className="flex items-center justify-between gap-3 border-b border-border/60 px-4 py-3">
               <div className="flex min-w-0 items-center gap-2">
                 <FileCode2 className="size-4 text-primary" />
-                <h2 className="truncate text-sm font-medium">Draft output</h2>
+                <h2 className="truncate text-sm font-medium">编译结果</h2>
               </div>
               <TabsList className="h-8 rounded-md">
-                <TabsTrigger value="yaml" className="h-6 rounded-sm px-2 text-xs">YAML</TabsTrigger>
-                <TabsTrigger value="graph" className="h-6 rounded-sm px-2 text-xs">Graph</TabsTrigger>
-              <TabsTrigger value="validation" className="h-6 rounded-sm px-2 text-xs">Validation</TabsTrigger>
-              <TabsTrigger value="ir" className="h-6 rounded-sm px-2 text-xs">IR</TabsTrigger>
-              <TabsTrigger value="run" className="h-6 rounded-sm px-2 text-xs">Run</TabsTrigger>
-              <TabsTrigger value="folder" className="h-6 rounded-sm px-2 text-xs">Folder</TabsTrigger>
-            </TabsList>
-          </div>
+                <TabsTrigger value="yaml" className="h-6 rounded-sm px-2 text-xs">配置</TabsTrigger>
+                <TabsTrigger value="graph" className="h-6 rounded-sm px-2 text-xs">图</TabsTrigger>
+                <TabsTrigger value="validation" className="h-6 rounded-sm px-2 text-xs">校验</TabsTrigger>
+                <TabsTrigger value="ir" className="h-6 rounded-sm px-2 text-xs">中间表示</TabsTrigger>
+                <TabsTrigger value="run" className="h-6 rounded-sm px-2 text-xs">运行</TabsTrigger>
+                <TabsTrigger value="folder" className="h-6 rounded-sm px-2 text-xs">文件夹</TabsTrigger>
+              </TabsList>
+            </div>
           <div className={cn('min-h-0 flex-1 p-4', busy && 'cursor-progress')}>
             <TabsContent value="yaml" className="m-0 h-full">
-              <CodeBlock value={yaml} empty="编译后会显示 Helios YAML。" />
+              <CodeBlock value={yaml} empty="编译后会显示工作流配置。" />
               </TabsContent>
               <TabsContent value="graph" className="m-0 h-full">
                 <GraphPanel result={result} run={run} />

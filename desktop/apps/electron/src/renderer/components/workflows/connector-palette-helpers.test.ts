@@ -18,6 +18,7 @@ import {
   formatConnectorArg,
   formatConnectorCommandPath,
   formatConnectorSideEffect,
+  formatCommunityStatusLabel,
   formatMcpTransportLabel,
   insertTextAtSelection,
   matchesBuiltinMcpQuery,
@@ -99,7 +100,7 @@ describe('connector palette helpers', () => {
 
   test('formats and filters builtin MCP platforms', () => {
     expect(formatMcpTransportLabel('http')).toBe('超文本传输')
-    expect(buildBuiltinMcpInsertText(builtinMcp)).toContain('请优先使用工作区平台连接器 `飞书`（collaboration）。')
+    expect(buildBuiltinMcpInsertText(builtinMcp)).toContain('请优先使用工作区平台连接器 `飞书`（协作）。')
     expect(buildBuiltinMcpInsertText(builtinMcp)).toContain('工具：docs_read · docs_write。')
     expect(matchesBuiltinMcpQuery(builtinMcp, '飞书 docs_write')).toBe(true)
     expect(filterBuiltinMcpCatalog([builtinMcp], 'docs_read')).toHaveLength(1)
@@ -113,6 +114,7 @@ describe('connector palette helpers', () => {
 
   test('formats and filters community MCP registry entries', () => {
     expect(buildCommunityMcpInsertText(communityMcp)).toContain('请优先使用社区 MCP `inference.sh`（ac.inference.sh/mcp）。')
+    expect(formatCommunityStatusLabel(communityMcp.status)).toBe('可用')
     expect(matchesCommunityMcpQuery(communityMcp, 'inference streamable')).toBe(true)
     expect(filterCommunityMcpCatalog([communityMcp], 'compose tools')).toHaveLength(1)
   })
@@ -121,8 +123,7 @@ describe('connector palette helpers', () => {
     const openWork = CURATED_OPEN_SOURCE_MCP_CATALOG[0]
     expect(openWork).toBeDefined()
     expect(openWork!.origin).toBe('项目')
-    expect(buildOpenSourceMcpInsertText(openWork!)).toContain('请优先使用开源 MCP `OpenWork 开源 MCP`（超文本传输）。')
-    expect(buildOpenSourceMcpInsertText(openWork!)).toContain('codex mcp add openwork --url https://api.openworklabs.com/mcp/agent')
+    expect(buildOpenSourceMcpInsertText(openWork!)).toContain('当前工作流优先使用开源 MCP `OpenWork 开源 MCP`。')
     expect(matchesOpenSourceMcpQuery(openWork!, 'openwork 技能')).toBe(true)
     expect(filterOpenSourceMcpCatalog(CURATED_OPEN_SOURCE_MCP_CATALOG, '会话 工具')).toHaveLength(1)
     expect(filterOpenSourceMcpCatalog(CURATED_OPEN_SOURCE_MCP_CATALOG, '拉取请求')).toHaveLength(1)

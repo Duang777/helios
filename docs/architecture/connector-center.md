@@ -5,15 +5,15 @@ Status: Active
 
 ## What changed
 
-Workflow Studio now uses a two-stage connector surface:
+Workflow Studio now uses a dialog-first connector surface:
 
-1. A compact launcher in the workflow column.
-2. An expandable MCP center dialog for browsing and inserting connectors.
+1. A compact `MCP 中心` button in the intent header.
+2. An expandable MCP center dialog for browsing, inserting, and attaching connectors.
 
-The launcher is intentionally small. It should read like a tool entry, not a second panel inside the workflow workspace.
+The launcher is intentionally just a small tool button. It should not become a first-screen card, a nested panel, or a second browse surface inside the workflow workspace.
 
 The dialog now surfaces a dedicated open-source layer before the broader community registry, so the first thing a business user sees is a small set of directly usable, well-known MCP entry points rather than a giant generic catalog.
-All visible labels in this surface should stay Chinese, including the transport badges, tab labels, and the attach-state markers shown on curated open-source cards.
+All visible labels in this surface should stay Chinese, including the transport badges, tab labels, attach-state markers, status badges, and insert actions shown on curated open-source cards.
 
 ## Data sources
 
@@ -31,6 +31,8 @@ It also includes a curated open-source MCP layer in the renderer, seeded from di
 - [modelcontextprotocol/servers](https://github.com/modelcontextprotocol/servers) via the filesystem, git, sequential-thinking, time, and fetch reference servers.
 
 These curated entries are not just descriptive cards. The workflow palette can upsert a selected entry into the current Helios workspace MCP config, and the main-process agent runtime already consumes that workspace `mcp.json` when it builds MCP server injection for sessions.
+
+The insert action is intentionally lightweight: it writes a short intent hint such as “当前工作流优先使用开源 MCP …”, while the real attach action writes the usable MCP entry into the workspace. Long install commands, source URLs, and capability descriptions stay inside the dialog card instead of flooding the intent editor.
 
 ## What was borrowed
 
@@ -57,12 +59,14 @@ So the registry is real, the UI is Helios-native, and the open-source MCP sectio
 ## Layout rules
 
 - Keep the launcher compact.
-- Use the dialog for browsing and insertion.
+- Keep the launcher in the intent header, not as a card in the first screen.
+- Use the dialog for browsing, insertion, and workspace attachment.
 - Put open-source MCPs first so the panel feels like a curated entry point rather than a dump.
 - Use small counts and badges for source state.
 - Distinguish already-written templates from already-enabled MCPs in the curated open-source cards.
 - Avoid nested summary cards at the top of the workflow column.
 - Prefer card grids inside the expandable dialog, not in the launcher.
+- Never insert multi-line installation drafts into the intent editor from a curated MCP card.
 
 ## Follow-up
 
