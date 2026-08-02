@@ -197,3 +197,4 @@ Manual:
 - 2026-08-02: Moved the MCP center to a compact dialog entry in the intent header, removed the first-screen launcher card, shortened curated MCP insertion to a one-line Chinese intent hint, and mapped remaining visible workflow/MCP statuses to Chinese labels.
 - 2026-08-02: Clarified the Workflow Studio left/right panels with explicit “操作” and “结果摘要” guidance, and renamed the result tabs so the workspace now reads as “先编译，再看配置/步骤图/校验/运行” instead of a generic split view.
 - 2026-08-02: Reframed the workspace into a single card-first main panel with detail dialogs for graph/validation/source/run/folder, removed the fixed right-side tab strip, and kept the visible action wording generation-first and Chinese-only.
+- 2026-08-02: Refined the Workflow Studio shell into a softer dialog-like surface with larger radius, lighter borders, and a more elevated inspector dialog so the single-panel workspace reads as polished instead of boxy.

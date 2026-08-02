@@ -247,8 +247,8 @@ export function WorkflowStudioView(): React.ReactElement {
         </div>
       </header>
 
-      <main className="titlebar-no-drag flex min-h-0 flex-1 justify-center overflow-y-auto px-6 pb-8 sm:px-8 xl:px-10">
-        <section className="flex min-h-[620px] w-full max-w-[1120px] flex-col rounded-lg border border-border/60 bg-background/35">
+      <main className="titlebar-no-drag flex min-h-0 flex-1 justify-center overflow-y-auto px-6 pb-8 pt-1 sm:px-8 xl:px-10">
+        <section className="flex min-h-[620px] w-full max-w-[1120px] flex-col overflow-hidden rounded-[28px] border border-border/30 bg-background/80 shadow-[0_28px_90px_rgba(15,23,42,0.08)] ring-1 ring-white/50 backdrop-blur-md dark:ring-white/5">
           <div className="border-b border-border/60 px-4 py-3">
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-3">

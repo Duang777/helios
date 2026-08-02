@@ -513,7 +513,7 @@ export function WorkflowInspectorDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="!grid !h-[min(88vh,calc(100vh-2rem))] !max-w-none !w-[min(1240px,calc(100vw-2rem))] !gap-0 overflow-hidden !p-0">
+      <DialogContent className="!grid !h-[min(88vh,calc(100vh-2rem))] !max-w-none !w-[min(1240px,calc(100vw-2rem))] !gap-0 !rounded-[28px] !p-0 !shadow-[0_40px_120px_rgba(15,23,42,0.18)]">
         <div className="flex h-full min-h-0 flex-col">
           <div className="border-b border-border/60 px-5 py-4">
             <DialogDescription className="text-xs uppercase tracking-wide text-muted-foreground">工作流详情</DialogDescription>
