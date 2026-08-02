@@ -1,5 +1,6 @@
 import type { BuiltinMcpServerSummary, McpTransportType, WorkspaceCapabilities } from '@proma/shared'
 import type { CLIArgSpec, CLICommandSpec, CommunityMcpRegistryServerSummary, RegisteredCLI } from '@/lib/helios/types'
+import type { CuratedOpenSourceMcp } from './open-source-mcp-catalog'
 
 export function normalizeConnectorQuery(query: string): string {
   return query.trim().toLowerCase()
@@ -86,6 +87,15 @@ export function buildCommunityMcpInsertText(server: CommunityMcpRegistryServerSu
     `版本：${server.version ?? 'latest'}；传输：${server.transport ?? 'unknown'}。`,
     server.installHint ? `安装建议：${server.installHint}。` : '从 MCP Registry 安装后再接入。',
     server.websiteUrl || server.repositoryUrl ? `来源：${server.websiteUrl ?? server.repositoryUrl}。` : '来源：MCP Registry。',
+  ].join('\n')
+}
+
+export function buildOpenSourceMcpInsertText(source: CuratedOpenSourceMcp): string {
+  return [
+    `请优先使用开源 MCP \`${source.title}\`（${source.transport}）。`,
+    `连接方式：${source.installHint}。`,
+    `能力：${source.description}。`,
+    `来源：${source.sourceUrl}。`,
   ].join('\n')
 }
 
@@ -202,4 +212,27 @@ export function filterCommunityMcpCatalog(
   query: string,
 ): CommunityMcpRegistryServerSummary[] {
   return connectors.filter((server) => matchesCommunityMcpQuery(server, query))
+}
+
+export function matchesOpenSourceMcpQuery(source: CuratedOpenSourceMcp, query: string): boolean {
+  const normalized = normalizeConnectorQuery(query)
+  if (!normalized) return true
+  const haystack = [
+    source.id,
+    source.title,
+    source.description,
+    source.transport,
+    source.installHint,
+    source.sourceUrl,
+    source.repositoryUrl,
+    ...(source.tags ?? []),
+  ].join(' ').toLowerCase()
+  return normalized.split(/\s+/).every((token) => haystack.includes(token))
+}
+
+export function filterOpenSourceMcpCatalog(
+  connectors: CuratedOpenSourceMcp[],
+  query: string,
+): CuratedOpenSourceMcp[] {
+  return connectors.filter((source) => matchesOpenSourceMcpQuery(source, query))
 }

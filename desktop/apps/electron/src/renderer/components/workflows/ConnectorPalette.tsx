@@ -1,12 +1,12 @@
 import * as React from 'react'
-import { ChevronRight, Command, Globe2, Plug, Workflow } from 'lucide-react'
+import { ChevronRight, Workflow } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { listCLIs, listCommunityMcpServers } from '@/lib/helios/client'
 import type { CommunityMcpRegistryResponse, RegisteredCLI } from '@/lib/helios/types'
 import type { WorkspaceCapabilities } from '@proma/shared'
 import { ConnectorRegistryDialog } from './ConnectorRegistryDialog'
+import { CURATED_OPEN_SOURCE_MCP_CATALOG } from './open-source-mcp-catalog'
 
 interface ConnectorPaletteProps {
   onInsert: (snippet: string) => void
@@ -110,6 +110,7 @@ export function ConnectorPalette({
   const totalWorkspacePlatforms = (workspaceCaps?.builtinMcpServers.length ?? 0) + (workspaceCaps?.mcpServers.length ?? 0)
   const communityCount = communityCatalog?.metadata?.count ?? communityCatalog?.servers.length ?? 0
   const communityLoadedCount = communityCatalog?.servers.length ?? 0
+  const openSourceCount = CURATED_OPEN_SOURCE_MCP_CATALOG.length
 
   const handleOpen = React.useCallback(() => {
     if (!disabled) setOpen(true)
@@ -117,19 +118,19 @@ export function ConnectorPalette({
 
   return (
     <>
-      <section className="rounded-lg border border-border/60 bg-background/35 px-3 py-2.5">
+      <section className="rounded-md border border-border/60 bg-background/25 px-2.5 py-2">
         <button
           type="button"
           onClick={handleOpen}
           disabled={disabled}
           className={cn(
-            'flex w-full items-center justify-between gap-3 rounded-md border border-border/60 bg-background/75 px-3 py-2.5 text-left transition-colors',
+            'flex w-full items-center justify-between gap-3 rounded-md border border-border/60 bg-background/70 px-3 py-2 text-left transition-colors',
             disabled ? 'cursor-not-allowed opacity-60' : 'hover:bg-background/90',
           )}
         >
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <div className="rounded-md border border-border/60 bg-background/60 p-1.5 text-primary">
+              <div className="rounded-md border border-border/60 bg-background/70 p-1.5 text-primary">
                 <Workflow className="size-4" />
               </div>
               <div className="min-w-0">
@@ -138,15 +139,16 @@ export function ConnectorPalette({
                   <Badge variant="outline" className="font-mono text-[11px]">registry</Badge>
                 </div>
                 <p className="mt-0.5 text-xs leading-5 text-muted-foreground">
-                  点开浏览 CLI、工作区 MCP、内置平台和社区目录。
+                  开源 MCP、官方目录、工作区和 CLI 一起看。
                 </p>
               </div>
             </div>
-            <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-muted-foreground">
-              <Badge variant="secondary" className="text-[11px]">CLI {clis.length}</Badge>
-              <Badge variant="secondary" className="text-[11px]">平台 {totalWorkspacePlatforms}</Badge>
-              <Badge variant="secondary" className="text-[11px]">社区 {communityCount}</Badge>
-              {communityLoadedCount > 0 && <Badge variant="outline" className="text-[11px]">已加载</Badge>}
+            <div className="mt-2 flex flex-wrap gap-1.5 text-[11px] text-muted-foreground">
+              <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-background/70 px-2 py-0.5">开源 {openSourceCount}</span>
+              <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-background/70 px-2 py-0.5">CLI {clis.length}</span>
+              <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-background/70 px-2 py-0.5">平台 {totalWorkspacePlatforms}</span>
+              <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-background/70 px-2 py-0.5">社区 {communityCount}</span>
+              {communityLoadedCount > 0 && <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-background/70 px-2 py-0.5">已加载</span>}
             </div>
           </div>
 

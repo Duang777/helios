@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { AlertCircle, ArrowRight, Bot, Command, Globe2, Loader2, Plug, Search, Workflow, X, Plus } from 'lucide-react'
+import { AlertCircle, ArrowRight, BookOpen, Bot, Command, Globe2, Loader2, Plug, Search, Workflow, X, Plus } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -14,11 +14,13 @@ import {
   buildBuiltinMcpInsertText,
   buildCommunityMcpInsertText,
   buildConnectorInsertText,
+  buildOpenSourceMcpInsertText,
   buildWorkspaceMcpInsertText,
   countConnectorCommands,
   filterBuiltinMcpCatalog,
   filterCommunityMcpCatalog,
   filterConnectorCatalog,
+  filterOpenSourceMcpCatalog,
   filterConnectorCommands,
   filterWorkspaceMcpCatalog,
   formatBuiltinMcpTools,
@@ -26,8 +28,9 @@ import {
   formatConnectorCommandPath,
   formatMcpTransportLabel,
 } from './connector-palette-helpers'
+import { CURATED_OPEN_SOURCE_MCP_CATALOG, type CuratedOpenSourceMcp } from './open-source-mcp-catalog'
 
-type ConnectorRegistrySource = 'all' | 'community' | 'workspace' | 'builtin' | 'cli'
+type ConnectorRegistrySource = 'all' | 'opensource' | 'community' | 'workspace' | 'builtin' | 'cli'
 
 interface ConnectorRegistryDialogProps {
   open: boolean
@@ -86,7 +89,12 @@ export function ConnectorRegistryDialog({
   const communityHasMore = Boolean(communityCatalog?.metadata?.nextCursor)
   const workspaceBuiltin = workspaceCaps?.builtinMcpServers ?? []
   const workspaceServers = workspaceCaps?.mcpServers ?? []
+  const openSourceMcp = CURATED_OPEN_SOURCE_MCP_CATALOG
 
+  const filteredOpenSourceMcp = React.useMemo(
+    () => filterOpenSourceMcpCatalog(openSourceMcp, query),
+    [openSourceMcp, query],
+  )
   const filteredCommunityMcp = React.useMemo(
     () => filterCommunityMcpCatalog(communityServers, query),
     [communityServers, query],
@@ -116,24 +124,28 @@ export function ConnectorRegistryDialog({
     || ((source === 'all' || source === 'workspace' || source === 'builtin') && loadingWorkspace)
     || ((source === 'all' || source === 'community') && loadingCommunity)
   )
-  const visibleSections = React.useMemo(() => {
-    if (source === 'all') return ['community', 'workspace', 'builtin', 'cli'] as const
-    return [source] as const
+  const visibleSections = React.useMemo<ConnectorRegistrySource[]>(() => {
+    if (source === 'all') return ['opensource', 'community', 'workspace', 'builtin', 'cli']
+    if (source === 'opensource') return ['opensource']
+    return [source]
   }, [source])
   const hasVisibleResults = React.useMemo(() => {
     if (source === 'all') {
       return (
+        filteredOpenSourceMcp.length > 0 ||
         filteredCommunityMcp.length > 0 ||
         filteredWorkspaceMcp.length > 0 ||
         filteredBuiltinMcp.length > 0 ||
         filteredCliCommands.length > 0
       )
     }
+    if (source === 'opensource') return filteredOpenSourceMcp.length > 0
     if (source === 'community') return filteredCommunityMcp.length > 0
     if (source === 'workspace') return filteredWorkspaceMcp.length > 0
     if (source === 'builtin') return filteredBuiltinMcp.length > 0
     return filteredCliCommands.length > 0
   }, [
+    filteredOpenSourceMcp.length,
     source,
     filteredBuiltinMcp.length,
     filteredCliCommands.length,
@@ -143,7 +155,7 @@ export function ConnectorRegistryDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent hideClose className="!h-[min(900px,calc(100vh-2rem))] !max-w-none !w-[min(1320px,calc(100vw-2rem))] overflow-hidden p-0">
+      <DialogContent hideClose className="!h-[min(860px,calc(100vh-2rem))] !max-w-none !w-[min(1240px,calc(100vw-2rem))] overflow-hidden p-0">
         <DialogTitle className="sr-only">Connector Registry</DialogTitle>
         <div className="flex h-full min-h-0 flex-col">
           <div className="flex shrink-0 items-start justify-between gap-4 border-b border-border/60 px-5 py-4">
@@ -159,7 +171,7 @@ export function ConnectorRegistryDialog({
                 <Badge variant="outline" className="font-mono text-[11px]">desktop</Badge>
               </div>
               <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
-                把 CLI、工作区 MCP、内置平台和社区目录放进一个更大的浏览面板里，业务人员只需要挑选并插入。
+                开源 MCP、官方目录、工作区和 CLI 放在同一个浏览面板里，直接插入即可。
               </p>
             </div>
             <Button variant="ghost" size="icon" className="shrink-0" onClick={() => onOpenChange(false)} aria-label="关闭 MCP 中心">
@@ -168,19 +180,11 @@ export function ConnectorRegistryDialog({
           </div>
 
           <div className="flex min-h-0 flex-1 flex-col gap-4 px-5 py-4">
-            <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border/60 bg-background/55 px-3 py-2 text-[11px] text-muted-foreground">
-              <span className="font-medium text-foreground">当前目录</span>
-              <Badge variant="secondary" className="text-[11px]">CLI {filteredCliCommands.length}/{totalCliCommands}</Badge>
-              <Badge variant="secondary" className="text-[11px]">工作区 {filteredWorkspaceMcp.length}/{workspaceServers.length}</Badge>
-              <Badge variant="secondary" className="text-[11px]">平台 {filteredBuiltinMcp.length}/{workspaceBuiltin.length}</Badge>
-              <Badge variant="secondary" className="text-[11px]">社区 {filteredCommunityMcp.length}/{communityCount}</Badge>
-              {communityHasMore && <Badge variant="outline" className="text-[11px]">可继续浏览</Badge>}
-            </div>
-
             <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
               <Tabs value={source} onValueChange={(value) => setSource(value as ConnectorRegistrySource)} className="w-full xl:flex-1">
-                <TabsList className="grid h-9 w-full grid-cols-5 rounded-md">
+                <TabsList className="grid h-9 w-full grid-cols-6 rounded-md">
                   <TabsTrigger value="all" className="h-8 text-xs">全部</TabsTrigger>
+                  <TabsTrigger value="opensource" className="h-8 text-xs">开源</TabsTrigger>
                   <TabsTrigger value="community" className="h-8 text-xs">社区</TabsTrigger>
                   <TabsTrigger value="workspace" className="h-8 text-xs">工作区</TabsTrigger>
                   <TabsTrigger value="builtin" className="h-8 text-xs">平台</TabsTrigger>
@@ -201,6 +205,16 @@ export function ConnectorRegistryDialog({
               </div>
             </div>
 
+            <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+              <span className="font-medium text-foreground">当前目录</span>
+              <span className="rounded-full border border-border/60 bg-background/65 px-2 py-0.5">开源 {filteredOpenSourceMcp.length}/{openSourceMcp.length}</span>
+              <span className="rounded-full border border-border/60 bg-background/65 px-2 py-0.5">CLI {filteredCliCommands.length}/{totalCliCommands}</span>
+              <span className="rounded-full border border-border/60 bg-background/65 px-2 py-0.5">工作区 {filteredWorkspaceMcp.length}/{workspaceServers.length}</span>
+              <span className="rounded-full border border-border/60 bg-background/65 px-2 py-0.5">平台 {filteredBuiltinMcp.length}/{workspaceBuiltin.length}</span>
+              <span className="rounded-full border border-border/60 bg-background/65 px-2 py-0.5">社区 {filteredCommunityMcp.length}/{communityCount}</span>
+              {communityHasMore && <span className="rounded-full border border-border/60 bg-background/65 px-2 py-0.5">可继续浏览</span>}
+            </div>
+
             {(cliError || workspaceError || communityError) && (
               <Alert variant="destructive">
                 <AlertCircle className="size-4" />
@@ -211,6 +225,30 @@ export function ConnectorRegistryDialog({
 
             <ScrollArea className="min-h-0 flex-1">
               <div className="space-y-6 pr-4">
+                {visibleSections.includes('opensource') && (
+                  <ConnectorSection
+                    title="开源 MCP"
+                    description="可直接接入的开源项目入口，带可复制命令和源码地址。"
+                    count={String(filteredOpenSourceMcp.length)}
+                    meta="oss"
+                  >
+                    {filteredOpenSourceMcp.length === 0 ? (
+                      <EmptyState text="没有匹配的开源 MCP。换个关键词再试试。" />
+                    ) : (
+                      <div className="grid gap-3 xl:grid-cols-2">
+                        {filteredOpenSourceMcp.map((sourceItem) => (
+                          <OpenSourceMcpCard
+                            key={sourceItem.id}
+                            source={sourceItem}
+                            onInsert={onInsert}
+                            disabled={disabled}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </ConnectorSection>
+                )}
+
                 {visibleSections.includes('community') && (
                   <ConnectorSection
                     title="社区 MCP"
@@ -440,6 +478,64 @@ function CommunityMcpCard({
             <ArrowRight className="size-3.5" />
           </a>
         )}
+      </div>
+    </article>
+  )
+}
+
+function OpenSourceMcpCard({
+  source,
+  onInsert,
+  disabled,
+}: {
+  source: CuratedOpenSourceMcp
+  onInsert: (snippet: string) => void
+  disabled: boolean
+}): React.ReactElement {
+  const icon = source.id === 'craft-session-mcp'
+    ? <Workflow className="size-4 shrink-0 text-primary" />
+    : source.id === 'craft-agents-docs-mcp'
+      ? <BookOpen className="size-4 shrink-0 text-primary" />
+      : <Globe2 className="size-4 shrink-0 text-primary" />
+
+  return (
+    <article className="flex h-full flex-col rounded-lg border border-border/60 bg-background/80 p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            {icon}
+            <h4 className="truncate text-sm font-semibold text-foreground">{source.title}</h4>
+            <Badge variant="outline" className="text-[11px]">开源</Badge>
+            <Badge variant="outline" className="text-[11px]">{source.transport}</Badge>
+          </div>
+          <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{source.description}</p>
+        </div>
+        <Button size="sm" variant="outline" className="shrink-0" onClick={() => onInsert(buildOpenSourceMcpInsertText(source))} disabled={disabled}>
+          <Plus className="size-4" />
+          插入
+        </Button>
+      </div>
+
+      <div className="mt-3 flex flex-wrap gap-2">
+        {source.tags.map((tag) => (
+          <Badge key={tag} variant="secondary" className="text-[11px]">{tag}</Badge>
+        ))}
+      </div>
+
+      <div className="mt-3 space-y-2 text-xs text-muted-foreground">
+        <div className="flex items-start gap-2">
+          <Command className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+          <span className="line-clamp-2">{source.installHint}</span>
+        </div>
+        <a
+          href={source.sourceUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+        >
+          打开源码
+          <ArrowRight className="size-3.5" />
+        </a>
       </div>
     </article>
   )
