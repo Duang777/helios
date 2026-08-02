@@ -1,4 +1,4 @@
-import type { CompileResult, RegisteredCLI, Workflow, WorkflowRun, WorkflowValidationResponse } from './types'
+import type { CompileResult, CommunityMcpRegistryResponse, RegisteredCLI, Workflow, WorkflowRun, WorkflowValidationResponse } from './types'
 
 const DEFAULT_BASE = 'http://127.0.0.1:8080/api/v1'
 
@@ -59,6 +59,18 @@ export async function listCLIs(): Promise<RegisteredCLI[]> {
   const response = await fetch(`${heliosBase()}/clis`, { cache: 'no-store' })
   const payload = await parseJSON<{ clis: RegisteredCLI[] }>(response)
   return payload?.clis ?? []
+}
+
+export async function listCommunityMcpServers(query = '', limit = 12): Promise<CommunityMcpRegistryResponse['servers']> {
+  const params = new URLSearchParams()
+  const trimmed = query.trim()
+  if (trimmed) {
+    params.set('search', trimmed)
+  }
+  params.set('limit', String(Math.max(1, Math.min(50, limit))))
+  const response = await fetch(`${heliosBase()}/mcp-registry/servers?${params.toString()}`, { cache: 'no-store' })
+  const payload = await parseJSON<CommunityMcpRegistryResponse>(response)
+  return payload?.servers ?? []
 }
 
 function requireRun(

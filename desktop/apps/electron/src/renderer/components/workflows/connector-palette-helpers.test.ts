@@ -3,10 +3,12 @@ import type { BuiltinMcpServerSummary } from '@proma/shared'
 import type { RegisteredCLI } from '@/lib/helios/types'
 import {
   buildBuiltinMcpInsertText,
+  buildCommunityMcpInsertText,
   buildConnectorInsertText,
   buildWorkspaceMcpInsertText,
   countConnectorCommands,
   filterBuiltinMcpCatalog,
+  filterCommunityMcpCatalog,
   filterConnectorCatalog,
   filterWorkspaceMcpCatalog,
   formatConnectorArg,
@@ -15,6 +17,7 @@ import {
   formatMcpTransportLabel,
   insertTextAtSelection,
   matchesBuiltinMcpQuery,
+  matchesCommunityMcpQuery,
   matchesWorkspaceMcpQuery,
   normalizeConnectorQuery,
 } from './connector-palette-helpers'
@@ -58,6 +61,18 @@ const builtinMcp: BuiltinMcpServerSummary = {
   ],
 }
 
+const communityMcp = {
+  name: 'ac.inference.sh/mcp',
+  title: 'inference.sh',
+  description: 'run any ai model. compose agents, stack knowledge, connect tools.',
+  version: '2.0.1',
+  transport: 'streamable-http',
+  installHint: 'streamable-http · https://api.inference.sh/mcp',
+  websiteUrl: 'https://registry.modelcontextprotocol.io',
+  status: 'active',
+  isLatest: true,
+}
+
 describe('connector palette helpers', () => {
   test('normalizes connector queries and formats commands', () => {
     expect(normalizeConnectorQuery('  GitHub  MCP ')).toBe('github  mcp')
@@ -87,6 +102,12 @@ describe('connector palette helpers', () => {
     expect(buildWorkspaceMcpInsertText('nowledge-mem', 'http', true)).toContain('传输：HTTP；状态：已启用。')
     expect(matchesWorkspaceMcpQuery({ name: 'nowledge-mem', enabled: true, type: 'http' }, 'nowledge enabled')).toBe(true)
     expect(filterWorkspaceMcpCatalog([{ name: 'nowledge-mem', enabled: true, type: 'http' }], 'sse')).toHaveLength(0)
+  })
+
+  test('formats and filters community MCP registry entries', () => {
+    expect(buildCommunityMcpInsertText(communityMcp)).toContain('请优先使用社区 MCP `inference.sh`（ac.inference.sh/mcp）。')
+    expect(matchesCommunityMcpQuery(communityMcp, 'inference streamable')).toBe(true)
+    expect(filterCommunityMcpCatalog([communityMcp], 'compose tools')).toHaveLength(1)
   })
 
   test('filters catalog by query tokens', () => {

@@ -1,5 +1,5 @@
 import type { BuiltinMcpServerSummary, McpTransportType, WorkspaceCapabilities } from '@proma/shared'
-import type { CLIArgSpec, CLICommandSpec, RegisteredCLI } from '@/lib/helios/types'
+import type { CLIArgSpec, CLICommandSpec, CommunityMcpRegistryServerSummary, RegisteredCLI } from '@/lib/helios/types'
 
 export function normalizeConnectorQuery(query: string): string {
   return query.trim().toLowerCase()
@@ -77,6 +77,15 @@ export function buildWorkspaceMcpInsertText(name: string, type: McpTransportType
   return [
     `请优先使用工作区 MCP 连接器 \`${name}\`。`,
     `传输：${formatMcpTransportLabel(type)}；状态：${enabled ? '已启用' : '已关闭'}。`,
+  ].join('\n')
+}
+
+export function buildCommunityMcpInsertText(server: CommunityMcpRegistryServerSummary): string {
+  return [
+    `请优先使用社区 MCP \`${server.title ?? server.name}\`（${server.name}）。`,
+    `版本：${server.version ?? 'latest'}；传输：${server.transport ?? 'unknown'}。`,
+    server.installHint ? `安装建议：${server.installHint}。` : '从 MCP Registry 安装后再接入。',
+    server.websiteUrl || server.repositoryUrl ? `来源：${server.websiteUrl ?? server.repositoryUrl}。` : '来源：MCP Registry。',
   ].join('\n')
 }
 
@@ -165,4 +174,28 @@ export function filterWorkspaceMcpCatalog(
   query: string,
 ): WorkspaceCapabilities['mcpServers'] {
   return connectors.filter((server) => matchesWorkspaceMcpQuery(server, query))
+}
+
+export function matchesCommunityMcpQuery(server: CommunityMcpRegistryServerSummary, query: string): boolean {
+  const normalized = normalizeConnectorQuery(query)
+  if (!normalized) return true
+  const haystack = [
+    server.name,
+    server.title ?? '',
+    server.description ?? '',
+    server.version ?? '',
+    server.transport ?? '',
+    server.installHint ?? '',
+    server.status ?? '',
+    server.repositoryUrl ?? '',
+    server.websiteUrl ?? '',
+  ].join(' ').toLowerCase()
+  return normalized.split(/\s+/).every((token) => haystack.includes(token))
+}
+
+export function filterCommunityMcpCatalog(
+  connectors: CommunityMcpRegistryServerSummary[],
+  query: string,
+): CommunityMcpRegistryServerSummary[] {
+  return connectors.filter((server) => matchesCommunityMcpQuery(server, query))
 }

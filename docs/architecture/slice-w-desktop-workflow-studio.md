@@ -63,6 +63,12 @@ Helios API localhost
 
 Workflow Studio 是桌面主区域的全屏工具视图，和 `planning`、`agent-skills` 同级；不进入会话 tab，不写聊天消息，不复用对话 pending compile state。
 
+连接器目录分三层来源：
+
+- 本地 CLI registry：Helios 后端已登记的 CLI 连接器。
+- 工作区 MCP：当前项目保存的 stdio / HTTP MCP 配置，以及 Helios 内置平台。
+- 社区 MCP registry：Helios 后端代理官方 MCP Registry，桌面通过 `GET /api/v1/mcp-registry/servers` 读取，不直接对外站点发请求。
+
 ## Contracts
 
 ### Renderer state
@@ -179,3 +185,4 @@ Manual:
 - 2026-08-02: Task 5 landed in the desktop shell as workflow folder import/export plumbing, folder preview UI, and `INTENT.md`/`manifest.json` export support; verified with `./scripts/smoke-workflow-folder.sh` and `cd desktop && bun run typecheck`.
 - 2026-08-02: Task 7 landed as a live Connector Registry panel in Workflow Studio, reusing the backend CLI registry and inserting connector prompts at the caret; verified with focused Bun tests, `cd desktop && bun run typecheck`, and `cd desktop && bun run build:renderer`.
 - 2026-08-02: Extended the Connector Registry with workspace MCP and built-in platform catalogs, so the desktop now exposes both CLI-style connectors and project-scoped business platforms in one insertable registry.
+- 2026-08-02: Simplified the Connector Registry into a single directory view, added a Helios-proxied community MCP registry source (`GET /api/v1/mcp-registry/servers`), and documented the desktop startup path plus optional `HELIOS_MCP_REGISTRY_BASE_URL` override.

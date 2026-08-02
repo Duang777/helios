@@ -57,6 +57,27 @@ export interface RegisteredCLI {
   introspect: CLIIntrospect
 }
 
+export interface CommunityMcpRegistryServerSummary {
+  name: string
+  title?: string
+  description?: string
+  version?: string
+  transport?: string
+  installHint?: string
+  repositoryUrl?: string
+  websiteUrl?: string
+  status?: string
+  isLatest?: boolean
+}
+
+export interface CommunityMcpRegistryResponse {
+  servers: CommunityMcpRegistryServerSummary[]
+  metadata?: {
+    nextCursor?: string
+    count?: number
+  }
+}
+
 export interface Workflow {
   id: string
   version: number

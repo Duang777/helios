@@ -234,6 +234,8 @@ go run ./cmd/helios
 PORT=18112 go run ./cmd/helios
 ```
 
+Helios 桌面默认读取 `http://127.0.0.1:8080/api/v1`。如果你改了后端端口，后面的桌面命令要一起改 `VITE_HELIOS_API_BASE`。
+
 ### 2. 启动桌面开发壳
 
 在另一个终端打开桌面目录：
@@ -245,6 +247,15 @@ bun run dev
 
 这会同时启动 Vite 预览和 Electron 主进程，桌面窗口会自动打开。
 
+如果你只想先看渲染层，可以单独起 Vite：
+
+```bash
+cd desktop
+bun run dev:vite
+```
+
+然后在浏览器打开 `http://127.0.0.1:5173/`。
+
 ### 3. 端口不一致时
 
 如果后端不是 8080，请把桌面端 API 地址一起改掉：
@@ -254,10 +265,20 @@ cd desktop
 VITE_HELIOS_API_BASE=http://127.0.0.1:18112/api/v1 bun run dev
 ```
 
-### 4. 你应该看到什么
+### 4. 可选的社区 MCP 目录
+
+Workflow Studio 里的 Connector Registry 默认会从官方 MCP Registry 拉取社区 MCP 目录。如果你想切换成自己的 registry 镜像或代理，可以在启动后端前设置：
+
+```bash
+HELIOS_MCP_REGISTRY_BASE_URL=https://registry.modelcontextprotocol.io go run ./cmd/helios
+```
+
+后端会把 `GET /api/v1/mcp-registry/servers` 代理到这个来源，再由桌面统一读取。
+
+### 5. 你应该看到什么
 
 - 桌面左侧导航里的 Workflow Studio。
-- Workflow Studio 里的 `Folder` 页签。
+- Workflow Studio 里的 Connector Registry。
 - `导入目录` 可以读取 `workflows/demo.folder-smoke` 这类 workflow folder。
 - `导出目录` 可以把当前草稿写回 `workflows/<id>/`，并生成 `INTENT.md` 和 `manifest.json`。
 

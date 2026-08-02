@@ -147,8 +147,8 @@
 - [x] User can insert a connector into prompt/draft from the UI.
 
 **Verification:**
-- [ ] `cd backend && go test ./internal/registry ./internal/httpapi`
-- [ ] `cd desktop && bun run typecheck`
+- [x] `cd backend && go test ./internal/registry ./internal/httpapi`
+- [x] `cd desktop && bun run typecheck`
 
 **Dependencies:** Task 2, Task 3
 
