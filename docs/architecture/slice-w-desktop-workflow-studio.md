@@ -69,7 +69,7 @@ Workflow Studio 是桌面主区域的全屏工具视图，和 `planning`、`agen
 - 本地 CLI registry：Helios 后端已登记的 CLI 连接器。
 - 工作区 MCP：当前项目保存的 stdio / HTTP MCP 配置，以及 Helios 内置平台。
 - 社区 MCP registry：Helios 后端代理官方 MCP Registry，桌面通过 `GET /api/v1/mcp-registry/servers` 读取，不直接对外站点发请求。
-- 开源 MCP 精选层：来自 `different-ai/openwork`、`craft-ai-agents/craft-agents-oss`、`github/github-mcp-server` 与 `modelcontextprotocol/servers` 的可直接安装入口，优先展示能落地复用的官方包或公开端点。
+- 开源 MCP 精选层：来自 `different-ai/openwork`、`craft-ai-agents/craft-agents-oss`、`magnusfroste/flowwink`、`github/github-mcp-server` 与 `modelcontextprotocol/servers` 的可直接安装入口，优先展示能落地复用的官方包、公开端点或自托管远程 MCP 模板。
 
 ## Contracts
 
@@ -198,3 +198,4 @@ Manual:
 - 2026-08-02: Clarified the Workflow Studio left/right panels with explicit “操作” and “结果摘要” guidance, and renamed the result tabs so the workspace now reads as “先编译，再看配置/步骤图/校验/运行” instead of a generic split view.
 - 2026-08-02: Reframed the workspace into a single card-first main panel with detail dialogs for graph/validation/source/run/folder, removed the fixed right-side tab strip, and kept the visible action wording generation-first and Chinese-only.
 - 2026-08-02: Refined the Workflow Studio shell into a softer dialog-like surface with larger radius, lighter borders, and a more elevated inspector dialog so the single-panel workspace reads as polished instead of boxy.
+- 2026-08-02: Added FlowWink as a curated self-hosted MCP platform template, writing a disabled Streamable HTTP workspace entry with `mode=dispatch` and sales/operations groups so users can complete the site/token before enabling a real agent-use path.

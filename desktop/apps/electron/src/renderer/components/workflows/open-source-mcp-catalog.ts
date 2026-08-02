@@ -48,6 +48,17 @@ export const CURATED_OPEN_SOURCE_MCP_CATALOG: CuratedOpenSourceMcp[] = [
     tags: ['会话工具', '计划提交', '配置校验'],
   },
   {
+    id: 'flowwink-mcp-platform',
+    title: 'FlowWink 业务系统 MCP',
+    description: '把自托管业务系统里的客户关系、销售、运营、内容和财务技能按分组暴露给外部智能体。',
+    origin: '项目',
+    transport: 'http',
+    installHint: '部署 FlowWink 后，在管理后台创建 MCP 访问令牌；Helios 会写入远程 MCP 模板，补全站点地址和访问令牌后启用。',
+    sourceUrl: 'https://github.com/magnusfroste/flowwink',
+    repositoryUrl: 'https://github.com/magnusfroste/flowwink/tree/main/supabase/functions/mcp-server',
+    tags: ['业务系统', '客户关系', '销售', '运营', '技能注册表', '流式超文本传输'],
+  },
+  {
     id: 'github-mcp-server',
     title: 'GitHub MCP 服务器',
     description: '官方 GitHub 连接器，覆盖仓库、议题、拉取请求和上下文工具。',

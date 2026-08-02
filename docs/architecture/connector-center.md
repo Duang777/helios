@@ -27,6 +27,7 @@ It also includes a curated open-source MCP layer in the renderer, seeded from di
 
 - [different-ai/openwork](https://github.com/different-ai/openwork) via the public OpenWork MCP endpoint.
 - [craft-ai-agents/craft-agents-oss](https://github.com/craft-ai-agents/craft-agents-oss) via the published Craft docs and session MCP entry points.
+- [magnusfroste/flowwink](https://github.com/magnusfroste/flowwink) via its self-hosted Streamable HTTP MCP gateway template.
 - [github/github-mcp-server](https://github.com/github/github-mcp-server) via the official GitHub MCP server package.
 - [modelcontextprotocol/servers](https://github.com/modelcontextprotocol/servers) via the filesystem, git, sequential-thinking, time, and fetch reference servers.
 
@@ -34,14 +35,29 @@ These curated entries are not just descriptive cards. The workflow palette can u
 
 The insert action is intentionally lightweight: it writes a short intent hint such as “当前工作流优先使用开源 MCP …”, while the real attach action writes the usable MCP entry into the workspace. Long install commands, source URLs, and capability descriptions stay inside the dialog card instead of flooding the intent editor.
 
+FlowWink is handled as a remote self-hosted platform, not as a public zero-config connector. The curated card writes a disabled template:
+
+- `https://<你的 FlowWink 站点>/functions/v1/mcp-server?mode=dispatch&groups=sales,operations`
+- `Authorization: Bearer <你的 FlowWink MCP 访问令牌>`
+
+The user must replace the site and token before enabling it. Once enabled, Helios uses the same closed loop as every workspace MCP: catalog card -> workspace `mcp.json` -> main-process MCP injection -> agent session tools. The `mode=dispatch` default mirrors FlowWink's own backend design: expose `search_skills` and `execute_skill` first, then let the remote registry decide which business skill to run, instead of flooding the desktop agent with hundreds of raw tools.
+
 ## What was borrowed
 
 The UI direction was informed by the layout patterns in:
 
 - [craft-ai-agents/craft-agents-oss](https://github.com/craft-ai-agents/craft-agents-oss)
 - [different-ai/openwork](https://github.com/different-ai/openwork)
+- [magnusfroste/flowwink](https://github.com/magnusfroste/flowwink)
 
 Those projects were used as interaction references and source material. We are reusing their public MCP entry points and command shapes, but not importing their desktop apps wholesale.
+
+From FlowWink we should borrow the backend pattern, not the whole SaaS shell:
+
+- Module-owned skill seeds register into one runtime skill table.
+- MCP stays platform-level and independent from the local operator.
+- Group filters keep tool lists small for external agents.
+- Approval-gated writes return staged operations rather than silently mutating business data.
 
 ## What was actually integrated
 

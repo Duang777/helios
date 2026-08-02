@@ -134,11 +134,14 @@ describe('connector palette helpers', () => {
   test('builds curated workspace attach plans', () => {
     const github = CURATED_OPEN_SOURCE_MCP_CATALOG.find((item) => item.id === 'github-mcp-server')
     const filesystem = CURATED_OPEN_SOURCE_MCP_CATALOG.find((item) => item.id === 'filesystem-mcp-server')
+    const flowwink = CURATED_OPEN_SOURCE_MCP_CATALOG.find((item) => item.id === 'flowwink-mcp-platform')
     expect(github).toBeDefined()
     expect(filesystem).toBeDefined()
+    expect(flowwink).toBeDefined()
 
     const githubPlan = buildCuratedOpenSourceMcpWorkspacePlan(github!)
     const filesystemPlan = buildCuratedOpenSourceMcpWorkspacePlan(filesystem!, '/tmp/helios-workspace')
+    const flowwinkPlan = buildCuratedOpenSourceMcpWorkspacePlan(flowwink!)
 
     expect(githubPlan?.name).toBe('github')
     expect(githubPlan?.entry.type).toBe('http')
@@ -148,6 +151,12 @@ describe('connector palette helpers', () => {
     expect(filesystemPlan?.entry.type).toBe('stdio')
     expect(filesystemPlan?.entry.enabled).toBe(true)
     expect(filesystemPlan?.entry.args).toContain('/tmp/helios-workspace')
+    expect(flowwinkPlan?.name).toBe('flowwink')
+    expect(flowwinkPlan?.entry.type).toBe('http')
+    expect(flowwinkPlan?.entry.enabled).toBe(false)
+    expect(flowwinkPlan?.entry.url).toContain('mode=dispatch')
+    expect(flowwinkPlan?.entry.url).toContain('groups=sales,operations')
+    expect(flowwinkPlan?.entry.headers?.Authorization).toContain('FlowWink MCP 访问令牌')
   })
 
   test('filters catalog by query tokens', () => {

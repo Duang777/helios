@@ -159,6 +159,8 @@ export function getCuratedOpenSourceMcpWorkspaceName(source: CuratedOpenSourceMc
       return 'craft-docs'
     case 'craft-session-mcp':
       return 'craft-session'
+    case 'flowwink-mcp-platform':
+      return 'flowwink'
     case 'github-mcp-server':
       return 'github'
     case 'filesystem-mcp-server':
@@ -203,6 +205,19 @@ export function buildCuratedOpenSourceMcpWorkspacePlan(
       }
     case 'craft-session-mcp':
       return null
+    case 'flowwink-mcp-platform':
+      return {
+        name: getCuratedOpenSourceMcpWorkspaceName(source),
+        entry: {
+          type: 'http',
+          url: 'https://<你的 FlowWink 站点>/functions/v1/mcp-server?mode=dispatch&groups=sales,operations',
+          headers: {
+            Authorization: 'Bearer <你的 FlowWink MCP 访问令牌>',
+          },
+          enabled: false,
+        },
+        attachNote: '已写入 FlowWink 远程 MCP 模板。请把站点地址和访问令牌补全后，在工作区 MCP 设置里启用。',
+      }
     case 'github-mcp-server':
       return {
         name: getCuratedOpenSourceMcpWorkspaceName(source),
