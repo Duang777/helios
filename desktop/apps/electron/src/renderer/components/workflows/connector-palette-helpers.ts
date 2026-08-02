@@ -136,6 +136,10 @@ export function filterConnectorCatalog(connectors: RegisteredCLI[], query: strin
   )
 }
 
+export function filterConnectorCommands(cli: RegisteredCLI, query: string): CLICommandSpec[] {
+  return cli.introspect.commands.filter((command) => matchesConnectorQuery(cli, command, query))
+}
+
 export function countConnectorCommands(cli: RegisteredCLI): number {
   return cli.introspect.commands.length
 }

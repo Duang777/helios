@@ -61,7 +61,7 @@ export async function listCLIs(): Promise<RegisteredCLI[]> {
   return payload?.clis ?? []
 }
 
-export async function listCommunityMcpServers(query = '', limit = 12): Promise<CommunityMcpRegistryResponse['servers']> {
+export async function listCommunityMcpServers(query = '', limit = 12): Promise<CommunityMcpRegistryResponse> {
   const params = new URLSearchParams()
   const trimmed = query.trim()
   if (trimmed) {
@@ -70,7 +70,7 @@ export async function listCommunityMcpServers(query = '', limit = 12): Promise<C
   params.set('limit', String(Math.max(1, Math.min(50, limit))))
   const response = await fetch(`${heliosBase()}/mcp-registry/servers?${params.toString()}`, { cache: 'no-store' })
   const payload = await parseJSON<CommunityMcpRegistryResponse>(response)
-  return payload?.servers ?? []
+  return payload
 }
 
 function requireRun(

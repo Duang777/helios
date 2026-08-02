@@ -7,6 +7,7 @@ import {
   buildConnectorInsertText,
   buildWorkspaceMcpInsertText,
   countConnectorCommands,
+  filterConnectorCommands,
   filterBuiltinMcpCatalog,
   filterCommunityMcpCatalog,
   filterConnectorCatalog,
@@ -113,10 +114,13 @@ describe('connector palette helpers', () => {
   test('filters catalog by query tokens', () => {
     const filtered = filterConnectorCatalog([inventoryCli], 'items create write')
     const empty = filterConnectorCatalog([inventoryCli], 'github')
+    const commands = filterConnectorCommands(inventoryCli, 'items list')
 
     expect(filtered).toHaveLength(1)
     expect(countConnectorCommands(filtered[0]!)).toBe(2)
     expect(empty).toHaveLength(0)
+    expect(commands).toHaveLength(1)
+    expect(commands[0]!.path.join(' ')).toBe('items list')
   })
 
   test('inserts snippet at the current selection', () => {
