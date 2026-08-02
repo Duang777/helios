@@ -107,3 +107,5 @@ npm run dev
 ```
 
 By default, the frontend calls `http://localhost:8080/api`.
+
+桌面端开发说明见 [desktop/README.md](desktop/README.md)。

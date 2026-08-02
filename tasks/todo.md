@@ -1,100 +1,206 @@
-# Helios Tasks
+# Helios Desktop Workflow Studio Tasks
 
-- [x] Task: Freeze `contracts/workflow.schema.json` and `cli-introspect.schema.json`
-  - Acceptance: Both schemas validate the examples in the implementation design
-  - Verify: schema unit tests with valid/invalid fixtures
-  - Files: `contracts/`, `backend/internal/schema/`
+## Task 1: Lock Desktop Studio Contract
 
-- [x] Task: Implement new domain types + expr interpolator
-  - Acceptance: `${params.x}` and `${out.field}` work; cycle detection helper exists
-  - Verify: `go test ./internal/expr ./internal/domain`
-  - Files: `backend/internal/domain/`, `backend/internal/expr/`
+**Description:** Define the desktop-facing compile result and workflow draft contract so backend, renderer, and future agents agree on one shape.
 
-- [x] Task: Build `demo-crm` and `demo-erp` CLIs with introspect/json/dry-run
-  - Acceptance: Commands match demo.lead-sync needs; exit code 9 for dry-run success
-  - Verify: CLI golden tests
-  - Files: `backend/cmd/demo-crm/`, `backend/cmd/demo-erp/`
+**Acceptance criteria:**
+- [x] Compile response includes `ir`, `yaml`, `validation`, `warnings`, and `repairAttempts`.
+- [x] Desktop types in `lib/helios/types.ts` match backend JSON exactly.
+- [x] Existing `POST /compile` callers keep working or have a compatibility shim.
 
-- [x] Task: CLI registry + allowlisted clirunner
-  - Acceptance: Unregistered CLI or unknown subcommand is rejected; capture/truncation/redaction work
-  - Verify: `go test ./internal/registry ./internal/clirunner`
-  - Files: `backend/internal/registry/`, `backend/internal/clirunner/`
+**Verification:**
+- [x] `cd backend && go test ./internal/httpapi ./internal/compile`
+- [x] `cd desktop && bun run typecheck`
 
-- [x] Task: Runtime DAG for cli + approval + evidence fs store
-  - Acceptance: demo workflow runs end-to-end in-process with fake approval injection
-  - Verify: `go test ./internal/runtime ./internal/evidence`
-  - Files: `backend/internal/runtime/`, `backend/internal/evidence/`, `backend/internal/store/`
+**Dependencies:** None
 
-- [x] Task: HTTP API for validate/save/run/approve/evidence/clis
-  - Acceptance: curl script runs demo.lead-sync through WAITING_APPROVAL to COMPLETED
-  - Verify: `go test ./internal/httpapi` + `scripts/smoke-lead-sync.sh`
-  - Files: `backend/internal/httpapi/`, `backend/cmd/helios/`, `workflows/demo.lead-sync.yaml`
+**Files likely touched:**
+- `backend/internal/compile/`
+- `backend/internal/httpapi/server.go`
+- `desktop/apps/electron/src/renderer/lib/helios/types.ts`
+- `desktop/apps/electron/src/renderer/lib/helios/client.ts`
 
-- [x] Task: Minimal console wired to new API
-  - Acceptance: compile-later optional; run/approve/evidence usable
-  - Verify: manual check
-  - Files: `web/src/**`, `web/src/api/types.ts`
+**Estimated scope:** M
 
-- [x] Task: Pi sidecar compile endpoint + Go compile client
-  - Acceptance: intent → yaml → validate loop; tool allowlist restricted
-  - Verify: mocked sidecar tests
-  - Files: `packages/pi-sidecar/`, `backend/internal/pi/`, `backend/internal/compile/`
+## Task 2: Add Schema-Grounded Compiler Rules
 
-- [x] Task: AI step + manifest publish + run_workflow skill
-  - Acceptance: published workflow callable with params only from manifest
-  - Verify: integration test
-  - Files: `packages/pi-sidecar/`, `skills/` or docs skill path, API publish
+**Description:** Port the Kestra-style generation discipline into Helios prompts and validation: allowed step types, registry-derived tools, side-effect flags, approvals, and no invented properties.
 
-- [x] Task: Slice E — Evidence WriteGUI + demo-erp needs_gui
-  - Acceptance: WriteGUI stores png+json; po create can return needs_gui+confirmUrl
-  - Verify: `go test ./internal/evidence`; demo-erp flag/env unit path
-  - Files: `backend/internal/evidence/`, `backend/internal/domain/`, `backend/cmd/demo-erp/`
-  - Design: `docs/architecture/slice-e-gui.md`
+**Acceptance criteria:**
+- [x] Compiler prompt receives Helios workflow schema and CLI/tool registry summary.
+- [x] Invalid step type/property fails validation before save/run.
+- [x] Repair loop includes previous YAML plus validation errors, capped at 3 attempts.
 
-- [x] Task: Slice E — gui-operator package
-  - Acceptance: fake mode `/v1/actions/screenshot_and_confirm`; playwright optional
-  - Verify: node test + health curl
-  - Files: `packages/gui-operator/`, `pnpm-workspace.yaml`
+**Verification:**
+- [x] `cd backend && go test ./internal/compile ./internal/runtime`
+- [x] `./scripts/smoke-desktop-nl-compile.sh`
 
-- [x] Task: Slice E — guiclient + runtime runGUI
-  - Acceptance: uses:gui runs when when=true; SKIPPED when false; evidence has ScreenshotRef
-  - Verify: `go test ./internal/guiclient ./internal/runtime`
-  - Files: `backend/internal/guiclient/`, `backend/internal/runtime/`, `backend/cmd/helios/`
+**Dependencies:** Task 1
 
-- [x] Task: Slice E — workflow + schema + smoke
-  - Acceptance: demo.lead-sync-gui completes with png evidence under DEMO_ERP_NEEDS_GUI=1
-  - Verify: `scripts/smoke-lead-sync-gui.sh`
-  - Files: `workflows/demo.lead-sync-gui.yaml`, `contracts/`, `scripts/`
+**Files likely touched:**
+- `backend/internal/compile/`
+- `contracts/`
+- `scripts/smoke-desktop-nl-compile.sh`
 
+**Estimated scope:** M
 
-- [x] Task: Pi hardening (Slice C/D quality bar)
-  - Acceptance: design doc; live repair includes previousYAML; demo AI consumes poDraft; self-contained smokes; evidence mode/model; no Go blind retry
-  - Verify: `cd packages/pi-sidecar && npm test`; `./scripts/smoke-compile.sh`; `./scripts/smoke-lead-sync-ai.sh`
-  - Design: `docs/architecture/slice-c-d-pi.md`
+## Task 3: Build Desktop Compiler Workbench View
 
-- [x] Task: CLI factory (Slice F)
-  - Acceptance: OpenAPI/factory spec → Go CLI with introspect; registers; workflow smoke
-  - Verify: `go test ./internal/clifactory`; `./scripts/smoke-cli-factory.sh`
-  - Files: `backend/internal/clifactory/`, `backend/cmd/helios-factory/`, `backend/cmd/demo-inventory/`, `examples/cli-factory/`
-  - Design: `docs/architecture/slice-f-cli-factory.md`
+**Description:** Add a real desktop view for natural-language workflow drafting with prompt input, YAML preview, validation panel, repair action, save, and run.
 
-- [x] Task: Dev gate — tech design before code (process)
-  - Acceptance: `docs/architecture/dev-gate.md` + template + Cursor rule; agent/CLAUDE aligned
-  - Design: `docs/architecture/dev-gate.md`
+**Acceptance criteria:**
+- [x] Left sidebar or main nav exposes Workflow Studio.
+- [x] User can generate from intent and see YAML/validation without leaving desktop.
+- [x] User can save and run a validated draft via existing Helios API.
 
-- [x] Task: Slice O — MVP §15 acceptance closeout
-  - Design: `docs/architecture/slice-o-mvp-acceptance.md`
-  - Acceptance: `./scripts/smoke-mvp-acceptance.sh`; PRD §15 all checked; feishu live record
-  - Files: `scripts/smoke-mvp-acceptance.sh`, `docs/acceptance/`, `docs/prd/helios-prd-v0.1.md`
+**Verification:**
+- [x] `cd desktop && bun run typecheck`
+- [x] `cd desktop && bun run build:renderer`
+- [x] Manual desktop run with Helios API on localhost.
 
-- [x] Task: Lathe adapter (Slice G)
-  - Design: `docs/architecture/slice-g-lathe-adapter.md` / ADR-002
-  - Acceptance: `helios-factory --engine=lathe` + introspect wrapper; tests/smoke
-  - Verify: `go test ./internal/clifactory/...`; `./scripts/smoke-cli-factory-lathe.sh`
-  - Files: `backend/internal/clifactory/latheadapt/`, `backend/cmd/helios-factory/`
+**Dependencies:** Task 1
 
-- [x] Task: human_help session handoff (Slice H)
-  - Design: `docs/architecture/slice-h-human-help-handoff.md`
-  - Acceptance: viewerUrl + smoke-human-help; console link
-  - Verify: `cd packages/gui-operator && npm test`; `./scripts/smoke-human-help.sh`
-  - Files: `packages/gui-operator/`, `backend/internal/guiclient/`, `backend/internal/runtime/`, `web/src/App.tsx`, `workflows/demo.human-help.yaml`
+**Files likely touched:**
+- `desktop/apps/electron/src/renderer/components/workflows/`
+- `desktop/apps/electron/src/renderer/atoms/`
+- `desktop/apps/electron/src/renderer/components/app-shell/LeftSidebar.tsx`
+- `desktop/apps/electron/src/renderer/lib/helios/`
+
+**Estimated scope:** M
+
+## Task 4: Add Workflow Graph Preview
+
+**Description:** Use a reusable graph library, preferably MIT `@xyflow/react`, to render workflow steps, dependencies, approvals, and run status.
+
+**Acceptance criteria:**
+- [x] Valid YAML renders a stable graph with step nodes and edges.
+- [x] Approval and failed states are visually distinct.
+- [x] Preview is read-only in v1; editing stays in YAML/compiler panel.
+
+**Verification:**
+- [x] `cd desktop && bun run typecheck`
+- [x] `cd desktop && bun run build:renderer`
+- [x] Browser/Electron screenshot check once dev server is running.
+
+**Dependencies:** Task 3
+
+**Files likely touched:**
+- `desktop/package.json`
+- `desktop/apps/electron/package.json`
+- `desktop/apps/electron/src/renderer/components/workflows/WorkflowGraph.tsx`
+
+**Estimated scope:** M
+
+## Task 5: Add Artifact Folder Draft Import/Export
+
+**Description:** Let desktop create and open Output-style workflow folders containing YAML, intent, manifest, fixtures, and later TS source.
+
+**Acceptance criteria:**
+- [x] Desktop can import a workflow folder and show parsed workflow/validation.
+- [x] Desktop can export current draft to `workflows/<id>/`.
+- [x] Export records `INTENT.md` and `manifest.json`.
+
+**Verification:**
+- [x] `./scripts/smoke-workflow-folder.sh`
+- [x] `cd desktop && bun run typecheck`
+
+**Dependencies:** Task 3
+
+**Files likely touched:**
+- `backend/internal/workflowdir/`
+- `desktop/apps/electron/src/main/ipc.ts`
+- `desktop/apps/electron/src/preload/index.ts`
+- `desktop/apps/electron/src/renderer/components/workflows/`
+
+**Estimated scope:** M
+
+## Task 6: Add TS Workflow Authoring Package
+
+**Description:** Create a small deterministic TypeScript DSL package that compiles declarations to Helios YAML. Do not execute generated TS as a runtime step.
+
+**Acceptance criteria:**
+- [ ] `workflow({ id }).param(...).step(...).approval(...)` or equivalent compiles to current YAML.
+- [ ] Package has tests for YAML output and invalid definitions.
+- [ ] Desktop can display generated TS for a workflow draft.
+
+**Verification:**
+- [ ] `cd desktop && bun test packages/workflow-ts`
+- [ ] `cd desktop && bun run typecheck`
+
+**Dependencies:** Task 1, Task 2
+
+**Files likely touched:**
+- `desktop/packages/workflow-ts/`
+- `desktop/apps/electron/src/renderer/components/workflows/`
+- `workflows/demo.folder-smoke/`
+
+**Estimated scope:** M
+
+## Task 7: Connector Registry UX
+
+**Description:** Surface available CLI/tools as reusable desktop building blocks and feed the same registry into compiler prompts.
+
+**Acceptance criteria:**
+- [x] Desktop lists available step types/connectors with parameters and side-effect markers.
+- [x] Compiler generated workflow only references listed connectors.
+- [x] User can insert a connector into prompt/draft from the UI.
+
+**Verification:**
+- [x] `cd backend && go test ./internal/registry ./internal/httpapi`
+- [x] `cd desktop && bun run typecheck`
+
+**Dependencies:** Task 2, Task 3
+
+**Files likely touched:**
+- `backend/internal/registry/`
+- `backend/internal/httpapi/server.go`
+- `desktop/apps/electron/src/renderer/components/workflows/ConnectorPalette.tsx`
+
+**Estimated scope:** M
+
+## Task 8: Desktop Run and Evidence Panel
+
+**Description:** Bring run timeline, approval actions, step output, and evidence links into Workflow Studio instead of only chat cards.
+
+**Acceptance criteria:**
+- [ ] Run panel polls or subscribes to run status.
+- [ ] Approval steps can be approved/rejected from the panel.
+- [ ] Evidence files are visible/openable from desktop.
+
+**Verification:**
+- [ ] `./scripts/smoke-desktop-helios-api.sh`
+- [ ] `cd desktop && bun run typecheck`
+- [ ] Manual run through WAITING_APPROVAL to COMPLETED.
+
+**Dependencies:** Task 3
+
+**Files likely touched:**
+- `desktop/apps/electron/src/renderer/components/workflows/RunPanel.tsx`
+- `desktop/apps/electron/src/renderer/lib/helios/client.ts`
+- `desktop/apps/electron/src/main/ipc.ts`
+
+**Estimated scope:** M
+
+## Checkpoint: First Usable Desktop Studio
+
+- [ ] Tasks 1-3 complete.
+- [ ] User can type intent, see generated YAML, validate, save, run.
+- [ ] `cd backend && go test ./...`
+- [ ] `cd desktop && bun run typecheck`
+- [ ] `./scripts/smoke-desktop-nl-compile.sh`
+
+## Checkpoint: Visual Workflow Studio
+
+- [x] Tasks 4-5 complete.
+- [x] User can preview graph and import/export workflow folders.
+- [x] `cd desktop && bun run build:renderer`
+- [x] `./scripts/smoke-workflow-folder.sh`
+
+## Checkpoint: Reusable Authoring Layer
+
+- [ ] Tasks 6-8 complete.
+- [ ] TS DSL, connector palette, run/evidence panel are usable from desktop.
+- [ ] `cd backend && go test ./...`
+- [ ] `cd desktop && bun run typecheck`
+- [ ] `./scripts/smoke-hatchet-scheduler.sh`

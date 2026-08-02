@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"strings"
@@ -19,7 +20,9 @@ func LoadWorkflowFile(path string) (domain.Workflow, error) {
 
 func LoadWorkflowYAML(raw []byte) (domain.Workflow, error) {
 	var wf domain.Workflow
-	if err := yaml.Unmarshal(raw, &wf); err != nil {
+	dec := yaml.NewDecoder(bytes.NewReader(raw))
+	dec.KnownFields(true)
+	if err := dec.Decode(&wf); err != nil {
 		return domain.Workflow{}, fmt.Errorf("parse workflow yaml: %w", err)
 	}
 	if err := StructuralValidate(wf); err != nil {

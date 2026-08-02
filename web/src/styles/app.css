@@ -218,7 +218,8 @@ a { color: inherit; text-decoration: none; }
   min-width: 0;
   border: 1px solid var(--color-rule);
   border-radius: var(--radius-md);
-  background: color-mix(in oklch, var(--color-paper) 86%, white);
+  background: var(--color-paper-2);
+  padding: var(--space-md);
 }
 
 .builder-panel,

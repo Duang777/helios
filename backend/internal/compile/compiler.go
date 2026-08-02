@@ -33,14 +33,39 @@ type Attempt struct {
 	Error      string `json:"error,omitempty"`
 }
 
+type IR struct {
+	ID          string             `json:"id"`
+	Version     int                `json:"version"`
+	Description string             `json:"description,omitempty"`
+	Params      map[string]IRParam `json:"params"`
+	Steps       []IRStep           `json:"steps"`
+}
+
+type IRParam struct {
+	Type        string `json:"type"`
+	Required    bool   `json:"required,omitempty"`
+	Description string `json:"description,omitempty"`
+}
+
+type IRStep struct {
+	ID         string   `json:"id"`
+	Uses       string   `json:"uses"`
+	Needs      []string `json:"needs,omitempty"`
+	CLI        string   `json:"cli,omitempty"`
+	SideEffect string   `json:"sideEffect,omitempty"`
+	Prompt     string   `json:"prompt,omitempty"`
+}
+
 type Result struct {
-	YAML       string           `json:"yaml"`
-	Mode       string           `json:"mode,omitempty"`
-	Model      string           `json:"model,omitempty"`
-	Validation Validation       `json:"validation"`
-	Warnings   []string         `json:"warnings"`
-	Attempts   []Attempt        `json:"attempts"`
-	Workflow   *domain.Workflow `json:"workflow,omitempty"`
+	YAML           string           `json:"yaml"`
+	Mode           string           `json:"mode,omitempty"`
+	Model          string           `json:"model,omitempty"`
+	Validation     Validation       `json:"validation"`
+	Warnings       []string         `json:"warnings"`
+	Attempts       []Attempt        `json:"attempts"`
+	RepairAttempts []Attempt        `json:"repairAttempts"`
+	IR             *IR              `json:"ir,omitempty"`
+	Workflow       *domain.Workflow `json:"workflow,omitempty"`
 }
 
 type Compiler struct {
@@ -68,7 +93,7 @@ func (c *Compiler) Compile(ctx context.Context, req Request) (Result, error) {
 
 	var (
 		yaml   string
-		result = Result{Attempts: []Attempt{}, Warnings: []string{}}
+		result = Result{Attempts: []Attempt{}, RepairAttempts: []Attempt{}, Warnings: []string{}}
 	)
 
 	maxAttempts := 1 + c.MaxRepairs
@@ -92,16 +117,18 @@ func (c *Compiler) Compile(ctx context.Context, req Request) (Result, error) {
 		wf, verr := validateYAML(yaml)
 		if verr != nil {
 			att.Error = verr.Error()
-			result.Attempts = append(result.Attempts, att)
+			result.addAttempt(att)
 			prevErrors = []string{verr.Error()}
 			continue
 		}
-		result.Attempts = append(result.Attempts, att)
+		result.addAttempt(att)
 		result.YAML = yaml
 		result.Mode = draft.Mode
 		result.Model = draft.Model
 		result.Validation = Validation{OK: true, Errors: []string{}}
 		result.Warnings = warningsFor(wf)
+		ir := buildIR(wf)
+		result.IR = &ir
 		result.Workflow = &wf
 		return result, nil
 	}
@@ -114,6 +141,11 @@ func (c *Compiler) Compile(ctx context.Context, req Request) (Result, error) {
 	}
 	result.Validation = Validation{OK: false, Errors: prevErrors}
 	return result, nil
+}
+
+func (r *Result) addAttempt(att Attempt) {
+	r.Attempts = append(r.Attempts, att)
+	r.RepairAttempts = append(r.RepairAttempts, att)
 }
 
 func validateYAML(raw string) (domain.Workflow, error) {
@@ -141,6 +173,37 @@ func warningsFor(wf domain.Workflow) []string {
 		}
 	}
 	return out
+}
+
+func buildIR(wf domain.Workflow) IR {
+	params := make(map[string]IRParam, len(wf.Params))
+	for name, param := range wf.Params {
+		params[name] = IRParam{
+			Type:        param.Type,
+			Required:    param.Required,
+			Description: param.Description,
+		}
+	}
+
+	steps := make([]IRStep, 0, len(wf.Steps))
+	for _, step := range wf.Steps {
+		steps = append(steps, IRStep{
+			ID:         step.ID,
+			Uses:       string(step.Uses),
+			Needs:      step.Needs,
+			CLI:        step.CLI,
+			SideEffect: string(step.SideEffect),
+			Prompt:     step.Prompt,
+		})
+	}
+
+	return IR{
+		ID:          wf.ID,
+		Version:     wf.Version,
+		Description: wf.Description,
+		Params:      params,
+		Steps:       steps,
+	}
 }
 
 var fenceRe = regexp.MustCompile("(?is)```(?:ya?ml)?\\s*(.*?)```")

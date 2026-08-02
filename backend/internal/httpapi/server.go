@@ -13,20 +13,46 @@ import (
 	"github.com/Duang777/helios/backend/internal/compile"
 	"github.com/Duang777/helios/backend/internal/manifest"
 	"github.com/Duang777/helios/backend/internal/registry"
-	"github.com/Duang777/helios/backend/internal/runtime"
+	"github.com/Duang777/helios/backend/internal/scheduler"
 	"github.com/Duang777/helios/backend/internal/schema"
 	"github.com/Duang777/helios/backend/internal/store"
 )
 
 type Server struct {
-	store    *store.FS
-	registry *registry.Registry
-	engine   *runtime.Engine
-	compiler *compile.Compiler
+	store                       *store.FS
+	registry                    *registry.Registry
+	scheduler                   scheduler.RunScheduler
+	compiler                    *compile.Compiler
+	workflowSrc                 string // HELIOS_WORKFLOW_SRC — repo root for folder import (U2)
+	communityMcpRegistryBaseURL string
+	schedulerName               string // inprocess | hatchet (reported on /health)
 }
 
-func NewServer(st *store.FS, reg *registry.Registry, engine *runtime.Engine, compiler *compile.Compiler) *Server {
-	return &Server{store: st, registry: reg, engine: engine, compiler: compiler}
+func NewServer(st *store.FS, reg *registry.Registry, sched scheduler.RunScheduler, compiler *compile.Compiler) *Server {
+	return &Server{store: st, registry: reg, scheduler: sched, compiler: compiler, schedulerName: scheduler.NameInProcess}
+}
+
+// WithWorkflowSrc sets the trusted root for POST .../import-folder (Output-style dirs).
+func (s *Server) WithWorkflowSrc(dir string) *Server {
+	s.workflowSrc = strings.TrimSpace(dir)
+	return s
+}
+
+// WithSchedulerName sets the name returned by GET /api/v1/health (for desktop/status).
+func (s *Server) WithSchedulerName(name string) *Server {
+	if strings.TrimSpace(name) != "" {
+		s.schedulerName = strings.TrimSpace(strings.ToLower(name))
+	}
+	return s
+}
+
+// WithCommunityMcpRegistryBaseURL overrides the upstream MCP registry endpoint used for
+// community connector discovery. Tests can point this at a local httptest server.
+func (s *Server) WithCommunityMcpRegistryBaseURL(rawURL string) *Server {
+	if strings.TrimSpace(rawURL) != "" {
+		s.communityMcpRegistryBaseURL = strings.TrimSpace(rawURL)
+	}
+	return s
 }
 
 func (s *Server) Handler() http.Handler {
@@ -36,6 +62,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /api/v1/compile", s.handleCompile)
 	mux.HandleFunc("POST /api/v1/workflows/validate", s.handleValidate)
 	mux.HandleFunc("PUT /api/v1/workflows/{id}", s.handleSaveWorkflow)
+	mux.HandleFunc("POST /api/v1/workflows/{id}/import-folder", s.handleImportFolder)
 	mux.HandleFunc("GET /api/v1/workflows", s.handleListWorkflows)
 	mux.HandleFunc("GET /api/v1/workflows/{id}", s.handleGetWorkflow)
 	mux.HandleFunc("GET /api/v1/workflows/{id}/yaml", s.handleGetWorkflowYAML)
@@ -52,11 +79,16 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/v1/runs/{runId}/files/{path...}", s.handleRunFile)
 	mux.HandleFunc("GET /api/v1/clis", s.handleListCLIs)
 	mux.HandleFunc("POST /api/v1/clis/register", s.handleRegisterCLI)
+	mux.HandleFunc("GET /api/v1/mcp-registry/servers", s.handleListCommunityMcpServers)
 	return cors(mux)
 }
 
 func (s *Server) handleHealth(w http.ResponseWriter, _ *http.Request) {
-	writeJSON(w, http.StatusOK, map[string]string{"status": "ok", "service": "helios"})
+	writeJSON(w, http.StatusOK, map[string]string{
+		"status":    "ok",
+		"service":   "helios",
+		"scheduler": s.schedulerName,
+	})
 }
 
 type compileRequest struct {
@@ -131,6 +163,30 @@ func (s *Server) handleSaveWorkflow(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"workflow": wf})
 }
 
+// handleImportFolder loads HELIOS_WORKFLOW_SRC/{id}/ (Output-style) into the runtime store.
+func (s *Server) handleImportFolder(w http.ResponseWriter, r *http.Request) {
+	if s.workflowSrc == "" {
+		writeError(w, http.StatusServiceUnavailable, "WORKFLOW_SRC_UNSET", "set HELIOS_WORKFLOW_SRC to enable folder import")
+		return
+	}
+	id := r.PathValue("id")
+	if id == "" || strings.Contains(id, "..") || strings.ContainsAny(id, `/\`) {
+		writeError(w, http.StatusBadRequest, "INVALID_ID", "invalid workflow id")
+		return
+	}
+	dir := filepath.Join(s.workflowSrc, id)
+	wf, err := s.store.ImportWorkflowDir(dir)
+	if err != nil {
+		writeError(w, http.StatusUnprocessableEntity, "IMPORT_FAILED", err.Error())
+		return
+	}
+	if wf.ID != id {
+		writeError(w, http.StatusUnprocessableEntity, "VALIDATION_FAILED", "workflow id mismatch")
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"workflow": wf, "importedFrom": dir})
+}
+
 func (s *Server) handleListWorkflows(w http.ResponseWriter, _ *http.Request) {
 	list, err := s.store.ListWorkflows()
 	if err != nil {
@@ -150,7 +206,12 @@ func (s *Server) handleGetWorkflow(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleGetWorkflowYAML(w http.ResponseWriter, r *http.Request) {
-	raw, err := os.ReadFile(filepath.Join(s.store.Root(), "workflows", r.PathValue("id")+".yaml"))
+	path, err := s.store.WorkflowYAMLPath(r.PathValue("id"))
+	if err != nil {
+		writeError(w, http.StatusNotFound, "NOT_FOUND", "workflow not found")
+		return
+	}
+	raw, err := os.ReadFile(path)
 	if err != nil {
 		writeError(w, http.StatusNotFound, "NOT_FOUND", "workflow not found")
 		return
@@ -175,7 +236,7 @@ func (s *Server) handleStartRun(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "INVALID_JSON", "Request body must be valid JSON")
 		return
 	}
-	run, err := s.engine.Start(context.Background(), wf, req.Params)
+	run, err := s.scheduler.Start(context.Background(), wf, req.Params)
 	if err != nil {
 		writeError(w, http.StatusUnprocessableEntity, "START_FAILED", err.Error())
 		return
@@ -245,7 +306,7 @@ func (s *Server) handleRunWorkflow(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusUnprocessableEntity, "PARAM_REJECTED", err.Error())
 		return
 	}
-	run, err := s.engine.Start(context.Background(), wf, params)
+	run, err := s.scheduler.Start(context.Background(), wf, params)
 	if err != nil {
 		writeError(w, http.StatusUnprocessableEntity, "START_FAILED", err.Error())
 		return
@@ -281,7 +342,7 @@ func (s *Server) handleApproval(w http.ResponseWriter, r *http.Request) {
 	if req.Actor == "" {
 		req.Actor = "api"
 	}
-	if err := s.engine.Approve(r.PathValue("runId"), req.StepID, req.Decision, req.Actor); err != nil {
+	if err := s.scheduler.Approve(r.PathValue("runId"), req.StepID, req.Decision, req.Actor); err != nil {
 		writeError(w, http.StatusConflict, "APPROVAL_FAILED", err.Error())
 		return
 	}
@@ -313,7 +374,7 @@ func (s *Server) handleHumanHelp(w http.ResponseWriter, r *http.Request) {
 	if req.Actor == "" {
 		req.Actor = "api"
 	}
-	if err := s.engine.ResolveHumanHelp(r.Context(), r.PathValue("runId"), req.StepID, *req.OK, req.Note, req.Actor); err != nil {
+	if err := s.scheduler.ResolveHumanHelp(r.Context(), r.PathValue("runId"), req.StepID, *req.OK, req.Note, req.Actor); err != nil {
 		writeError(w, http.StatusConflict, "HUMAN_HELP_FAILED", err.Error())
 		return
 	}
@@ -326,7 +387,7 @@ func (s *Server) handleHumanHelp(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleAbort(w http.ResponseWriter, r *http.Request) {
-	if err := s.engine.Abort(r.PathValue("runId")); err != nil {
+	if err := s.scheduler.Abort(r.PathValue("runId")); err != nil {
 		writeError(w, http.StatusConflict, "ABORT_FAILED", err.Error())
 		return
 	}

@@ -59,6 +59,42 @@ steps:
 	}
 }
 
+func TestLoadWorkflowYAMLRejectsUnknownRootField(t *testing.T) {
+	_, err := schema.LoadWorkflowYAML([]byte(`
+apiVersion: helios/v1
+kind: Workflow
+id: bad.extra-root
+version: 1
+params: {}
+unexpected: true
+steps:
+  - id: approve
+    uses: approval
+    prompt: "ok?"
+`))
+	if err == nil {
+		t.Fatal("expected unknown root field error")
+	}
+}
+
+func TestLoadWorkflowYAMLRejectsUnknownStepField(t *testing.T) {
+	_, err := schema.LoadWorkflowYAML([]byte(`
+apiVersion: helios/v1
+kind: Workflow
+id: bad.extra-step
+version: 1
+params: {}
+steps:
+  - id: approve
+    uses: approval
+    prompt: "ok?"
+    inventedProperty: true
+`))
+	if err == nil {
+		t.Fatal("expected unknown step field error")
+	}
+}
+
 func TestSemanticValidate_DetectsCycle(t *testing.T) {
 	wf, err := schema.LoadWorkflowYAML([]byte(`
 apiVersion: helios/v1
