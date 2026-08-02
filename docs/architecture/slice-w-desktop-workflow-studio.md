@@ -53,8 +53,8 @@ LeftSidebar
 MainArea
   -> WorkflowStudioView
       intent textarea
-      compile action -> lib/helios/client.compileIntent
-      YAML / validation / IR panels
+      generate action -> lib/helios/client.compileIntent
+      cards / graph / validation / source / run / folder panels
       save action -> saveWorkflow(id, yaml)
       run action -> startRun(id, params) -> waitForRun
 Helios API localhost
@@ -195,3 +195,5 @@ Manual:
 - 2026-08-02: Finished the Chinese UI pass for the MCP center launch surface and curated open-source cards, including Chinese transport labels and separate “已接入 / 已写入” state markers for workspace-bound entries.
 - 2026-08-02: Moved the MCP center to a compact dialog entry in the intent header, removed the first-screen launcher card, shortened curated MCP insertion to a one-line Chinese intent hint, and mapped remaining visible workflow/MCP statuses to Chinese labels.
 - 2026-08-02: Clarified the Workflow Studio left/right panels with explicit “操作” and “结果摘要” guidance, and renamed the result tabs so the workspace now reads as “先编译，再看配置/步骤图/校验/运行” instead of a generic split view.
+- 2026-08-02: Reframed the right panel as card-first presentation with a separate source tab, and changed the left action wording to generation-first language so business users do not have to think in compile/IR terms.
+- 2026-08-02: Continued the business-facing simplification by keeping card presentation as the default, demoting source and folder inspection to secondary tabs, and translating visible repair/error wording to Chinese-only labels.

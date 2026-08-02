@@ -13,13 +13,13 @@ import type { CompileResult, Workflow as HeliosWorkflow, WorkflowRun } from '@/l
 import { cn } from '@/lib/utils'
 import type { WorkflowFolderImportPreview } from '@/types/workflow-folder'
 import {
-  CodeBlock,
   FolderPanel,
   GraphPanel,
-  IRPanel,
   RunPanel,
   ValidationBadge,
   ValidationPanel,
+  WorkflowCardsPanel,
+  WorkflowSourcePanel,
   WorkflowSummary,
   statusLabel,
   type StudioStatus,
@@ -85,7 +85,7 @@ export function WorkflowStudioView(): React.ReactElement {
   const handleCompile = React.useCallback(async (repair = false): Promise<void> => {
     const trimmed = intent.trim()
     if (!trimmed) {
-      setErrorMessage('请输入 workflow 目标。')
+      setErrorMessage('请输入工作流目标。')
       setStatus('error')
       return
     }
@@ -103,11 +103,11 @@ export function WorkflowStudioView(): React.ReactElement {
       setFolderPreview(null)
       setStatus(compiled.validation.ok ? 'ready' : 'error')
       if (!compiled.validation.ok) {
-        setErrorMessage('后端校验未通过，请查看校验结果。')
+        setErrorMessage('生成后的校验未通过，请查看校验结果。')
       }
     } catch (error) {
       setStatus('error')
-      setErrorMessage(error instanceof Error ? error.message : '编译失败')
+      setErrorMessage(error instanceof Error ? error.message : '生成失败')
     }
   }, [intent, resetRunState, result])
 
@@ -159,7 +159,7 @@ export function WorkflowStudioView(): React.ReactElement {
         toast.success(`已导入 ${folder.folderName}`)
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : '导入 workflow folder 失败'
+      const message = error instanceof Error ? error.message : '导入工作流文件夹失败'
       setStatus('error')
       setErrorMessage(message)
       setFolderErrorMessage(message)
@@ -207,7 +207,7 @@ export function WorkflowStudioView(): React.ReactElement {
       })
       toast.success(`已导出 ${workflow.id}`)
     } catch (error) {
-      const message = error instanceof Error ? error.message : '导出 workflow folder 失败'
+      const message = error instanceof Error ? error.message : '导出工作流文件夹失败'
       setStatus('error')
       setErrorMessage(message)
       setFolderErrorMessage(message)
@@ -241,7 +241,7 @@ export function WorkflowStudioView(): React.ReactElement {
       <header className="titlebar-drag-region flex w-full items-start justify-between gap-4 px-6 pb-4 pt-8 sm:px-8 xl:px-10">
         <div className="min-w-0">
           <h1 className="text-2xl font-semibold tracking-tight text-wrap-balance">工作流工作台</h1>
-          <p className="mt-1 text-sm text-muted-foreground">把自然语言编译成可保存、可运行的工作流。</p>
+          <p className="mt-1 text-sm text-muted-foreground">把自然语言变成可保存、可运行的工作流。</p>
         </div>
         <div className="titlebar-no-drag flex shrink-0 items-center gap-2">
           <Badge variant="outline">{statusLabel(status)}</Badge>
@@ -260,10 +260,10 @@ export function WorkflowStudioView(): React.ReactElement {
                 </div>
                 <div className="flex items-center gap-2">
                   <ConnectorPalette onInsert={insertIntentSnippet} workspaceSlug={workspaceSlug} disabled={busy} />
-                  <Badge variant="outline" className="font-mono">{workflowId ?? '未保存'}</Badge>
+                  <Badge variant="outline" className="font-mono">{workflowId ?? '未生成'}</Badge>
                 </div>
               </div>
-              <p className="text-xs text-muted-foreground">先写一句业务目标，再点“编译”。编译后右侧才会出现配置、图和校验结果。</p>
+              <p className="text-xs text-muted-foreground">先写一句业务目标，再点“生成”。生成后右侧才会出现卡片、步骤图和校验结果。</p>
             </div>
           </div>
           <div className="flex min-h-0 flex-1 flex-col gap-4 p-4">
@@ -286,16 +286,16 @@ export function WorkflowStudioView(): React.ReactElement {
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-3">
                 <h3 className="text-xs font-medium text-foreground">操作</h3>
-                <p className="text-[11px] text-muted-foreground">先编译，再保存和运行。</p>
+                <p className="text-[11px] text-muted-foreground">先生成，再保存和运行。</p>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <Button onClick={() => void handleCompile(false)} disabled={busy || intent.trim().length === 0}>
                   {status === 'compiling' ? <Loader2 className="animate-spin" /> : <Wand2 />}
-                  编译
+                  生成
                 </Button>
                 <Button variant="outline" onClick={() => void handleCompile(true)} disabled={busy || !result}>
                   <Wand2 />
-                  修复
+                  修正
                 </Button>
                 <Button variant="secondary" onClick={() => void saveCurrentDraft()} disabled={busy || !saveEnabled}>
                   {status === 'saving' ? <Loader2 className="animate-spin" /> : <Save />}
@@ -311,27 +311,27 @@ export function WorkflowStudioView(): React.ReactElement {
         </section>
 
         <section className="flex min-h-[520px] flex-col rounded-lg border border-border/60 bg-background/35 lg:min-h-0">
-          <Tabs defaultValue="yaml" className="flex min-h-0 flex-1 flex-col">
+          <Tabs defaultValue="cards" className="flex min-h-0 flex-1 flex-col">
             <div className="flex items-center justify-between gap-3 border-b border-border/60 px-4 py-3">
               <div className="min-w-0">
                 <div className="flex min-w-0 items-center gap-2">
                   <FileCode2 className="size-4 text-primary" />
-                  <h2 className="truncate text-sm font-medium">编译结果</h2>
+                  <h2 className="truncate text-sm font-medium">工作流结果</h2>
                 </div>
-                <p className="mt-1 text-xs text-muted-foreground">这里查看编译出来的配置、步骤图、校验、运行记录和工作流文件夹。</p>
+                <p className="mt-1 text-xs text-muted-foreground">先看卡片，再按需切到步骤图、校验、源码、运行和文件夹。</p>
               </div>
               <TabsList className="h-8 rounded-md">
-                <TabsTrigger value="yaml" className="h-6 rounded-sm px-2 text-xs">工作流配置</TabsTrigger>
+                <TabsTrigger value="cards" className="h-6 rounded-sm px-2 text-xs">卡片</TabsTrigger>
                 <TabsTrigger value="graph" className="h-6 rounded-sm px-2 text-xs">步骤图</TabsTrigger>
                 <TabsTrigger value="validation" className="h-6 rounded-sm px-2 text-xs">校验</TabsTrigger>
-                <TabsTrigger value="ir" className="h-6 rounded-sm px-2 text-xs">中间表示</TabsTrigger>
+                <TabsTrigger value="source" className="h-6 rounded-sm px-2 text-xs">源码</TabsTrigger>
                 <TabsTrigger value="run" className="h-6 rounded-sm px-2 text-xs">运行状态</TabsTrigger>
                 <TabsTrigger value="folder" className="h-6 rounded-sm px-2 text-xs">文件夹</TabsTrigger>
               </TabsList>
             </div>
-          <div className={cn('min-h-0 flex-1 p-4', busy && 'cursor-progress')}>
-            <TabsContent value="yaml" className="m-0 h-full">
-              <CodeBlock value={yaml} empty="编译后会显示工作流配置。" />
+            <div className={cn('min-h-0 flex-1 p-4', busy && 'cursor-progress')}>
+              <TabsContent value="cards" className="m-0 h-full">
+                <WorkflowCardsPanel result={result} />
               </TabsContent>
               <TabsContent value="graph" className="m-0 h-full">
                 <GraphPanel result={result} run={run} />
@@ -339,8 +339,8 @@ export function WorkflowStudioView(): React.ReactElement {
               <TabsContent value="validation" className="m-0 h-full">
                 <ValidationPanel result={result} />
               </TabsContent>
-              <TabsContent value="ir" className="m-0 h-full">
-                <IRPanel ir={result?.ir} />
+              <TabsContent value="source" className="m-0 h-full">
+                <WorkflowSourcePanel value={yaml} />
               </TabsContent>
               <TabsContent value="run" className="m-0 h-full">
                 <RunPanel run={run} usedDefaults={usedDefaults} />
