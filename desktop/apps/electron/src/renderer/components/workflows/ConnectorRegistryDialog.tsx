@@ -168,31 +168,13 @@ export function ConnectorRegistryDialog({
           </div>
 
           <div className="flex min-h-0 flex-1 flex-col gap-4 px-5 py-4">
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-              <SummaryTile
-                icon={<Command className="size-4" />}
-                label="CLI 命令"
-                value={String(filteredCliCommands.length)}
-                detail={`共 ${totalCliCommands} 条命令`}
-              />
-              <SummaryTile
-                icon={<Plug className="size-4" />}
-                label="工作区 MCP"
-                value={String(filteredWorkspaceMcp.length)}
-                detail={`共 ${workspaceServers.length} 条`}
-              />
-              <SummaryTile
-                icon={<Bot className="size-4" />}
-                label="内置平台"
-                value={String(filteredBuiltinMcp.length)}
-                detail={`共 ${workspaceBuiltin.length} 个`}
-              />
-              <SummaryTile
-                icon={<Globe2 className="size-4" />}
-                label="社区目录"
-                value={String(filteredCommunityMcp.length)}
-                detail={communityHasMore ? `${communityCount} 条，继续搜索可查看更多` : `共 ${communityCount} 条`}
-              />
+            <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border/60 bg-background/55 px-3 py-2 text-[11px] text-muted-foreground">
+              <span className="font-medium text-foreground">当前目录</span>
+              <Badge variant="secondary" className="text-[11px]">CLI {filteredCliCommands.length}/{totalCliCommands}</Badge>
+              <Badge variant="secondary" className="text-[11px]">工作区 {filteredWorkspaceMcp.length}/{workspaceServers.length}</Badge>
+              <Badge variant="secondary" className="text-[11px]">平台 {filteredBuiltinMcp.length}/{workspaceBuiltin.length}</Badge>
+              <Badge variant="secondary" className="text-[11px]">社区 {filteredCommunityMcp.length}/{communityCount}</Badge>
+              {communityHasMore && <Badge variant="outline" className="text-[11px]">可继续浏览</Badge>}
             </div>
 
             <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
@@ -371,29 +353,6 @@ export function ConnectorRegistryDialog({
         </div>
       </DialogContent>
     </Dialog>
-  )
-}
-
-function SummaryTile({
-  icon,
-  label,
-  value,
-  detail,
-}: {
-  icon: React.ReactNode
-  label: string
-  value: string
-  detail: string
-}): React.ReactElement {
-  return (
-    <div className="rounded-lg border border-border/60 bg-background/70 p-3">
-      <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-        <span className="text-primary">{icon}</span>
-        {label}
-      </div>
-      <div className="mt-2 text-2xl font-semibold text-foreground">{value}</div>
-      <div className="mt-1 text-xs text-muted-foreground">{detail}</div>
-    </div>
   )
 }
 

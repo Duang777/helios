@@ -117,19 +117,19 @@ export function ConnectorPalette({
 
   return (
     <>
-      <section className="rounded-lg border border-border/60 bg-background/35 p-3">
+      <section className="rounded-lg border border-border/60 bg-background/35 px-3 py-2.5">
         <button
           type="button"
           onClick={handleOpen}
           disabled={disabled}
           className={cn(
-            'flex w-full items-start justify-between gap-4 rounded-md border border-border/60 bg-background/75 px-4 py-3 text-left transition-colors',
+            'flex w-full items-center justify-between gap-3 rounded-md border border-border/60 bg-background/75 px-3 py-2.5 text-left transition-colors',
             disabled ? 'cursor-not-allowed opacity-60' : 'hover:bg-background/90',
           )}
         >
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <div className="rounded-md border border-border/60 bg-background/60 p-2 text-primary">
+              <div className="rounded-md border border-border/60 bg-background/60 p-1.5 text-primary">
                 <Workflow className="size-4" />
               </div>
               <div className="min-w-0">
@@ -137,16 +137,16 @@ export function ConnectorPalette({
                   <h3 className="text-sm font-medium text-foreground">MCP 中心</h3>
                   <Badge variant="outline" className="font-mono text-[11px]">registry</Badge>
                 </div>
-                <p className="mt-1 text-xs text-muted-foreground">
+                <p className="mt-0.5 text-xs leading-5 text-muted-foreground">
                   点开浏览 CLI、工作区 MCP、内置平台和社区目录。
                 </p>
               </div>
             </div>
-
-            <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-muted-foreground">
+            <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-muted-foreground">
               <Badge variant="secondary" className="text-[11px]">CLI {clis.length}</Badge>
               <Badge variant="secondary" className="text-[11px]">平台 {totalWorkspacePlatforms}</Badge>
               <Badge variant="secondary" className="text-[11px]">社区 {communityCount}</Badge>
+              {communityLoadedCount > 0 && <Badge variant="outline" className="text-[11px]">已加载</Badge>}
             </div>
           </div>
 
@@ -155,27 +155,6 @@ export function ConnectorPalette({
             <ChevronRight className="size-4" />
           </div>
         </button>
-
-        <div className="mt-3 grid gap-2 md:grid-cols-3">
-          <LauncherMetric
-            icon={<Command className="size-4" />}
-            label="CLI"
-            value={String(clis.length)}
-            loading={loadingClis}
-          />
-          <LauncherMetric
-            icon={<Plug className="size-4" />}
-            label="工作区平台"
-            value={String(totalWorkspacePlatforms)}
-            loading={loadingWorkspace}
-          />
-          <LauncherMetric
-            icon={<Globe2 className="size-4" />}
-            label="社区目录"
-            value={String(communityCount)}
-            loading={loadingCommunity}
-          />
-        </div>
       </section>
 
       <ConnectorRegistryDialog
@@ -197,30 +176,5 @@ export function ConnectorPalette({
         disabled={disabled}
       />
     </>
-  )
-}
-
-function LauncherMetric({
-  icon,
-  label,
-  value,
-  loading,
-}: {
-  icon: React.ReactNode
-  label: string
-  value: string
-  loading: boolean
-}): React.ReactElement {
-  return (
-    <div className="rounded-md border border-border/60 bg-background/55 px-3 py-2">
-      <div className="flex items-center gap-2 text-[11px] font-medium text-muted-foreground">
-        <span className="text-primary">{icon}</span>
-        {label}
-      </div>
-      <div className="mt-1 flex items-center gap-2">
-        <span className="text-lg font-semibold text-foreground">{value}</span>
-        {loading && <span className="text-[11px] text-muted-foreground">加载中</span>}
-      </div>
-    </div>
   )
 }
