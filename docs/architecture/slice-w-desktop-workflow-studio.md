@@ -178,3 +178,4 @@ Manual:
 - 2026-08-01: Verified in browser against localhost Helios API: compile → save → run, reaching `WAITING_APPROVAL` for `run_168109111400f013`.
 - 2026-08-02: Task 5 landed in the desktop shell as workflow folder import/export plumbing, folder preview UI, and `INTENT.md`/`manifest.json` export support; verified with `./scripts/smoke-workflow-folder.sh` and `cd desktop && bun run typecheck`.
 - 2026-08-02: Task 7 landed as a live Connector Registry panel in Workflow Studio, reusing the backend CLI registry and inserting connector prompts at the caret; verified with focused Bun tests, `cd desktop && bun run typecheck`, and `cd desktop && bun run build:renderer`.
+- 2026-08-02: Extended the Connector Registry with workspace MCP and built-in platform catalogs, so the desktop now exposes both CLI-style connectors and project-scoped business platforms in one insertable registry.

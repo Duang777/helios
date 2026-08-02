@@ -1,3 +1,4 @@
+import type { BuiltinMcpServerSummary, McpTransportType, WorkspaceCapabilities } from '@proma/shared'
 import type { CLIArgSpec, CLICommandSpec, RegisteredCLI } from '@/lib/helios/types'
 
 export function normalizeConnectorQuery(query: string): string {
@@ -43,6 +44,39 @@ export function buildConnectorInsertText(cli: RegisteredCLI, command: CLICommand
     `请优先使用连接器 \`${cli.name} ${commandPath}\`（${sideEffect}）。`,
     `参数：${argSummary}`,
     command.dryRun ? '如果需要验证，可优先使用 dry-run。' : '按真实执行路径编排。',
+  ].join('\n')
+}
+
+export function formatMcpTransportLabel(type: McpTransportType): string {
+  switch (type) {
+    case 'stdio':
+      return 'stdio'
+    case 'http':
+      return 'HTTP'
+    case 'sse':
+      return 'SSE'
+    default:
+      return type
+  }
+}
+
+export function formatBuiltinMcpTools(server: Pick<BuiltinMcpServerSummary, 'tools'>): string {
+  if (server.tools.length === 0) return '无工具'
+  return server.tools.map((tool) => tool.name).join(' · ')
+}
+
+export function buildBuiltinMcpInsertText(server: BuiltinMcpServerSummary): string {
+  return [
+    `请优先使用工作区平台连接器 \`${server.displayName}\`（${server.category}）。`,
+    `工具：${formatBuiltinMcpTools(server)}。`,
+    server.availabilityReason ? `可用性提示：${server.availabilityReason}。` : '当前平台在工作区可用。',
+  ].join('\n')
+}
+
+export function buildWorkspaceMcpInsertText(name: string, type: McpTransportType, enabled: boolean): string {
+  return [
+    `请优先使用工作区 MCP 连接器 \`${name}\`。`,
+    `传输：${formatMcpTransportLabel(type)}；状态：${enabled ? '已启用' : '已关闭'}。`,
   ].join('\n')
 }
 
@@ -95,4 +129,40 @@ export function filterConnectorCatalog(connectors: RegisteredCLI[], query: strin
 
 export function countConnectorCommands(cli: RegisteredCLI): number {
   return cli.introspect.commands.length
+}
+
+export function matchesBuiltinMcpQuery(server: BuiltinMcpServerSummary, query: string): boolean {
+  const normalized = normalizeConnectorQuery(query)
+  if (!normalized) return true
+  const haystack = [
+    server.id,
+    server.name,
+    server.displayName,
+    server.description,
+    server.category,
+    ...(server.tools ?? []).flatMap((tool) => [tool.name, tool.description]),
+    server.availabilityReason ?? '',
+  ].join(' ').toLowerCase()
+  return normalized.split(/\s+/).every((token) => haystack.includes(token))
+}
+
+export function filterBuiltinMcpCatalog(connectors: BuiltinMcpServerSummary[], query: string): BuiltinMcpServerSummary[] {
+  return connectors.filter((server) => matchesBuiltinMcpQuery(server, query))
+}
+
+export function matchesWorkspaceMcpQuery(
+  server: WorkspaceCapabilities['mcpServers'][number],
+  query: string,
+): boolean {
+  const normalized = normalizeConnectorQuery(query)
+  if (!normalized) return true
+  const haystack = [server.name, server.type, server.enabled ? 'enabled' : 'disabled'].join(' ').toLowerCase()
+  return normalized.split(/\s+/).every((token) => haystack.includes(token))
+}
+
+export function filterWorkspaceMcpCatalog(
+  connectors: WorkspaceCapabilities['mcpServers'],
+  query: string,
+): WorkspaceCapabilities['mcpServers'] {
+  return connectors.filter((server) => matchesWorkspaceMcpQuery(server, query))
 }

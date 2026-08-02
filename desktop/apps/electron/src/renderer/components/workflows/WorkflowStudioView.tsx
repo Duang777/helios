@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { useAtomValue } from 'jotai'
 import { AlertCircle, FileCode2, Loader2, Play, Save, Sparkles, Wand2, Workflow } from 'lucide-react'
 import { toast } from 'sonner'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -6,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
+import { agentWorkspacesAtom, currentAgentWorkspaceIdAtom } from '@/atoms/agent-atoms'
 import { compileIntent, saveWorkflow, startRun, validateWorkflowYaml, waitForRun } from '@/lib/helios/client'
 import type { CompileResult, Workflow as HeliosWorkflow, WorkflowRun } from '@/lib/helios/types'
 import { cn } from '@/lib/utils'
@@ -40,6 +42,9 @@ function childPath(folderPath: string, filename: string): string {
 
 export function WorkflowStudioView(): React.ReactElement {
   const intentRef = React.useRef<HTMLTextAreaElement | null>(null)
+  const workspaces = useAtomValue(agentWorkspacesAtom)
+  const currentWorkspaceId = useAtomValue(currentAgentWorkspaceIdAtom)
+  const workspaceSlug = workspaces.find((workspace) => workspace.id === currentWorkspaceId)?.slug
   const [intent, setIntent] = React.useState(SAMPLE_INTENT)
   const [result, setResult] = React.useState<CompileResult | null>(null)
   const [savedWorkflow, setSavedWorkflow] = React.useState<HeliosWorkflow | null>(null)
@@ -294,7 +299,7 @@ export function WorkflowStudioView(): React.ReactElement {
                 运行
               </Button>
             </div>
-            <ConnectorPalette onInsert={insertIntentSnippet} disabled={busy} />
+            <ConnectorPalette onInsert={insertIntentSnippet} workspaceSlug={workspaceSlug} disabled={busy} />
           </div>
         </section>
 
