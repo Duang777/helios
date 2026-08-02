@@ -1,27 +1,23 @@
 import * as React from 'react'
 import { useAtomValue } from 'jotai'
-import { AlertCircle, FileCode2, Loader2, Play, Save, Sparkles, Wand2 } from 'lucide-react'
+import { AlertCircle, Loader2, Play, Save, Sparkles, Wand2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 import { agentWorkspacesAtom, currentAgentWorkspaceIdAtom } from '@/atoms/agent-atoms'
 import { compileIntent, saveWorkflow, startRun, validateWorkflowYaml, waitForRun } from '@/lib/helios/client'
 import type { CompileResult, Workflow as HeliosWorkflow, WorkflowRun } from '@/lib/helios/types'
-import { cn } from '@/lib/utils'
 import type { WorkflowFolderImportPreview } from '@/types/workflow-folder'
 import {
-  FolderPanel,
-  GraphPanel,
-  RunPanel,
-  ValidationBadge,
-  ValidationPanel,
   WorkflowCardsPanel,
-  WorkflowSourcePanel,
   WorkflowSummary,
+  WorkflowDetailMenu,
+  WorkflowInspectorDialog,
+  ValidationBadge,
   statusLabel,
+  type WorkflowDetailView,
   type StudioStatus,
 } from './WorkflowStudioPanels'
 import {
@@ -55,11 +51,13 @@ export function WorkflowStudioView(): React.ReactElement {
   const [folderStatus, setFolderStatus] = React.useState<'idle' | 'importing' | 'exporting'>('idle')
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null)
   const [folderErrorMessage, setFolderErrorMessage] = React.useState<string | null>(null)
+  const [detailView, setDetailView] = React.useState<WorkflowDetailView | null>(null)
 
   const yaml = result?.yaml ?? ''
   const workflowId = getWorkflowDraftId(result)
   const saveEnabled = canSaveDraft(result, yaml)
   const busy = status === 'compiling' || status === 'saving' || status === 'running' || folderStatus !== 'idle'
+  const detailDialogOpen = detailView !== null
 
   const insertIntentSnippet = React.useCallback((snippet: string): void => {
     const textarea = intentRef.current
@@ -249,8 +247,8 @@ export function WorkflowStudioView(): React.ReactElement {
         </div>
       </header>
 
-      <main className="titlebar-no-drag grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-y-auto px-6 pb-8 sm:px-8 lg:grid-cols-[minmax(320px,0.9fr)_minmax(420px,1.4fr)] lg:overflow-hidden xl:px-10">
-        <section className="flex min-h-[520px] flex-col rounded-lg border border-border/60 bg-background/35 lg:min-h-0">
+      <main className="titlebar-no-drag flex min-h-0 flex-1 justify-center overflow-y-auto px-6 pb-8 sm:px-8 xl:px-10">
+        <section className="flex min-h-[620px] w-full max-w-[1120px] flex-col rounded-lg border border-border/60 bg-background/35">
           <div className="border-b border-border/60 px-4 py-3">
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-3">
@@ -263,7 +261,7 @@ export function WorkflowStudioView(): React.ReactElement {
                   <Badge variant="outline" className="font-mono">{workflowId ?? '未生成'}</Badge>
                 </div>
               </div>
-              <p className="text-xs text-muted-foreground">先写一句业务目标，再点“生成”。生成后右侧才会出现卡片、步骤图和校验结果。</p>
+              <p className="text-xs text-muted-foreground">先写一句业务目标，再点“生成”。生成后当前面板会直接显示卡片，其他内容从“查看详情”弹窗里打开。</p>
             </div>
           </div>
           <div className="flex min-h-0 flex-1 flex-col gap-4 p-4">
@@ -276,6 +274,7 @@ export function WorkflowStudioView(): React.ReactElement {
               disabled={busy}
             />
             <WorkflowSummary result={result} />
+            <WorkflowCardsPanel result={result} />
             {errorMessage && (
               <Alert variant="destructive">
                 <AlertCircle className="size-4" />
@@ -288,7 +287,7 @@ export function WorkflowStudioView(): React.ReactElement {
                 <h3 className="text-xs font-medium text-foreground">操作</h3>
                 <p className="text-[11px] text-muted-foreground">先生成，再保存和运行。</p>
               </div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                 <Button onClick={() => void handleCompile(false)} disabled={busy || intent.trim().length === 0}>
                   {status === 'compiling' ? <Loader2 className="animate-spin" /> : <Wand2 />}
                   生成
@@ -306,59 +305,29 @@ export function WorkflowStudioView(): React.ReactElement {
                   运行
                 </Button>
               </div>
+              <div className="flex justify-end">
+                <WorkflowDetailMenu onSelect={setDetailView} disabled={busy} />
+              </div>
             </div>
           </div>
         </section>
-
-        <section className="flex min-h-[520px] flex-col rounded-lg border border-border/60 bg-background/35 lg:min-h-0">
-          <Tabs defaultValue="cards" className="flex min-h-0 flex-1 flex-col">
-            <div className="flex items-center justify-between gap-3 border-b border-border/60 px-4 py-3">
-              <div className="min-w-0">
-                <div className="flex min-w-0 items-center gap-2">
-                  <FileCode2 className="size-4 text-primary" />
-                  <h2 className="truncate text-sm font-medium">工作流结果</h2>
-                </div>
-                <p className="mt-1 text-xs text-muted-foreground">先看卡片，再按需切到步骤图、校验、源码、运行和文件夹。</p>
-              </div>
-              <TabsList className="h-8 rounded-md">
-                <TabsTrigger value="cards" className="h-6 rounded-sm px-2 text-xs">卡片</TabsTrigger>
-                <TabsTrigger value="graph" className="h-6 rounded-sm px-2 text-xs">步骤图</TabsTrigger>
-                <TabsTrigger value="validation" className="h-6 rounded-sm px-2 text-xs">校验</TabsTrigger>
-                <TabsTrigger value="source" className="h-6 rounded-sm px-2 text-xs">源码</TabsTrigger>
-                <TabsTrigger value="run" className="h-6 rounded-sm px-2 text-xs">运行状态</TabsTrigger>
-                <TabsTrigger value="folder" className="h-6 rounded-sm px-2 text-xs">文件夹</TabsTrigger>
-              </TabsList>
-            </div>
-            <div className={cn('min-h-0 flex-1 p-4', busy && 'cursor-progress')}>
-              <TabsContent value="cards" className="m-0 h-full">
-                <WorkflowCardsPanel result={result} />
-              </TabsContent>
-              <TabsContent value="graph" className="m-0 h-full">
-                <GraphPanel result={result} run={run} />
-              </TabsContent>
-              <TabsContent value="validation" className="m-0 h-full">
-                <ValidationPanel result={result} />
-              </TabsContent>
-              <TabsContent value="source" className="m-0 h-full">
-                <WorkflowSourcePanel value={yaml} />
-              </TabsContent>
-              <TabsContent value="run" className="m-0 h-full">
-                <RunPanel run={run} usedDefaults={usedDefaults} />
-              </TabsContent>
-              <TabsContent value="folder" className="m-0 h-full">
-                <FolderPanel
-                  preview={folderPreview}
-                  result={result}
-                  actionStatus={folderStatus}
-                  errorMessage={folderErrorMessage}
-                  onImportFolder={() => void handleImportFolder()}
-                  onExportFolder={() => void handleExportFolder()}
-                />
-              </TabsContent>
-            </div>
-          </Tabs>
-        </section>
       </main>
+
+      <WorkflowInspectorDialog
+        open={detailDialogOpen}
+        view={detailView}
+        result={result}
+        run={run}
+        usedDefaults={usedDefaults}
+        folderPreview={folderPreview}
+        folderStatus={folderStatus}
+        folderErrorMessage={folderErrorMessage}
+        onImportFolder={() => void handleImportFolder()}
+        onExportFolder={() => void handleExportFolder()}
+        onOpenChange={(open) => {
+          if (!open) setDetailView(null)
+        }}
+      />
     </div>
   )
 }

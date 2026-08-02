@@ -87,7 +87,7 @@ describe('workflow studio helpers', () => {
     }, 'wrong-name')).toMatchObject({
       validation: {
         ok: false,
-        errors: ['workflow id demo.lead-sync must match folder name wrong-name'],
+        errors: ['工作流 ID demo.lead-sync 必须与文件夹名 wrong-name 一致'],
       },
     })
   })

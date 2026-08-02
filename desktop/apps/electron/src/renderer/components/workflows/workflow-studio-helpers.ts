@@ -20,7 +20,7 @@ export function buildFolderImportResult(
 ): CompileResult {
   const errors = [...validation.errors]
   if (validation.workflow?.id && folderName && validation.workflow.id !== folderName) {
-    errors.push(`workflow id ${validation.workflow.id} must match folder name ${folderName}`)
+    errors.push(`工作流 ID ${validation.workflow.id} 必须与文件夹名 ${folderName} 一致`)
   }
   return {
     yaml,

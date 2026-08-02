@@ -1,8 +1,17 @@
 import * as React from 'react'
-import { AlertCircle, CheckCircle2, FileText, FolderOpen, FolderOutput, LayoutGrid, Loader2 } from 'lucide-react'
+import { AlertCircle, CheckCircle2, Eye, FileText, FolderOpen, FolderOutput, LayoutGrid, Loader2 } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import type { WorkflowFolderImportPreview } from '@/types/workflow-folder'
 import type { CompileResult, RunStatus, StepStatus, WorkflowRun } from '@/lib/helios/types'
@@ -37,6 +46,8 @@ function formatCompileAttemptLabel(value?: string): string {
       return '生成'
     case 'repair':
       return '修正'
+    case 'folder-import':
+      return '文件夹导入'
     default:
       return value ?? '生成'
   }
@@ -135,6 +146,31 @@ export function WorkflowSummary({ result }: { result: CompileResult | null }): R
   )
 }
 
+export type WorkflowDetailView = 'graph' | 'validation' | 'source' | 'run' | 'folder'
+
+const WORKFLOW_DETAIL_META: Record<WorkflowDetailView, { title: string; description: string }> = {
+  graph: {
+    title: '步骤图',
+    description: '按步骤关系查看工作流结构和当前执行状态。',
+  },
+  validation: {
+    title: '校验',
+    description: '查看生成后的错误、警告和修正记录。',
+  },
+  source: {
+    title: '源码',
+    description: '查看当前工作流的源码，便于核对和排查。',
+  },
+  run: {
+    title: '运行状态',
+    description: '查看最近一次运行的编号、状态和每一步结果。',
+  },
+  folder: {
+    title: '文件夹',
+    description: '查看工作流文件夹里的意图、清单和路径信息。',
+  },
+}
+
 type WorkflowCardStep = {
   id: string
   uses: string
@@ -164,6 +200,28 @@ function getWorkflowCardSteps(result: CompileResult | null): WorkflowCardStep[] 
     sideEffect: step.sideEffect,
     needs: step.needs,
   }))
+}
+
+function formatWorkflowStepUseLabel(value: string): string {
+  if (value.includes('approval')) return '审批'
+  if (value.includes('cli')) return '命令'
+  if (value.includes('gui')) return '界面'
+  if (value.includes('ai')) return '智能'
+  if (value.includes('http')) return '接口'
+  return value
+}
+
+function formatWorkflowStepSideEffectLabel(value: string): string {
+  switch (value) {
+    case 'read':
+      return '只读'
+    case 'write':
+      return '写入'
+    case 'none':
+      return '无副作用'
+    default:
+      return value
+  }
 }
 
 function SummaryCell({ label, value }: { label: string; value: string }): React.ReactElement {
@@ -284,7 +342,7 @@ export function WorkflowCardsPanel({ result }: { result: CompileResult | null })
               <LayoutGrid className="size-4 text-primary" />
               <div>
                 <h3 className="text-sm font-medium">工作流卡片</h3>
-                <p className="mt-0.5 text-[11px] text-muted-foreground">每一步都用卡片展示，源码放到单独的标签页里。</p>
+                <p className="mt-0.5 text-[11px] text-muted-foreground">每一步都用卡片展示，其他视图可以从“查看详情”里弹出。</p>
               </div>
             </div>
 
@@ -313,12 +371,12 @@ export function WorkflowCardsPanel({ result }: { result: CompileResult | null })
                           {step.description ?? step.prompt ?? '这个步骤暂时没有说明。'}
                         </p>
                       </div>
-                      <Badge variant="outline" className="shrink-0 text-[11px]">{step.uses}</Badge>
+                      <Badge variant="outline" className="shrink-0 text-[11px]">{formatWorkflowStepUseLabel(step.uses)}</Badge>
                     </div>
 
                     <div className="mt-3 flex flex-wrap gap-2">
                       {step.cli && <Badge variant="secondary" className="text-[11px]">命令 {step.cli}</Badge>}
-                      {step.sideEffect && <Badge variant="outline" className="text-[11px]">副作用 {step.sideEffect}</Badge>}
+                      {step.sideEffect && <Badge variant="outline" className="text-[11px]">副作用 {formatWorkflowStepSideEffectLabel(step.sideEffect)}</Badge>}
                       {step.needs?.length ? <Badge variant="outline" className="text-[11px]">前置 {step.needs.length}</Badge> : null}
                     </div>
                   </article>
@@ -329,6 +387,34 @@ export function WorkflowCardsPanel({ result }: { result: CompileResult | null })
         </>
       )}
     </div>
+  )
+}
+
+export function WorkflowDetailMenu({
+  onSelect,
+  disabled = false,
+}: {
+  onSelect: (view: WorkflowDetailView) => void
+  disabled?: boolean
+}): React.ReactElement {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" size="sm" disabled={disabled} className="gap-2">
+          <Eye className="size-4" />
+          查看详情
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="min-w-[12rem]">
+        <DropdownMenuLabel className="text-[11px] font-normal text-muted-foreground">在弹窗中打开</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onSelect={() => onSelect('graph')}>步骤图</DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => onSelect('validation')}>校验</DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => onSelect('source')}>源码</DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => onSelect('run')}>运行状态</DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => onSelect('folder')}>文件夹</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 
@@ -394,6 +480,65 @@ export function WorkflowSourcePanel({ value }: { value: string }): React.ReactEl
       </div>
       <CodeBlock value={value} empty="先在左侧点“生成”，这里会显示工作流源码。" />
     </div>
+  )
+}
+
+export function WorkflowInspectorDialog({
+  open,
+  view,
+  result,
+  run,
+  usedDefaults,
+  folderPreview,
+  folderStatus,
+  folderErrorMessage,
+  onImportFolder,
+  onExportFolder,
+  onOpenChange,
+}: {
+  open: boolean
+  view: WorkflowDetailView | null
+  result: CompileResult | null
+  run: WorkflowRun | null
+  usedDefaults: string[]
+  folderPreview: WorkflowFolderImportPreview | null
+  folderStatus: 'idle' | 'importing' | 'exporting'
+  folderErrorMessage: string | null
+  onImportFolder: () => void
+  onExportFolder: () => void
+  onOpenChange: (open: boolean) => void
+}): React.ReactElement | null {
+  if (!view) return null
+  const meta = WORKFLOW_DETAIL_META[view]
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="!grid !h-[min(88vh,calc(100vh-2rem))] !max-w-none !w-[min(1240px,calc(100vw-2rem))] !gap-0 overflow-hidden !p-0">
+        <div className="flex h-full min-h-0 flex-col">
+          <div className="border-b border-border/60 px-5 py-4">
+            <DialogDescription className="text-xs uppercase tracking-wide text-muted-foreground">工作流详情</DialogDescription>
+            <DialogTitle className="text-lg font-semibold text-foreground">{meta.title}</DialogTitle>
+            <p className="mt-2 text-sm text-muted-foreground">{meta.description}</p>
+          </div>
+          <div className="min-h-0 flex-1 p-4">
+            {view === 'graph' && <GraphPanel result={result} run={run} />}
+            {view === 'validation' && <ValidationPanel result={result} />}
+            {view === 'source' && <WorkflowSourcePanel value={result?.yaml ?? ''} />}
+            {view === 'run' && <RunPanel run={run} usedDefaults={usedDefaults} />}
+            {view === 'folder' && (
+              <FolderPanel
+                preview={folderPreview}
+                result={result}
+                actionStatus={folderStatus}
+                errorMessage={folderErrorMessage}
+                onImportFolder={onImportFolder}
+                onExportFolder={onExportFolder}
+              />
+            )}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }
 
