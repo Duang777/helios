@@ -221,6 +221,7 @@ export function matchesOpenSourceMcpQuery(source: CuratedOpenSourceMcp, query: s
     source.id,
     source.title,
     source.description,
+    source.origin,
     source.transport,
     source.installHint,
     source.sourceUrl,

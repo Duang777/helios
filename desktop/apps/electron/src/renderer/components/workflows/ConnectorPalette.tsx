@@ -139,7 +139,7 @@ export function ConnectorPalette({
                   <Badge variant="outline" className="font-mono text-[11px]">registry</Badge>
                 </div>
                 <p className="mt-0.5 text-xs leading-5 text-muted-foreground">
-                  开源 MCP、官方目录、工作区和 CLI 一起看。
+                  开源 MCP、官方参考服务器、工作区和 CLI 一起看。
                 </p>
               </div>
             </div>

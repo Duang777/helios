@@ -228,7 +228,7 @@ export function ConnectorRegistryDialog({
                 {visibleSections.includes('opensource') && (
                   <ConnectorSection
                     title="开源 MCP"
-                    description="可直接接入的开源项目入口，带可复制命令和源码地址。"
+                    description="可直接接入的开源项目与官方参考服务器，带可复制命令和源码地址。"
                     count={String(filteredOpenSourceMcp.length)}
                     meta="oss"
                   >
@@ -505,7 +505,7 @@ function OpenSourceMcpCard({
           <div className="flex flex-wrap items-center gap-2">
             {icon}
             <h4 className="truncate text-sm font-semibold text-foreground">{source.title}</h4>
-            <Badge variant="outline" className="text-[11px]">开源</Badge>
+            <Badge variant="outline" className="text-[11px]">{source.origin}</Badge>
             <Badge variant="outline" className="text-[11px]">{source.transport}</Badge>
           </div>
           <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{source.description}</p>

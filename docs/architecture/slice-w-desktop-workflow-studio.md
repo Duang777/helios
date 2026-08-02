@@ -68,6 +68,7 @@ Workflow Studio 是桌面主区域的全屏工具视图，和 `planning`、`agen
 - 本地 CLI registry：Helios 后端已登记的 CLI 连接器。
 - 工作区 MCP：当前项目保存的 stdio / HTTP MCP 配置，以及 Helios 内置平台。
 - 社区 MCP registry：Helios 后端代理官方 MCP Registry，桌面通过 `GET /api/v1/mcp-registry/servers` 读取，不直接对外站点发请求。
+- 开源 MCP 精选层：来自 `different-ai/openwork`、`craft-ai-agents/craft-agents-oss`、`github/github-mcp-server` 与 `modelcontextprotocol/servers` 的可直接安装入口，优先展示能落地复用的官方包或公开端点。
 
 ## Contracts
 
@@ -189,3 +190,4 @@ Manual:
 - 2026-08-02: Reworked the Connector Registry into an expandable MCP center launcher with a full-width modal, category tabs, and card-style browsing for community/workspace/builtin/CLI connectors so the business-facing surface is no longer cramped inside the workflow column.
 - 2026-08-02: Tightened the Connector Registry launcher into a compact tool-row entry and flattened the MCP center summary into lightweight badges, with the source/provenance documented in `docs/architecture/connector-center.md`.
 - 2026-08-02: Added a curated open-source MCP section to the Connector Registry, seeding the panel with public OpenWork and Craft entry points and moving that layer ahead of the broader community registry.
+- 2026-08-02: Expanded the curated open-source MCP layer with direct upstream packages for GitHub, Filesystem, Git, Sequential Thinking, Time, and Fetch, and kept the renderer copy aligned with the new official/project provenance badges.

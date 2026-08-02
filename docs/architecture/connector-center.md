@@ -22,10 +22,12 @@ The connector center currently combines three live Helios-backed sources:
 - Workspace MCP and built-in platform capabilities from the current project.
 - Community MCP Registry results from the official MCP Registry, proxied by Helios at `GET /api/v1/mcp-registry/servers`.
 
-It also includes a curated open-source MCP layer in the renderer, seeded from:
+It also includes a curated open-source MCP layer in the renderer, seeded from directly installable upstream packages and public project endpoints:
 
 - [different-ai/openwork](https://github.com/different-ai/openwork) via the public OpenWork MCP endpoint.
 - [craft-ai-agents/craft-agents-oss](https://github.com/craft-ai-agents/craft-agents-oss) via the published Craft docs and session MCP entry points.
+- [github/github-mcp-server](https://github.com/github/github-mcp-server) via the official GitHub MCP server package.
+- [modelcontextprotocol/servers](https://github.com/modelcontextprotocol/servers) via the filesystem, git, sequential-thinking, time, and fetch reference servers.
 
 ## What was borrowed
 
@@ -46,7 +48,7 @@ The current implementation uses Helios-owned code and runtime data paths:
 - `desktop/apps/electron/src/renderer/lib/helios/client.ts`
 - `backend/internal/httpapi/registry_mcp.go`
 
-So the registry is real, the UI is Helios-native, and the open-source MCP section is intentionally limited to public, reproducible entry points.
+So the registry is real, the UI is Helios-native, and the open-source MCP section is intentionally limited to public, reproducible entry points rather than ad hoc prose.
 
 ## Layout rules
 

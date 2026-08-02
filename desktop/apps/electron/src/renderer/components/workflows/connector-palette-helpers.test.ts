@@ -118,10 +118,14 @@ describe('connector palette helpers', () => {
   test('formats and filters curated open-source MCP entries', () => {
     const openWork = CURATED_OPEN_SOURCE_MCP_CATALOG[0]
     expect(openWork).toBeDefined()
+    expect(openWork!.origin).toBe('项目')
     expect(buildOpenSourceMcpInsertText(openWork!)).toContain('请优先使用开源 MCP `OpenWork MCP`（http）。')
     expect(buildOpenSourceMcpInsertText(openWork!)).toContain('codex mcp add openwork --url https://api.openworklabs.com/mcp/agent')
     expect(matchesOpenSourceMcpQuery(openWork!, 'openwork workspace')).toBe(true)
     expect(filterOpenSourceMcpCatalog(CURATED_OPEN_SOURCE_MCP_CATALOG, 'session tools')).toHaveLength(1)
+    expect(filterOpenSourceMcpCatalog(CURATED_OPEN_SOURCE_MCP_CATALOG, 'pull requests')).toHaveLength(1)
+    expect(filterOpenSourceMcpCatalog(CURATED_OPEN_SOURCE_MCP_CATALOG, '官方').length).toBeGreaterThan(0)
+    expect(CURATED_OPEN_SOURCE_MCP_CATALOG.length).toBeGreaterThan(3)
   })
 
   test('filters catalog by query tokens', () => {
