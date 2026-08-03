@@ -1,7 +1,7 @@
 {
   "name": "proma",
   "version": "0.1.0",
-  "description": "Helios desktop shell (Proma-derived)",
+  "description": "Helios desktop shell",
   "type": "module",
   "private": true,
   "workspaces": [

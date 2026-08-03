@@ -41,7 +41,7 @@ ls "$PROMA_HOME/agent-workspaces/"
 - `multiSelect`: `false`
 - `options`: 上一步扫描到的每个 Helios 工作区目录名作为一个 option，`label` 直接写目录名（如 `default`、`dev-pma`），`description` 留空或填关联项目简介。`mcp.json` 中已存在 `nowledge-mem` 条目的 Helios 工作区可以在 `description` 标注 "已配置"，方便用户避免重复装。
 
-**记下用户选中的 Helios 工作区名**（下文统一用 `<Proma工作区名>` 表示）。后续命令中出现的 `<Proma工作区名>` 占位都要替换成用户的选择。
+**记下用户选中的 Helios 工作区名**（下文统一用 `<Helios工作区名>` 表示）。后续命令中出现的 `<Helios工作区名>` 占位都要替换成用户的选择。
 
 ---
 
@@ -109,15 +109,15 @@ nmem status
 rm -rf /tmp/nowledge-community
 git clone https://github.com/nowledge-co/community.git /tmp/nowledge-community
 
-mkdir -p "$PROMA_HOME/scripts" "$PROMA_HOME/agent-workspaces/<Proma工作区名>/skills"
+mkdir -p "$PROMA_HOME/scripts" "$PROMA_HOME/agent-workspaces/<Helios工作区名>/skills"
 cp /tmp/nowledge-community/nowledge-mem-proma-plugin/hooks/save-to-nmem.py "$PROMA_HOME/scripts/"
 cp /tmp/nowledge-community/nowledge-mem-proma-plugin/hooks/read-working-memory.py "$PROMA_HOME/scripts/"
 chmod +x "$PROMA_HOME/scripts/save-to-nmem.py" "$PROMA_HOME/scripts/read-working-memory.py"
-cp -R /tmp/nowledge-community/nowledge-mem-proma-plugin/skills/{read-working-memory,search-memory,distill-memory,save-thread,status} "$PROMA_HOME/agent-workspaces/<Proma工作区名>/skills/"
+cp -R /tmp/nowledge-community/nowledge-mem-proma-plugin/skills/{read-working-memory,search-memory,distill-memory,save-thread,status} "$PROMA_HOME/agent-workspaces/<Helios工作区名>/skills/"
 ```
 
 ## Step 3：配置目标 Helios 工作区 MCP
-在 `$PROMA_HOME/agent-workspaces/<Proma工作区名>/mcp.json` 中创建或编辑（顶层 key 必须是 `servers`）：
+在 `$PROMA_HOME/agent-workspaces/<Helios工作区名>/mcp.json` 中创建或编辑（顶层 key 必须是 `servers`）：
 
 ```json
 {
@@ -198,12 +198,12 @@ Hooks 是全局 Claude 配置，**不要在命令中硬编码某个项目或 Hel
 ```bash
 export PATH="$HOME/.local/bin:$PATH"
 nmem status
-PROMA_WORKSPACE_DIR="$PROMA_HOME/agent-workspaces/<Proma工作区名>" python3 "$PROMA_HOME/scripts/read-working-memory.py"
-grep 'nowledge-mem:start' "$PROMA_HOME/agent-workspaces/<Proma工作区名>/CLAUDE.md" && echo "Block 已注入" || echo "Block 缺失"
+PROMA_WORKSPACE_DIR="$PROMA_HOME/agent-workspaces/<Helios工作区名>" python3 "$PROMA_HOME/scripts/read-working-memory.py"
+grep 'nowledge-mem:start' "$PROMA_HOME/agent-workspaces/<Helios工作区名>/CLAUDE.md" && echo "Block 已注入" || echo "Block 缺失"
 
 # 检查 5 个 skill 是否都已安装到目标 Helios 工作区
 for s in read-working-memory search-memory distill-memory save-thread status; do
-  if [ -d "$PROMA_HOME/agent-workspaces/<Proma工作区名>/skills/$s" ]; then
+  if [ -d "$PROMA_HOME/agent-workspaces/<Helios工作区名>/skills/$s" ]; then
     echo "✅ skill: $s"
   else
     echo "❌ skill: $s 缺失"

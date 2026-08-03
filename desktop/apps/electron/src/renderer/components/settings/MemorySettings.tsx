@@ -143,7 +143,7 @@ function NowledgeMemSection(): React.ReactElement {
             <p className="text-xs text-muted-foreground">
               📖 配置过程遇到问题？查看{' '}
               <a
-                href="https://mem.nowledge.co/zh/docs/integrations/proma"
+                href="https://mem.nowledge.co/zh/docs/integrations"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-primary hover:underline inline-flex items-center gap-0.5"
