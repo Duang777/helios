@@ -248,7 +248,7 @@ export function AgentIslandApp(): React.ReactElement {
           <div className="pulse-compact" onMouseDown={handlePointerDown} title="点击展开；拖动移动">
             <PulseGlyph phase={phase} compact />
             <div className="pulse-compact-copy">
-              <span className="pulse-kicker">PROMA · AGENT</span>
+              <span className="pulse-kicker">HELIOS · AGENT</span>
               <span className="pulse-compact-title">{compactTitle}</span>
               <span className="pulse-compact-detail">{compactDetail}</span>
             </div>
@@ -272,7 +272,7 @@ export function AgentIslandApp(): React.ReactElement {
           <div className="pulse-header-identity">
             <PulseGlyph phase={phase} />
             <div>
-              <p className="pulse-kicker">PROMA · WORK PULSE</p>
+              <p className="pulse-kicker">HELIOS · 工作脉冲</p>
               <h1>工作脉冲</h1>
             </div>
           </div>

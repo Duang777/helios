@@ -4,7 +4,7 @@ Status: Implemented
 Date: 2026-08-01
 Accepted-by: user（对话确认：开始开发；先落 PRD、代码规范、完整设计）
 Parent: Task 3 in `tasks/todo.md` / Slice T / Slice V
-Reuse: Proma desktop shell in `desktop/`; Helios `/api/v1` compile/workflow/run contract
+Reuse: Helios desktop shell in `desktop/`; Helios `/api/v1` compile/workflow/run contract
 Gate: `docs/architecture/dev-gate.md`
 
 ## PRD
@@ -38,12 +38,12 @@ Gate: `docs/architecture/dev-gate.md`
 
 | 对象 | 许可 | 用法 |
 |------|------|------|
-| Proma desktop shell | AGPL-3.0 | 直接复用当前 `desktop/` renderer、sidebar、active view、ui 组件 |
+| Helios desktop shell | AGPL-3.0 | 直接复用当前 `desktop/` renderer、sidebar、active view、ui 组件 |
 | Helios client helpers | 本仓库 | 复用 `compileIntent` / `saveWorkflow` / `startRun` / `waitForRun` |
 | Helios compile IR | 本仓库 | 展示摘要；不另造前端 workflow schema |
 | lucide-react | ISC | 导航和按钮图标 |
 
-**禁止：** 引入第二套 Electron 壳；为 v1 手写新 DSL；在 renderer 里绕过 `lib/helios/client.ts` 直接散落 `fetch`；提交 Proma upstream 的无关格式化。
+**禁止：** 引入第二套 Electron 壳；为 v1 手写新 DSL；在 renderer 里绕过 `lib/helios/client.ts` 直接散落 `fetch`；提交桌面上游的无关格式化。
 
 ## Architecture
 

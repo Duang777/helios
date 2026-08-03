@@ -1,5 +1,5 @@
 /**
- * PromaLogoSettings - Helios 品牌 Logo 下载
+ * HeliosLogoSettings - Helios 品牌 Logo 下载
  *
  * 展示多个 Helios Logo 颜色变体网格，用户可下载用作机器人头像。
  */
@@ -172,7 +172,7 @@ function LogoCard({ logo }: { logo: LogoVariant }): React.ReactElement {
     try {
       const saved = await window.electronAPI.saveResourceFileAs(
         logo.resourcePath,
-        `proma-${logo.id}.png`,
+        `helios-${logo.id}.png`,
       )
       if (saved) {
         toast.success(`${logo.name} 已保存`)

@@ -14,7 +14,7 @@ This file provides guidance to Codex (Codex.ai/code) when working with code in t
 
 ## 项目概述
 
-Proma 是一个集成通用 AI Agent 的下一代人工智能软件，采用 Electron 桌面应用架构。
+Helios 是一个集成通用 AI Agent 的桌面应用，采用 Electron 桌面应用架构。
 
 ## Monorepo 结构
 
@@ -287,7 +287,7 @@ bun run generate:icons    # 生成应用图标
 ├── agent-workspaces/       # Agent 工作区目录
 │   └── {workspace-slug}/
 │       ├── {session-id}/   # 会话工作目录
-│       ├── workspace-files/# 仅空白项目使用的 Proma 托管项目根
+│       ├── workspace-files/# 仅空白项目使用的 Helios 托管项目根
 │       ├── mcp.json        # MCP Server 配置
 │       └── skills/         # Skills 配置目录
 ├── attachments/            # 附件文件
@@ -455,7 +455,7 @@ React UI 更新
   - `options.env` 回退为"替换"
   - **SDK 包结构重构**：删除 `cli.js`，改为平台 native binary（通过 `@anthropic-ai/Codex-agent-sdk-{platform}-{arch}` optionalDependency 分发），ripgrep 编译进 binary
   - 详见上方"打包配置注意事项"段落
-- `0.2.120`: `query()` 省略 `settingSources` 时默认加载所有来源（Proma 已显式传 `['user', 'project']`，不受影响）
+- `0.2.120`: `query()` 省略 `settingSources` 时默认加载所有来源（Helios 已显式传 `['user', 'project']`，不受影响）
 
 ### 共享类型（`@proma/shared`）
 

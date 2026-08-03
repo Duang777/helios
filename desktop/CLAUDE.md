@@ -14,7 +14,7 @@ This file provides guidance to AI coding agents working with this repository.
 
 ## 项目概述
 
-Proma 是一个本地优先的 Electron AI 桌面应用，Chat 与 Agent 工作流并行；Agent 模式可使用 Claude Agent SDK（默认）或 Pi Agent SDK（实验性）。
+Helios 是一个本地优先的 Electron AI 桌面应用，业务对话与 Agent 工作流并行；Agent 模式可使用 Claude Agent SDK（默认）或 Pi Agent SDK（实验性）。
 
 ## Monorepo 结构
 
@@ -288,7 +288,7 @@ bun run generate:icons    # 生成应用图标
 ├── agent-workspaces/       # Agent 工作区目录
 │   └── {workspace-slug}/
 │       ├── {session-id}/   # 会话工作目录
-│       ├── workspace-files/# 仅空白项目使用的 Proma 托管项目根
+│       ├── workspace-files/# 仅空白项目使用的 Helios 托管项目根
 │       ├── mcp.json        # MCP Server 配置
 │       └── skills/         # Skills 配置目录
 ├── attachments/            # 附件文件
@@ -315,7 +315,7 @@ bun run generate:icons    # 生成应用图标
 
 ## Agent Runtime 架构
 
-Proma 的 Agent 模式通过 `RuntimeRoutingAgentAdapter` 统一入口，按会话的 `agentRuntime` 路由到两套适配器：
+Helios 的 Agent 模式通过 `RuntimeRoutingAgentAdapter` 统一入口，按会话的 `agentRuntime` 路由到两套适配器：
 
 ```text
 用户输入 → AgentOrchestrator
@@ -326,9 +326,9 @@ Proma 的 Agent 模式通过 `RuntimeRoutingAgentAdapter` 统一入口，按会�
 ```
 
 - **Claude Runtime（默认）**：`ClaudeAgentAdapter` 使用 `@anthropic-ai/claude-agent-sdk`。它要求渠道位于 `AGENT_COMPATIBLE_PROVIDERS`，即 Anthropic Messages API 或兼容端点。
-- **Pi Runtime**：在 Agent 输入框下方可直接切换；`PiAgentAdapter` 通过 `pi-model-registry.ts` 将任意已启用的 Proma 渠道注册为运行时 provider，覆盖 OpenAI Chat Completions / Responses、Google Generative AI 与 Anthropic Messages 协议。
-- **会话语义**：会话元数据持久化 `agentRuntime` 与 `sdkSessionId`。切换 runtime 时必须清除旧的 `sdkSessionId`，以免跨 SDK resume；Proma 的 JSONL 消息仍保留并作为历史上下文回填。
-- **共享能力**：两套 runtime 均复用工作区、权限服务、AgentEventBus、SDKMessage 持久化、Skills 与 Proma 内置 Automation / Collaboration 工具。Pi 的用户 MCP Server 需经 `adapters/pi-mcp-tools.ts` 连接并转换为 Pi custom tools，不能假设 Pi SDK 接受 Claude 的 `mcpServers` 参数。
+- **Pi Runtime**：在 Agent 输入框下方可直接切换；`PiAgentAdapter` 通过 `pi-model-registry.ts` 将任意已启用的 Helios 渠道注册为运行时 provider，覆盖 OpenAI Chat Completions / Responses、Google Generative AI 与 Anthropic Messages 协议。
+- **会话语义**：会话元数据持久化 `agentRuntime` 与 `sdkSessionId`。切换 runtime 时必须清除旧的 `sdkSessionId`，以免跨 SDK resume；Helios 的 JSONL 消息仍保留并作为历史上下文回填。
+- **共享能力**：两套 runtime 均复用工作区、权限服务、AgentEventBus、SDKMessage 持久化、Skills 与 Helios 内置 Automation / Collaboration 工具。Pi 的用户 MCP Server 需经 `adapters/pi-mcp-tools.ts` 连接并转换为 Pi custom tools，不能假设 Pi SDK 接受 Claude 的 `mcpServers` 参数。
 - **运行时资源**：Pi runtime 需要在会话结束/取消时清理资源；不要绕开 `PiAgentAdapter` 或 `cleanupPiRuntimeResources()`。
 
 ### 修改 Agent 行为时的检查清单

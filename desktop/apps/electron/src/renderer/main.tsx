@@ -393,7 +393,7 @@ function UpdaterInitializer(): null {
             <button
               type="button"
               className="flex h-7 items-center gap-1 rounded-md px-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground active:scale-[0.96]"
-              onClick={() => { void window.electronAPI.openExternal('https://github.com/proma-ai/Proma/releases') }}
+              onClick={() => { void window.electronAPI.openExternal('https://github.com/Duang777/helios/releases') }}
             >
               查看更新
               <ArrowUpRight size={13} />

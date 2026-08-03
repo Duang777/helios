@@ -32,7 +32,6 @@ const APP_VERSION = __APP_VERSION__
 
 const GITHUB_RELEASES_URL = 'https://github.com/Duang777/helios/releases'
 const HELIOS_REPO_URL = 'https://github.com/Duang777/helios'
-const PROMA_UPSTREAM_URL = 'https://github.com/proma-ai/Proma'
 const AGPL_URL = 'https://www.gnu.org/licenses/agpl-3.0.html'
 
 /** 更新状态卡片 */
@@ -508,7 +507,7 @@ export function AboutSettings(): React.ReactElement {
         </SettingsRow>
         <SettingsRow
           label="开源协议"
-          description="桌面壳基于 Proma 魔改，AGPL-3.0（ADR-004）；安装包内附 LICENSE"
+          description="桌面端遵循 AGPL-3.0；安装包内附 LICENSE 和上游归属说明"
         >
           <a
             href={AGPL_URL}
@@ -527,19 +526,6 @@ export function AboutSettings(): React.ReactElement {
             className="text-sm text-primary hover:underline"
           >
             github.com/Duang777/helios
-          </a>
-        </SettingsRow>
-        <SettingsRow
-          label="壳上来源（Proma）"
-          description="Electron 壳上游；业务运行时是 Helios API"
-        >
-          <a
-            href={PROMA_UPSTREAM_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-primary hover:underline"
-          >
-            github.com/proma-ai/Proma
           </a>
         </SettingsRow>
       </SettingsCard>
